@@ -1,0 +1,552 @@
+from flask import Flask, request
+from flask import __version__ as flask_version
+from flask.json import jsonify
+from flask_cors import CORS
+from platform import python_version
+import subprocess
+import re
+import os
+
+app = Flask(__name__)
+CORS(app)
+
+os.environ['SPOT_DOTEXTRA'] = 'size="6.30,5" edge[arrowhead=vee, arrowsize=.7]'
+
+import spot
+from spot.aux import str_to_svg
+
+def parse_ltl(input, res, errkey='parse_error', synkey='prefix_syntax'):
+    env = spot.default_environment.instance()
+    pf = spot.parse_infix_psl(input, env)
+    f = pf.f
+    if pf.errors:
+        # Try the LBT parser in case someone is throwing LBT formulas at us.
+        pg = spot.parse_prefix_ltl(input, env)
+        if pg.errors:
+            errstr = spot.ostringstream()
+            pf.format_errors(errstr)
+            res[errkey] = errstr.str()
+        else:
+            f = pg.f
+            res[synkey] = True
+    # starting with Spot 2.6.1 we can do "return f", but before that f is a
+    # pointer into the pf/pg structure, so we cannot return it.
+    if not f:
+        return None
+    return spot.formula(str(f))
+
+# Return a Json list of triplets [[tool,version,url],...].
+@app.route('/api/versions')
+def versions():
+    dot = subprocess.Popen(['dot', '-V'],
+                           stdout=subprocess.PIPE,
+                           stderr=subprocess.PIPE)
+    (out, err) = dot.communicate()
+    try:
+        dot_version = err.split(b"\n")[0].split(b"version ")[1].decode("utf-8")
+    except Exception as e:
+        dot_version = "missing"
+
+    return jsonify([
+        ("Spot", spot.version(), "https://spot.lrde.epita.fr/"),
+        ("Python", python_version(), "https://www.python.org/"),
+        ("Flask", flask_version, "http://flask.pocoo.org/"),
+        ("GraphViz", dot_version, "https://graphviz.gitlab.io/"),
+        ])
+
+# Rewrite a formula.
+#
+# URL parameters:
+#
+# ff=o    Spot syntax
+# ff=i    Spin syntax
+# ff=l    LBT syntax
+# ff=g    graphviz output of the AST
+#
+# r=br    enable Basic Reductions
+# r=lf    allow larger formulas
+# r=si    enable Syntactic Implications
+# r=eu    enable Eventuality and Universality
+# r=lc    enable Language Containment
+# r=fs    favor suspendable at top-level
+# r=pn    positive normal form
+# r=bi    Boolean to ISOP
+#
+# u=ops   unabbreviate(f, ops)
+#
+# Output:
+#   on success: { formula: "text" } or { svg: "text" }
+#   on syntax error: { parse_error: "text" }
+@app.route('/api/rewrite/<path:ltlformula>')
+def rewrite(ltlformula, method='GET'):
+
+    res = {}
+
+    f = parse_ltl(ltlformula, res)
+    if not f:
+        return jsonify(res)
+
+    simpopt = spot.tl_simplifier_options(False, False, False,
+                                         False, False, False,
+                                         True, False, False)
+
+    simplify = False
+    for r in request.args.getlist('r'):
+        simplify = True
+        if r == 'br':
+            simpopt.reduce_basics = True
+        elif r == 'lf':
+            simpopt.reduce_size_strictly = False
+        elif r == 'si':
+            simpopt.synt_impl = True
+        elif r == 'eu':
+            simpopt.event_univ = True
+        elif r == 'lc':
+            simpopt.containment_checks = True
+            simpopt.containment_checks_stronger = True
+        elif r == 'fs':
+            simpopt.favor_event_univ = True
+        elif r == 'pn':
+            simpopt.nenoform_stop_on_boolean = True
+        elif r == 'bi':
+            simpopt.boolean_to_isop = True
+
+    if simplify:
+        f = spot.tl_simplifier(simpopt).simplify(f)
+
+    unabbrev = request.args.get('u', None)
+    if unabbrev:
+        f = spot.unabbreviate(f, unabbrev);
+
+    syntax = request.args.get('ff', 'o')
+
+    if syntax == 'g':
+        dotsrc = spot.ostringstream()
+        spot.print_dot_psl(dotsrc, f)
+        s = dotsrc.str().encode('utf-8')
+        return jsonify({'svg': str_to_svg(s)})
+
+    s = None
+    if syntax == 'l':
+        s = spot.str_lbt_ltl(f)
+    elif syntax == 'i':
+        s = spot.str_spin_ltl(f)
+    else:
+        s = spot.str_psl(f)
+
+    res['formula'] = s
+    return jsonify(res)
+
+
+mp_class_to_english = {
+    'B': "a safety and guarantee property",
+    'S': "a safety property",
+    'G': "a guarantee property",
+    'O': "an obligation property",
+    'R': "a recurrence property",
+    'P': "a persistence property",
+    'T': "a reactivity property",
+}
+
+# Output
+#
+# on syntax error: { parse_error: "text" }
+#
+# on success:
+# { mp_class: 'name',
+#   pathological: True,   (absent if not pathological)
+#   mp_hierarchy_svg: '<svg...'
+#   acc_word: 'word',     (an example of accepting word, or null)
+#   rej_word: 'word',     (an example of rejecting word, or null)
+#   stutter_invariant: False   (or True, or 'no X')
+# }
+@app.route('/api/study/<path:ltlformula>')
+def study(ltlformula, method='GET'):
+    result = {}
+
+    f = parse_ltl(ltlformula, result)
+    if not f:
+        return jsonify(result)
+
+    mp_class = spot.mp_class(f)
+
+    result['mp_class'] = mp_class
+    result['mp_class_text'] = mp_class_to_english[mp_class]
+
+    syntactic_class = None
+    if mp_class == 'R':
+        syntactic_class = f.is_syntactic_recurrence()
+    if mp_class == 'P':
+        syntactic_class = f.is_syntactic_persistence()
+    if mp_class == 'O':
+        syntactic_class = f.is_syntactic_obligation()
+    if mp_class == 'S':
+        syntactic_class = f.is_syntactic_safety()
+    if mp_class == 'G':
+        syntactic_class = f.is_syntactic_guarantee()
+    if mp_class == 'B':
+        syntactic_class = f.is_syntactic_safety() and f.is_syntactic_guarantee()
+    if syntactic_class is False:
+        result['pathological'] = True
+
+    result['mp_hierarchy_svg'] = spot.mp_hierarchy_svg(mp_class)
+
+    # This is to be done before translation, otherwise f will be simplified
+    ssi = f.is_syntactic_stutter_invariant()
+
+    pos = spot.translate(f, 'med')
+    neg = spot.translate(spot.formula_Not(f), 'med')
+
+    if ssi:
+        result['stutter_invariant'] = 'no X'
+    else:
+        word = spot.product(spot.closure(pos),
+                            spot.closure(neg)).accepting_word()
+        if word is None:
+            result['stutter_invariant'] = True
+        else:
+            result['stutter_invariant'] = False
+            word.simplify()
+            waut = word.as_automaton()
+            if waut.intersects(pos):
+                word2 = spot.sl2(waut).intersecting_word(neg)
+                word2.simplify()
+                result['acc_word'] = str(word)
+                result['rej_word'] = str(word2)
+            else:
+                word2 = spot.sl2(waut).intersecting_word(pos)
+                word2.simplify()
+                result['rej_word'] = str(word)
+                result['acc_word'] = str(word2)
+
+    if 'acc_word' not in result:
+        acc_word = pos.accepting_word()
+        rej_word = neg.accepting_word()
+        if acc_word is not None:
+            result['acc_word'] = str(acc_word);
+        else:
+            result['acc_word'] = None;
+        if rej_word is not None:
+            result['rej_word'] = str(rej_word);
+        else:
+            result['rej_word'] = None;
+
+    return jsonify(result)
+
+# Input parameters
+#
+#   p=s   small
+#   p=d   deterministic
+#   p=a   any
+#
+#   a=m   monitor
+#   a=b   BA (state-based)
+#   a=g   TGBA
+#   a=p   parity
+#   a=e   Emerson-Lei
+#   a=c   co-Büchi
+#
+#   if a=p:
+#     m=min   parity min
+#     m=max   parity max
+#     m=any   parity min or max
+#     e=odd   parity odd
+#     e=even  parity even
+#     e=any   parity odd or even
+#
+#   l=h   high
+#   l=m   medium
+#   l=l   low
+#
+#   o=unambiguous
+#   o=complete
+#   o=statebased
+#   o=colored
+#   o=showscc
+#   o=forcetacc
+#   o=showndet
+#
+# Output
+#
+# on syntax error: { parse_error: "text" }
+# on success:
+# { automaton_svg: '<svg...'
+#   note: {'text'}              (optional)
+# }
+@app.route('/api/translate/<path:ltlformula>')
+def translate(ltlformula, method='GET'):
+
+    res = {}
+
+    f = parse_ltl(ltlformula, res)
+    if not f:
+        return jsonify(res)
+
+    args = []
+
+    arg_p = request.args.get('p', 's')
+    match_arg_p = {
+        's': 'small',
+        'd': 'deterministic',
+        'a': 'any',
+    }
+    if arg_p in match_arg_p:
+        args.append(match_arg_p[arg_p])
+
+    arg_a = request.args.get('a', 'g')
+    match_arg_a = {
+        'm': 'monitor',
+        'b': 'BA',
+        'g': 'TGBA',
+        'p': 'parity',
+        'e': 'generic',
+        'c': 'cobuchi',
+    }
+    if arg_a in match_arg_a:
+        if arg_a != 'p':
+            args.append(match_arg_a[arg_a])
+        else:
+            acc = 'parity'
+            minmax = request.args.get('m', 'any')
+            oddeven = request.args.get('e', 'any')
+            if minmax != 'any':
+                acc += ' ' + minmax
+            if oddeven != 'any':
+                acc += ' ' + oddeven
+            print(acc)
+            args.append(acc)
+
+    arg_l = request.args.get('l', 'h')
+    match_arg_l = {
+        'h': 'high',
+        'm': 'med',
+        'l': 'low',
+    }
+    if arg_l in match_arg_l:
+        args.append(match_arg_l[arg_l])
+
+    match_arg_trans_opts = {
+        'unambiguous': 'unambiguous',
+        'complete': 'complete',
+        'statebased': 'sbacc',
+        'colored': 'colored',
+    }
+    args_o = request.args.getlist('o')
+    for arg_o in args_o:
+        if arg_o in match_arg_trans_opts:
+            if arg_o != 'colored' or arg_a == 'p':
+                args.append(match_arg_trans_opts[arg_o])
+
+    aut = spot.translate(f, *args)
+
+    if arg_a == 'c' and not f.is_syntactic_persistence():
+        res['note'] = ("Co-Büchi automata can only represent persistence"
+                       " properties.  If your formula does not belong to this"
+                       " class, the automaton below will accept a superset of"
+                       " the intended language.")
+    if arg_a == 'm' and not f.is_syntactic_safety():
+        res['note'] = ("Monitors can only represent safety properties.  "
+                       "If your formula does not belong to this class, "
+                       "the automaton below will accept a superset of "
+                       "the intended language.")
+    if arg_a == 'p':
+        accname = aut.acc().name()
+        if not accname.startswith('parity'):
+            [ip,ipm,ipo] = aut.acc().is_parity()
+            if ip:
+                ns = aut.num_sets()
+                msg = \
+                  ("Acceptance condition '{}' is equivalent to "
+                    "'parity {} {} {}'".format(accname,
+                                               "max" if ipm else "min",
+                                               "odd" if ipo else "even",
+                                               ns))
+                if ns == 1:
+                    msg += " and to 'parity {} {} 1'".format(
+                        "min" if ipm else "max",
+                        "odd" if ipo else "even")
+                res['note'] = msg + '.'
+
+    opt = "arf(Lato)C(#ffffaa)"
+    opt += 'B' if arg_a in ('b', 'm', 'c') else 'b'
+    if arg_a == 'm':
+        opt += 'A'
+
+    match_arg_display_opts = {
+        'showscc': 's',
+        'forcetacc': 't',
+    }
+    highlightnondet = False
+    for arg_o in args_o:
+        if arg_o in match_arg_display_opts:
+            opt += match_arg_display_opts[arg_o]
+        if arg_o == 'showndet':
+            highlightnondet = True
+
+    if highlightnondet:
+        spot.highlight_nondet_edges(aut, 5)
+        spot.highlight_nondet_states(aut, 5)
+
+    dotsrc = spot.ostringstream()
+    spot.print_dot(dotsrc, aut, opt)
+    automaton_svg = str_to_svg(dotsrc.str().encode('utf-8'))
+    res['automaton_svg'] = automaton_svg
+
+    aut.set_name(str(f))
+
+    res['automaton_hoa'] = aut.to_str('hoa')
+
+    if aut.is_sba() or aut.acc().is_t():
+        res['automaton_spin'] = aut.to_str('spin')
+
+
+    return jsonify(res)
+
+
+
+svg_compare_list = [
+    ("""<svg width="200px" height="100px" viewBox="0 0 200 100">
+       <ellipse cx="66" cy="50" rx="60" ry="40" style='fill:cyan;opacity:0.3' />
+       <ellipse cx="132" cy="50" rx="60" ry="40" style='fill:magenta;opacity:0.2' />
+       <text text-anchor="middle" x="50" y="53">w₄</text>
+       <text text-anchor="middle" x="150" y="53">w₂</text>
+       <text text-anchor="middle" x="100" y="53">w₁</text>
+       <text text-anchor="middle" x="100" y="100">w₃</text>
+    </svg>""", "The two formulas are incomparable."),
+    ("""<svg width="200px" height="100px" viewBox="0 0 200 100">
+       <ellipse cx="100" cy="50" rx="90" ry="40" style='fill:cyan;opacity:0.3' />
+       <ellipse cx="132" cy="50" rx="50" ry="30" style='fill:magenta;opacity:0.2' />
+       <text text-anchor="middle" x="50" y="53">w₄</text>
+       <text text-anchor="middle" x="132" y="53">w₁</text>
+       <text text-anchor="middle" x="20" y="90">w₃</text>
+    </svg>""", "The first formula covers the second one."),
+    ("""<svg width="200px" height="100px" viewBox="0 0 200 100">
+       <ellipse cx="66" cy="50" rx="50" ry="30" style='fill:cyan;opacity:0.3' />
+       <ellipse cx="100" cy="50" rx="90" ry="40" style='fill:magenta;opacity:0.2' />
+       <text text-anchor="middle" x="150" y="53">w₂</text>
+       <text text-anchor="middle" x="66" y="53">w₁</text>
+       <text text-anchor="middle" x="20" y="90">w₃</text>
+    </svg>""", "The first formula is covered by the second one."),
+    ("""<svg width="200px" height="100px" viewBox="0 0 200 100">
+       <ellipse cx="100" cy="50" rx="90" ry="40" style='fill:cyan;opacity:0.3' />
+       <ellipse cx="100" cy="50" rx="90" ry="40" style='fill:magenta;opacity:0.2' />
+       <text text-anchor="middle" x="100" y="53">w₁</text>
+       <text text-anchor="middle" x="20" y="90">w₃</text>
+    </svg>""", "The two formulas are equivalent,"),
+    ("""<svg width="200px" height="100px" viewBox="0 0 200 100">
+       <ellipse cx="50" cy="50" rx="45" ry="40" style='fill:cyan;opacity:0.3' />
+       <ellipse cx="150" cy="50" rx="45" ry="40" style='fill:magenta;opacity:0.2' />
+       <text text-anchor="middle" x="50" y="53">w₄</text>
+       <text text-anchor="middle" x="150" y="53">w₂</text>
+       <text text-anchor="middle" x="100" y="90">w₃</text>
+    </svg>""", "The two formula are disjoint."),
+    ("""<svg width="200px" height="100px" viewBox="0 0 200 100">
+       <ellipse cx="50" cy="50" rx="45" ry="40" style='fill:cyan;opacity:0.3' />
+       <text text-anchor="middle" x="50" y="53">w₄</text>
+       <text text-anchor="middle" x="150" y="53" style='fill:magenta'>∅</text>
+       <text text-anchor="middle" x="120" y="53">w₃</text>
+    </svg>""", "The second formula is unsatisfiable."),
+    ("""<svg width="200px" height="100px" viewBox="0 0 200 100">
+       <ellipse cx="150" cy="50" rx="45" ry="40" style='fill:magenta;opacity:0.2' />
+       <text text-anchor="middle" x="150" y="53">w₂</text>
+       <text text-anchor="middle" x="50" y="53" style='fill:#00aaff'>∅</text>
+       <text text-anchor="middle" x="80" y="53">w₃</text>
+    </svg>""", "The first formula is unsatisfiable."),
+    ("""<svg width="200px" height="100px" viewBox="0 0 200 100">
+       <text text-anchor="middle" x="50" y="53" style='fill:#00aaff'>∅</text>
+       <text text-anchor="middle" x="150" y="53" style='fill:magenta'>∅</text>
+    </svg>""", "Both formulas are unsatisfiable; that makes them equivalent."),
+    ("""<svg width="200px" height="100px" viewBox="0 0 200 100">
+       <rect x="0" y="0" width="120" height="100" style='fill:cyan;opacity:0.3' />
+       <rect x="80" y="0" width="120" height="100" style='fill:magenta;opacity:0.2' />
+       <text text-anchor="middle" x="50" y="53">w₄</text>
+       <text text-anchor="middle" x="150" y="53">w₂</text>
+       <text text-anchor="middle" x="100" y="53">w₁</text>
+    </svg>""", "The two formulas are incomparable, but their union accepts all words"),
+    ("""<svg width="200px" height="100px" viewBox="0 0 200 100">
+       <rect x="0" y="0" width="200" height="100" style='fill:cyan;opacity:0.3' />
+       <ellipse cx="132" cy="50" rx="50" ry="30" style='fill:magenta;opacity:0.2' />
+       <text text-anchor="middle" x="50" y="53">w₄</text>
+       <text text-anchor="middle" x="132" y="53">w₁</text>
+    </svg>""", "The first formula is a tautology."),
+    ("""<svg width="200px" height="100px" viewBox="0 0 200 100">
+       <ellipse cx="66" cy="50" rx="50" ry="30" style='fill:cyan;opacity:0.3' />
+       <rect x="0" y="0" width="200" height="100" style='fill:magenta;opacity:0.2' />
+       <text text-anchor="middle" x="66" y="53">w₁</text>
+       <text text-anchor="middle" x="150" y="53">w₂</text>
+    </svg>""", "The second formula is a tautology."),
+    ("""<svg width="200px" height="100px" viewBox="0 0 200 100">
+       <rect x="0" y="0" width="200" height="100" style='fill:cyan;opacity:0.3' />
+       <rect x="0" y="0" width="200" height="100" style='fill:magenta;opacity:0.2' />
+    </svg>""", "Both formulas are tautologies; that makes them equivalent."),
+    ("""<svg width="200px" height="100px" viewBox="0 0 200 100">
+       <rect x="0" y="0" width="100" height="100" style='fill:cyan;opacity:0.3' />
+       <rect x="100" y="0" width="100" height="100" style='fill:magenta;opacity:0.2' />
+       <text text-anchor="middle" x="50" y="53">w₄</text>
+       <text text-anchor="middle" x="150" y="53">w₂</text>
+    </svg>""", "The two formulas are complementary."),
+    ("""<svg width="200px" height="100px" viewBox="0 0 200 100">
+       <rect x="0" y="0" width="200" height="100" style='fill:cyan;opacity:0.3' />
+       <text text-anchor="middle" x="185" y="90" style='fill:magenta'>∅</text>
+    </svg>""", "The first formula is a tautology, the second one is unsatisfiable; that makes them complementary."),
+    ("""<svg width="200px" height="100px" viewBox="0 0 200 100">
+       <rect x="0" y="0" width="200" height="100" style='fill:magenta;opacity:0.2' />
+       <text text-anchor="middle" x="185" y="90" style='fill:#00aaff'>∅</text>
+    </svg>""", "The first formula is unsatisfiable, the second one is a a tautology; that makes them complementary.")
+    ]
+
+def svg_compare(w1, w2, w3, w4):
+    idx = int(w2 is None) + int(w4 is None)*2 + int(w1 is None)*4 + int(w3 is None)*8
+    return svg_compare_list[idx]
+
+@app.route('/api/compare/<path:ltlformula>')
+def compare(ltlformula, method='GET'):
+    result = {}
+
+    f = parse_ltl(ltlformula, result)
+
+    g = parse_ltl(request.args.get('g', ""),
+                  result, errkey='parse_error2', synkey='prefix_syntax2')
+
+    if not f or not g:
+        return jsonify(result)
+
+    pos_f = spot.translate(f, 'low')
+    neg_f = spot.translate(spot.formula_Not(f), 'low')
+    pos_g = spot.translate(g, 'low')
+    neg_g = spot.translate(spot.formula_Not(g), 'low')
+
+    w1 = pos_f.intersecting_word(pos_g)
+    w2 = neg_f.intersecting_word(pos_g)
+
+    w3 = neg_f.intersecting_word(neg_g)
+    w4 = pos_f.intersecting_word(neg_g)
+
+    svg, txt = svg_compare(w1, w2, w3, w4)
+    result['svg'] = svg
+    result['txt'] = txt
+    twowordsormore = sum((w is not None for w in (w1, w2, w3, w4))) > 1
+    if twowordsormore:
+        if w1:
+            result['w1'] = str(w1)
+        if w2:
+            result['w2'] = str(w2)
+        if w3:
+            result['w3'] = str(w3)
+        if w4:
+            result['w4'] = str(w4)
+
+    return jsonify(result)
+
+
+    # import os
+# import sys
+#
+# # 3600s = 1h
+# sys.stdout.write("""Cache-Control: max-age=3600
+# Content-Type: application/json
+#
+# """)
+#
+# from http.server import CGIHTTPRequestHandler, HTTPServer
+
