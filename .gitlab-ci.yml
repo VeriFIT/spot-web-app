@@ -8,6 +8,7 @@ compile:
   image: registry.lrde.epita.fr/spot-deb-node
   script:
     - cd client
+    - npm install
     - npm run build
   artifacts:
     when: always
