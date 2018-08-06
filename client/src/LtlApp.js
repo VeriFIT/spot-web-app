@@ -195,6 +195,11 @@ function NoteText(props) {
             </Typography>);
 }
 
+function api_endpoint() {
+    return (window.location.protocol + '//' + window.location.hostname
+            + process.env.REACT_APP_API_ENDPOINT)
+}
+
 class Versions extends React.Component {
 
     state = {
@@ -212,7 +217,7 @@ class Versions extends React.Component {
 
     componentDidMount()
     {
-        fetch(process.env.REACT_APP_API_ENDPOINT + 'versions').then(
+        fetch(api_endpoint() + 'versions').then(
             response => {
                 if (!response.ok)
                     throw new Error("fetch error: "
@@ -478,8 +483,7 @@ class LtlRewrite extends React.Component {
             this.setState({ result: "" });
             return;
         }
-        let url = new URL(process.env.REACT_APP_API_ENDPOINT + 'rewrite/' +
-                          this.props.formula);
+        let url = new URL(api_endpoint() + 'rewrite/' + this.props.formula);
         if (this.props.simplify)
             Object.entries(this.props.ltlsimp)
             .forEach(([key, value]) => {
@@ -643,8 +647,7 @@ class LtlStudy extends React.Component {
             this.setState({ result: "" });
             return;
         }
-        let url = new URL(process.env.REACT_APP_API_ENDPOINT + 'study/' +
-                          this.props.formula);
+        let url = new URL(api_endpoint() + 'study/' + this.props.formula);
 
         fetch(url).then(
             response => {
@@ -728,8 +731,7 @@ class LtlTranslate extends React.Component {
             this.setState({ result: "" });
             return;
         }
-        let url = new URL(process.env.REACT_APP_API_ENDPOINT + 'translate/' +
-                          this.props.formula);
+        let url = new URL(api_endpoint() + 'translate/' + this.props.formula);
 
         url.searchParams.append("a", this.props.acc);
         url.searchParams.append("p", this.props.autpref);
@@ -959,8 +961,7 @@ class LtlCompare extends React.Component {
             this.setState({ result: "" });
             return;
         }
-        let url = new URL(process.env.REACT_APP_API_ENDPOINT + 'compare/' +
-                          this.props.formula);
+        let url = new URL(api_endpoint() + 'compare/' + this.props.formula);
         url.searchParams.append("g", this.props.formula2);
 
         fetch(url).then(
