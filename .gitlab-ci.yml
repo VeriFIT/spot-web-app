@@ -1,0 +1,17 @@
+stages:
+  - build
+
+compile:
+  stage: build
+  except:
+    - /wip/
+  image: registry.lrde.epita.fr/spot-deb-node
+  script:
+    - cd client
+    - npm run build
+  artifacts:
+    when: always
+    paths:
+      - ./client/build/
+      - ./server/*.py
+
