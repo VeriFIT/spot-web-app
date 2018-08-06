@@ -158,7 +158,7 @@ const styles = theme => ({
         fontWeight: 'bold',
     },
     automaton_svg: {
-        overflow: 'scroll',
+        overflow: 'auto',
     },
 });
 
@@ -212,7 +212,7 @@ class Versions extends React.Component {
 
     componentDidMount()
     {
-        fetch('http://localhost:5000/api/versions').then(
+        fetch(process.env.REACT_APP_API_ENDPOINT + 'versions').then(
             response => {
                 if (!response.ok)
                     throw new Error("fetch error: "
@@ -478,7 +478,7 @@ class LtlRewrite extends React.Component {
             this.setState({ result: "" });
             return;
         }
-        let url = new URL('http://localhost:5000/api/rewrite/' +
+        let url = new URL(process.env.REACT_APP_API_ENDPOINT + 'rewrite/' +
                           this.props.formula);
         if (this.props.simplify)
             Object.entries(this.props.ltlsimp)
@@ -643,7 +643,7 @@ class LtlStudy extends React.Component {
             this.setState({ result: "" });
             return;
         }
-        let url = new URL('http://localhost:5000/api/study/' +
+        let url = new URL(process.env.REACT_APP_API_ENDPOINT + 'study/' +
                           this.props.formula);
 
         fetch(url).then(
@@ -728,7 +728,7 @@ class LtlTranslate extends React.Component {
             this.setState({ result: "" });
             return;
         }
-        let url = new URL('http://localhost:5000/api/translate/' +
+        let url = new URL(process.env.REACT_APP_API_ENDPOINT + 'translate/' +
                           this.props.formula);
 
         url.searchParams.append("a", this.props.acc);
@@ -959,7 +959,7 @@ class LtlCompare extends React.Component {
             this.setState({ result: "" });
             return;
         }
-        let url = new URL('http://localhost:5000/api/compare/' +
+        let url = new URL(process.env.REACT_APP_API_ENDPOINT + 'compare/' +
                           this.props.formula);
         url.searchParams.append("g", this.props.formula2);
 
