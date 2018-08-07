@@ -1,0 +1,20 @@
+This is a web application based on Spot.  It offers some
+tools to rewrite/study/compare/translate LTL formula.
+
+It's made of
+- a server-side API written in Python using Spot's Python
+  binding,
+- a client-side web application written using ReactJS,
+  and calling that API.
+
+To start developping, first launch a server on localhost:5000 with
+
+  % server/spotapi.py
+
+then launch a client with
+
+  % cd client
+  % npm run start
+
+Now any save to spotapi.py or client/src/LtlApp.js will cause these
+components to reload automatically.

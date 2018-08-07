@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 from flask import Flask, request
 from flask import __version__ as flask_version
 from flask.json import jsonify
@@ -538,6 +540,17 @@ def compare(ltlformula, method='GET'):
 
     return jsonify(result)
 
+
+
+
+@app.after_request
+def add_header(response):
+    if response.status_code == 200:
+        response.cache_control.max_age = 3600
+    return response
+
+if __name__ == '__main__':
+    app.run(debug=True, use_reloader=True, use_debugger=False)
 
     # import os
 # import sys
