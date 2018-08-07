@@ -84,6 +84,7 @@ const styles = theme => ({
         '& legend': {
             paddingLeft: 8,
             paddingRight: 8,
+            backgroundColor: 'white',
             color: theme.palette.primary.light,
         }
     },
@@ -97,11 +98,10 @@ const styles = theme => ({
         '& legend': {
             paddingLeft: 8,
             paddingRight: 8,
+            backgroundColor: 'white',
             color: theme.palette.secondary.light,
         },
         '& legend$focused': {
-            paddingLeft: 8,
-            paddingRight: 8,
             color: theme.palette.secondary.main,
         },
     },
