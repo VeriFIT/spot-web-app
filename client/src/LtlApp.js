@@ -230,6 +230,14 @@ function api_endpoint() {
             + process.env.REACT_APP_API_ENDPOINT)
 }
 
+function handleErrors(response) {
+    if (!response.ok) {
+        throw Error(response.status + ' ' + response.statusText);
+    }
+    return response.json();
+}
+
+
 
 class LtlInput extends React.Component {
     state = {
@@ -297,17 +305,11 @@ class Versions extends React.Component {
 
     componentDidMount()
     {
-        fetch(api_endpoint() + 'versions').then(
-            response => {
-                if (!response.ok)
-                    throw new Error("fetch error: "
-                                    + response.status + " "
-                                    + response.statusText);
-                return response.json(); }).then(
-                    vers => {
-                        vers.push(["React", React.version, "https://reactjs.org/"]);
-                        this.setState({ versions: vers });
-                    })
+        fetch(api_endpoint() + 'versions').then(handleErrors).then(
+            vers => {
+                vers.push(["React", React.version, "https://reactjs.org/"]);
+                this.setState({ versions: vers });
+            }).catch(error => this.setState({ versions: [[error.message,null,null]]}));
     }
 
     render() {
@@ -578,23 +580,16 @@ class LtlRewrite extends React.Component {
         if (unabbrev !== "")
             url.searchParams.append("u", unabbrev);
 
-        fetch(url).then(
-            response => {
-                if (!response.ok)
-                    throw new Error("fetch error: "
-                                    + response.status + " "
-                                    + response.statusText);
-                return response.json();
-            }).then(
-                res => {
-                    this.props.handleAnyParseError(res);
-                    if ('formula' in res)
-                        this.setState({ result: <Typography>{res['formula']}</Typography> });
-                    else if ('svg' in res)
-                        this.setState({ result: <SVGInline svg={res['svg']}/> });
-                    else
-                        this.setState({ result: null});
-                });
+        fetch(url).then(handleErrors).then(
+            res => {
+                this.props.handleAnyParseError(res);
+                if ('formula' in res)
+                    this.setState({ result: <Typography>{res['formula']}</Typography> });
+                else if ('svg' in res)
+                    this.setState({ result: <SVGInline svg={res['svg']}/> });
+                else
+                    this.setState({ result: null});
+            }).catch(error => this.setState({ result: <pre>{error.message}</pre> }));
     }
 
     componentDidMount() {
@@ -729,18 +724,11 @@ class LtlStudy extends React.Component {
         }
         let url = new URL(api_endpoint() + 'study/' + this.props.formula);
 
-        fetch(url).then(
-            response => {
-                if (!response.ok)
-                    throw new Error("fetch error: "
-                                    + response.status + " "
-                                    + response.statusText);
-                return response.json();
-            }).then(
-                res => {
-                    this.props.handleAnyParseError(res);
-                    this.setState({ result: this.buildResult(res) });
-                });
+        fetch(url).then(handleErrors).then(
+            res => {
+                this.props.handleAnyParseError(res);
+                this.setState({ result: this.buildResult(res) });
+            }).catch(error => this.setState({ result: <pre>{error.message}</pre> }));
     }
 
     componentDidMount() {
@@ -831,18 +819,11 @@ class LtlTranslate extends React.Component {
                 if (value) url.searchParams.append("o", key);
             });
 
-        fetch(url).then(
-            response => {
-                if (!response.ok)
-                    throw new Error("fetch error: "
-                                    + response.status + " "
-                                    + response.statusText);
-                return response.json();
-            }).then(
-                res => {
-                    this.props.handleAnyParseError(res);
-                    this.setState({ result: this.buildResult(res) });
-                });
+        fetch(url).then(handleErrors).then(
+            res => {
+                this.props.handleAnyParseError(res);
+                this.setState({ result: this.buildResult(res) });
+            }).catch(error => this.setState({ result: () => <pre>{error.message}</pre> }));
     }
 
     componentDidMount() {
@@ -1055,18 +1036,12 @@ class LtlCompare extends React.Component {
         let url = new URL(api_endpoint() + 'compare/' + this.props.formula);
         url.searchParams.append("g", this.props.formula2);
 
-        fetch(url).then(
-            response => {
-                if (!response.ok)
-                    throw new Error("fetch error: "
-                                    + response.status + " "
-                                    + response.statusText);
-                return response.json();
-            }).then(
-                res => {
-                    this.handleAnyParseError(res);
-                    this.setState({ result: this.buildResult(res) });
-                });
+        fetch(url).then(handleErrors).then(
+            res => {
+                this.handleAnyParseError(res);
+                this.setState({ result: this.buildResult(res) });
+            }).catch(error => this.setState({ result: <pre>{error.message}</pre> }));
+
     }
 
     componentDidMount() {
