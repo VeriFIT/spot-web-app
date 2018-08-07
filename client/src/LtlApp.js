@@ -5,6 +5,7 @@ import Checkbox from '@material-ui/core/Checkbox';
 import FormControl from '@material-ui/core/FormControl';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import FormLabel from '@material-ui/core/FormLabel';
+import FormHelperText from '@material-ui/core/FormHelperText';
 import IconButton from '@material-ui/core/IconButton';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
@@ -31,18 +32,47 @@ const styles = theme => ({
     toplevel: {
         display: 'flex',
         flexWrap: 'wrap',
-        justifyContent: 'center',
+        [theme.breakpoints.up('sm')]: {
+            justifyContent: 'center',
+        }
     },
     root: {
         margin: theme.spacing.unit,
         padding: theme.spacing.unit,
-        maxWidth: '640px',
+        width: 640 - 2 * theme.spacing.unit,
+        [theme.breakpoints.down('sm')]: {
+            marginLeft: 0,
+            marginRight: 0,
+        },
+    },
+    optionstrans: {
+        display: 'flex',
+        flexWrap: 'wrap',
+        alignItems: 'flex-start',
+    },
+    tab: {
+        maxWidth: 150,
+        minWidth: 50,
+    },
+    tablabel: {
+        fontSize: theme.typography.pxToRem(14),
+    },
+    fclvertical: {
+        marginRight: 0,
+    },
+    pre: {
+        overflow: 'scroll',
+        whiteSpace: 'pre-wrap',
+        width: "100%",
     },
     ltlInput: {
         width: "100%",
         overflow: "hidden",
     },
     ltlsyntax: {
+    },
+    helperText: {
+        marginTop: 0,
     },
     borderedgroupprimary: {
         padding: 8,
@@ -131,7 +161,7 @@ const styles = theme => ({
     results: {
         width: '100%',
         padding: theme.spacing.unit,
-        overflow: 'auto',
+        overflow: 'scroll',
     },
     hierarchy_svg: {
         float: 'right',
@@ -198,6 +228,56 @@ function NoteText(props) {
 function api_endpoint() {
     return (window.location.protocol + '//' + window.location.hostname
             + process.env.REACT_APP_API_ENDPOINT)
+}
+
+
+class LtlInput extends React.Component {
+    state = {
+        tmpformula: this.props.defaultValue || "",
+        formula: this.props.defaultValue || "",
+    }
+
+    handleChange = (e) => {
+        this.setState({tmpformula: e.target.value})
+    }
+
+    updateFormula = () => {
+        let fmt = this.state.tmpformula;
+        this.setState({formula: fmt});
+        this.props.setFormula(fmt);
+    }
+
+    handleKey = (e) => {
+        if (e.key === 'Enter')
+            this.updateFormula();
+    }
+
+    render() {
+        return (
+            <div className={this.props.classes.ltlInput}>
+              <TextField error={Boolean(this.props.formulaerr)}
+                         className={this.props.className}
+                         fullWidth
+                         defaultValue={this.props.defaultValue}
+                         label={this.props.label}
+                         autoFocus={this.props.autoFocus}
+                         onChange={this.handleChange}
+                         onKeyPress={this.handleKey}
+                         onBlur={this.updateFormula}
+                         />
+              <FormHelperText className={this.props.classes.helperText}>{(this.state.tmpformula !== this.state.formula) && <span>Hit <i>Enter</i> or <i>Tab</i> to update the results.</span>}</FormHelperText>
+              {this.props.formulalbt &&
+                  <NoteText text={"Assuming a prefix syntax in the style of "
+                                  +"LBT/LTL2DSTAR, as the standard parser for "
+                                  +"infix syntaxes failed."}
+                            />}
+              {this.props.formulaerr &&
+                      <pre className={this.props.classes.parseerror}>
+                            {this.props.formulaerr}</pre>
+                      }
+            </div>
+        );
+    }
 }
 
 class Versions extends React.Component {
@@ -712,6 +792,11 @@ class LtlTranslate extends React.Component {
         // NeverClaim).
         return () => {return (
             <React.Fragment>
+              {'states' in res &&
+                  <Typography>
+                        {res['det'] ? "D" : "Non-d"}eterministic automaton
+                        with {res['states']} states and {res['edges']} edges.
+                  </Typography>}
               {'note' in res && <NoteText text={res['note']}/>}
               {'automaton_svg' in res &&
                   <SVGInline className={this.props.classes.automaton_svg}
@@ -719,8 +804,8 @@ class LtlTranslate extends React.Component {
                              svg={res['automaton_svg']}/>}
                   {'automaton_hoa' in res && <Button color="primary" onClick={this.showfilehoa}>HOA</Button>}
                   {'automaton_spin' in res && <Button color="primary" onClick={this.showfilespin}>NeverClaim</Button>}
-                  {this.state.showfile === 1 && <pre>{res['automaton_hoa']}</pre>}
-                  {this.state.showfile === 2 && <pre>{res['automaton_spin']}</pre>}
+                  {this.state.showfile === 1 && <pre className={this.props.classes.pre}>{res['automaton_hoa']}</pre>}
+                  {this.state.showfile === 2 && <pre className={this.props.classes.pre}>{res['automaton_spin']}</pre>}
             </React.Fragment>
         );};
     }
@@ -787,8 +872,9 @@ class LtlTranslate extends React.Component {
               <AccChoice acc={this.props.acc}
                          classes={this.props.classes}
                          changeAcc={this.props.changeAcc} />
+              <div className={this.props.classes.optionstrans}>
               <FormControl component="fieldset" className={this.props.classes.borderedgroupprimary}>
-                <FormLabel component="legend">Translation pref.</FormLabel>
+                      <FormLabel component="legend">Translation pref.</FormLabel>
                 <RadioGroup
                   aria-label="Translation preferences"
                   name="autpref"
@@ -796,24 +882,28 @@ class LtlTranslate extends React.Component {
 
                   onChange={this.props.changeAutpref}
                   >
-                  <FormControlLabel value="s" control={<Radio color="primary" />} label="small" />
-                  <FormControlLabel value="d" control={<Radio color="primary" />} label="deterministic" />
-                  {(this.props.expert || this.props.autpref==='a') && <FormControlLabel value="a" control={<Radio />} label="any" />}
+                      <FormControlLabel classes={{root: this.props.classes.fclvertical}}
+                           value="s" control={<Radio color="primary" />} label="small" />
+                      <FormControlLabel classes={{root: this.props.classes.fclvertical}}
+                           value="d" control={<Radio color="primary" />} label="deterministic" />
+                     {(this.props.expert || this.props.autpref==='a') &&
+                          <FormControlLabel classes={{root: this.props.classes.fclvertical}}
+                                            value="a" control={<Radio />} label="any" />}
                 </RadioGroup>
               </FormControl>
               <FormControl component="fieldset" className={this.props.classes.borderedgroupprimary}>
                 <FormLabel component="legend">Translation constraints</FormLabel>
-                <FormControlLabel
+                <FormControlLabel classes={{root: this.props.classes.fclvertical}}
                   control={<Checkbox checked={this.props.transopts['complete']} color="primary"
                            onChange={this.props.handleChangeTransOpts('complete')}
                          />}
                   label={'complete'} />
-                <FormControlLabel
+                <FormControlLabel classes={{root: this.props.classes.fclvertical}}
                   control={<Checkbox checked={this.props.transopts['unambiguous']} color="primary"
                            onChange={this.props.handleChangeTransOpts('unambiguous')}
                          />}
                   label={'unambiguous'} />
-                <FormControlLabel
+                <FormControlLabel classes={{root: this.props.classes.fclvertical}}
                   control={<Checkbox checked={this.props.transopts['statebased']} color="primary"
                                          disabled={this.props.acc==='m' || this.props.acc==='b'}
                            onChange={this.props.handleChangeTransOpts('statebased')}
@@ -822,17 +912,17 @@ class LtlTranslate extends React.Component {
               </FormControl>
               <FormControl component="fieldset" className={this.props.classes.borderedgroupprimary}>
                 <FormLabel component="legend">Display options</FormLabel>
-                <FormControlLabel
+                <FormControlLabel classes={{root: this.props.classes.fclvertical}}
                   control={<Checkbox checked={this.props.transopts['showscc']}  color="primary"
                            onChange={this.props.handleChangeTransOpts('showscc')}
                          />}
                   label={'show SCCs'} />
-                <FormControlLabel
+                <FormControlLabel classes={{root: this.props.classes.fclvertical}}
                   control={<Checkbox checked={this.props.transopts['showndet']}  color="primary"
                            onChange={this.props.handleChangeTransOpts('showndet')}
                          />}
                   label={'show non-determinism'} />
-                <FormControlLabel
+                <FormControlLabel classes={{root: this.props.classes.fclvertical}}
                   control={<Checkbox checked={this.props.transopts['forcetacc']}  color="primary"
                                          onChange={this.props.handleChangeTransOpts('forcetacc')}
                                          disabled={this.props.acc==='m'}
@@ -886,6 +976,7 @@ class LtlTranslate extends React.Component {
                   <FormControlLabel value="l" control={<Radio color="secondary" />} label="low" />
                 </RadioGroup>
                   </FormControl>}
+                  </div>
                       </React.Fragment>}
             {this.state.result &&
                           <LtlResult classes={this.props.classes}
@@ -994,9 +1085,15 @@ class LtlCompare extends React.Component {
     render() {
         return (
             <React.Fragment>
-              <TextField className={this.props.classes.textField2} fullWidth name="formula2" label="Second formula" onChange={this.props.handleChangeFormula2} defaultValue={this.props.formula2} error={Boolean(this.state.formula2err)}/>
-              {this.state.formula2lbt && <NoteText text={"Assuming a prefix syntax in the style of LBT/LTL2DSTAR, as the standard parser for infix syntaxes failed."}/>}
-              {this.state.formula2err && <pre className={this.props.classes.parseerror}>{this.state.formula2err}</pre>}
+              <LtlInput
+                classes={this.props.classes}
+                className={this.props.classes.textField2}
+                label="Second formula"
+                defaultValue={this.props.formula2}
+                setFormula={this.props.handleChangeFormula2}
+                formulalbt={this.state.formula2lbt}
+                formulaerr={this.state.formula2err}
+                />
               {this.state.result && <LtlResult classes={this.props.classes} result={this.state.result} />}
             </React.Fragment>);
     }
@@ -1109,15 +1206,8 @@ class LtlApp extends React.Component {
     handleChecked = name => event => {
         this.setState({ [name]: event.target.checked });
     };
-    handleChangeFormula = event => {
-        this.setState({ formula: event.target.value });
-    };
-    handleChangeFormula2 = event => {
-        this.setState({ formula2: event.target.value });
-    };
-
-
-    // <Button className={this.props.classes.update} color="primary">Update</Button>
+    handleChangeFormula = str => { this.setState({ formula: str }); }
+    handleChangeFormula2 = str => { this.setState({ formula2: str }); };
 
     render() {
         return (
@@ -1139,19 +1229,24 @@ class LtlApp extends React.Component {
                                     } label="Hide all options" />}
               <Tabs value={this.state.action}
                     onChange={this.changeAction}
-                    fullWidth
+                    scrollable
+                    centered
                     indicatorColor="primary"
                     textColor="primary">
-                <Tab label="Rewrite"/>
-                <Tab label="Study" />
-                <Tab label="Compare" />
-                <Tab label="Translate" />
+                <Tab value={0} classes={{root: this.props.classes.tab, label:this.props.classes.tablabel}} label="Rewrite"/>
+                <Tab value={1} classes={{root: this.props.classes.tab, label:this.props.classes.tablabel}} label="Study" />
+                <Tab value={2} classes={{root: this.props.classes.tab, label:this.props.classes.tablabel}} label="Compare" />
+                <Tab value={3} classes={{root: this.props.classes.tab, label:this.props.classes.tablabel}} label="Translate" />
               </Tabs>
-              <div className={this.props.classes.ltlInput}>
-                <TextField error={Boolean(this.state.formulaerr)} className={this.state.action === 2 ? this.props.classes.textField1 : this.props.classes.textField} fullWidth name="formula" label={this.state.action === 2 ? "First formula" : "Input formula"} autoFocus onChange={this.handleChangeFormula}/>
-                {this.state.formulalbt && <NoteText text={"Assuming a prefix syntax in the style of LBT/LTL2DSTAR, as the standard parser for infix syntaxes failed."}/>}
-                {this.state.formulaerr && <pre className={this.props.classes.parseerror}>{this.state.formulaerr}</pre>}
-              </div>
+              <LtlInput
+                classes={this.props.classes}
+                className={this.state.action === 2 ? this.props.classes.textField1 : this.props.classes.textField}
+                label={this.state.action === 2 ? "First formula" : "Input formula"}
+                autoFocus
+                setFormula={this.handleChangeFormula}
+                formulalbt={this.state.formulalbt}
+                formulaerr={this.state.formulaerr}
+                />
               {this.state.action === 0 && <LtlRewrite syntax={this.state.syntax}
                                                           hideoptions={this.state.hideoptions}
                                                               classes={this.props.classes}

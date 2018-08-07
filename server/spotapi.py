@@ -389,12 +389,24 @@ def translate(ltlformula, method='GET'):
         spot.highlight_nondet_edges(aut, 5)
         spot.highlight_nondet_states(aut, 5)
 
-    dotsrc = spot.ostringstream()
-    spot.print_dot(dotsrc, aut, opt)
-    automaton_svg = str_to_svg(dotsrc.str().encode('utf-8'))
-    res['automaton_svg'] = automaton_svg
+    dodot = True
+    if float(aut.num_edges())/aut.num_states() > 16:
+        res['note'] = "Automaton not displayed because it has too many edges per state."
+        dodot = False;
+    elif aut.num_states() > 30:
+        res['note'] = "Only the first 30 states of the automaton are displayed."
+
+    if dodot:
+        dotsrc = spot.ostringstream()
+        spot.print_dot(dotsrc, aut, opt + "<30")
+        automaton_svg = str_to_svg(dotsrc.str().encode('utf-8'))
+        res['automaton_svg'] = automaton_svg
 
     aut.set_name(str(f))
+
+    res['states'] = aut.num_states()
+    res['edges'] = aut.num_edges()
+    res['det'] = spot.is_deterministic(aut)
 
     res['automaton_hoa'] = aut.to_str('hoa')
 
