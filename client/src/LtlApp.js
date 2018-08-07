@@ -189,6 +189,8 @@ const styles = theme => ({
     },
     automaton_svg: {
         overflow: 'auto',
+        marginLeft: -4,
+        marginRight: -4,
     },
 });
 
@@ -782,8 +784,7 @@ class LtlTranslate extends React.Component {
             <React.Fragment>
               {'states' in res &&
                   <Typography>
-                        {res['det'] ? "D" : "Non-d"}eterministic automaton
-                        with {res['states']} states and {res['edges']} edges.
+                        {res['det'] ? "D" : "Non-d"}eterministic automaton with {res['states']} state{res['states'] > 1 ? "s" : ""} and {res['edges']} edge{res['edges'] > 1 ? "s" : ""}.
                   </Typography>}
               {'note' in res && <NoteText text={res['note']}/>}
               {'automaton_svg' in res &&

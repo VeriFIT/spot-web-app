@@ -12,7 +12,7 @@ import os
 app = Flask(__name__)
 CORS(app)
 
-os.environ['SPOT_DOTEXTRA'] = 'size="6.30,5" edge[arrowhead=vee, arrowsize=.7]'
+os.environ['SPOT_DOTEXTRA'] = 'size="6,6" edge[arrowhead=vee, arrowsize=.7]'
 
 import spot
 from spot.aux import str_to_svg
