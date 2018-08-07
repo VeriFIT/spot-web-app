@@ -61,7 +61,7 @@ const styles = theme => ({
         marginRight: 0,
     },
     pre: {
-        overflow: 'scroll',
+        overflow: 'auto',
         whiteSpace: 'pre-wrap',
         width: "100%",
     },
@@ -161,7 +161,7 @@ const styles = theme => ({
     results: {
         width: '100%',
         padding: theme.spacing.unit,
-        overflow: 'scroll',
+        overflow: 'auto',
     },
     hierarchy_svg: {
         float: 'right',
