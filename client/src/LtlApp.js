@@ -25,6 +25,7 @@ import Table from '@material-ui/core/Table';
 import TableRow from '@material-ui/core/TableRow';
 import Tabs from '@material-ui/core/Tabs';
 import TextField from '@material-ui/core/TextField';
+import Tooltip from '@material-ui/core/Tooltip';
 import Typography from '@material-ui/core/Typography';
 import { withStyles } from '@material-ui/core/styles';
 
@@ -239,7 +240,13 @@ function handleErrors(response) {
     return response.json();
 }
 
-
+function righthelp(contents, help) {
+  return (
+   <Tooltip title={help} placement="right" enterDelay={750}>
+     <div>{contents}</div>
+   </Tooltip>
+  );
+}
 
 class LtlInput extends React.Component {
     state = {
@@ -879,18 +886,18 @@ class LtlTranslate extends React.Component {
                   control={<Checkbox checked={this.props.transopts['complete']} color="primary"
                            onChange={this.props.handleChangeTransOpts('complete')}
                          />}
-                  label={'complete'} />
+                  label={righthelp('complete', "Make sure we can always move forward in the automaton, regardless of where we are and what letter we read.")} />
                 <FormControlLabel classes={{root: this.props.classes.fclvertical}}
                   control={<Checkbox checked={this.props.transopts['unambiguous']} color="primary"
                            onChange={this.props.handleChangeTransOpts('unambiguous')}
                          />}
-                  label={'unambiguous'} />
+                  label={righthelp('unambiguous', "Accepted words should have only one accepting run.  Rejecting words may be rejected by many runs.")} />
                 <FormControlLabel classes={{root: this.props.classes.fclvertical}}
                   control={<Checkbox checked={this.props.transopts['statebased']} color="primary"
                                          disabled={this.props.acc==='m' || this.props.acc==='b'}
                            onChange={this.props.handleChangeTransOpts('statebased')}
                          />}
-                  label={'force state-based acc.'} />
+                                      label={righthelp('force state-based acc.', "Automata with state-based acceptance are sometimes larger than those with transition-based acceptance, and never smaller.  By defaut we use state-based acceptance only when it is clear that transition-based acceptance has no benefit.")} />
               </FormControl>
               <FormControl component="fieldset" className={this.props.classes.borderedgroupprimary}>
                 <FormLabel component="legend">Display options</FormLabel>
@@ -898,7 +905,7 @@ class LtlTranslate extends React.Component {
                   control={<Checkbox checked={this.props.transopts['showscc']}  color="primary"
                            onChange={this.props.handleChangeTransOpts('showscc')}
                          />}
-                  label={'show SCCs'} />
+                  label={righthelp('show SCCs', "Strongly Connected Components will be highlighted in green (accepting), red (rejecting), black (transiant), and gray (rejecting and useless).")} />
                 <FormControlLabel classes={{root: this.props.classes.fclvertical}}
                   control={<Checkbox checked={this.props.transopts['showndet']}  color="primary"
                            onChange={this.props.handleChangeTransOpts('showndet')}
@@ -909,7 +916,7 @@ class LtlTranslate extends React.Component {
                                          onChange={this.props.handleChangeTransOpts('forcetacc')}
                                          disabled={this.props.acc==='m'}
                          />}
-                  label={'force transition-based acc.'} />
+                   label={righthelp('force transition-based acc.', "If an automaton with state-based acceptance has ben built, move the acceptance marks of each state to its outgoing transitions.  (This is actually how automata are stored in Spot.)")}/>
               </FormControl>
               {this.props.acc === 'p' &&
               <FormControl component="fieldset" className={this.props.classes.borderedgroupprimary}>
@@ -918,7 +925,7 @@ class LtlTranslate extends React.Component {
                   control={<Checkbox checked={this.props.transopts['colored']}  color="primary"
                            onChange={this.props.handleChangeTransOpts('colored')}
                          />}
-                  label={'colored'} />
+                      label={righthelp('colored', 'Force each transition (or state if state-based acceptance is used) to belong to exactly one acceptance set.  Without this option some transitions may not belong to any set.')} />
                 <RadioGroup
                   aria-label="min or max"
                   name="minmax"
@@ -994,6 +1001,8 @@ class LtlCompare extends React.Component {
     }
 
     buildResult(res) {
+        if (!('txt' in res && 'svg' in res))
+            return null;
         return (
             <React.Fragment>
               {'txt' in res && <Typography>{res['txt']}</Typography>}
