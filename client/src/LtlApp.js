@@ -33,6 +33,7 @@ const styles = theme => ({
     toplevel: {
         display: 'flex',
         flexWrap: 'wrap',
+        alignItems: 'flex-start',
         [theme.breakpoints.up('sm')]: {
             justifyContent: 'center',
         }
