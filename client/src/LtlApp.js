@@ -621,7 +621,10 @@ class LtlRewrite extends React.Component {
                     this.setState({ result: <SVGInline svg={res['svg']}/> });
                 else
                     this.setState({ result: null});
-            }).catch(error => this.setState({ result: <pre>{error.message}</pre> }));
+            }).catch(error => {
+                clearTimeout(this.timer);
+                this.setState({ result: <pre>{error.message}</pre> });
+            });
     }
 
     componentDidMount() {
@@ -770,7 +773,10 @@ class LtlStudy extends React.Component {
             res => {
                 this.props.handleAnyParseError(res);
                 this.setState({ result: this.buildResult(res) });
-            }).catch(error => this.setState({ result: <pre>{error.message}</pre> }));
+            }).catch(error => {
+                clearTimeout(this.timer);
+                this.setState({ result: <pre>{error.message}</pre> });
+            });
     }
 
     componentDidMount() {
@@ -872,7 +878,10 @@ class LtlTranslate extends React.Component {
             res => {
                 this.props.handleAnyParseError(res);
                 this.setState({ result: this.buildResult(res) });
-            }).catch(error => this.setState({ result: () => <pre>{error.message}</pre> }));
+            }).catch(error => {
+                clearTimeout(this.timer);
+                this.setState({ result: () => <pre>{error.message}</pre> });
+            });
     }
 
     componentDidMount() {
@@ -1100,8 +1109,10 @@ class LtlCompare extends React.Component {
             res => {
                 this.handleAnyParseError(res);
                 this.setState({ result: this.buildResult(res) });
-            }).catch(error => this.setState({ result: <pre>{error.message}</pre> }));
-
+            }).catch(error => {
+                clearTimeout(this.timer);
+                this.setState({ result: <pre>{error.message}</pre> });
+            });
     }
 
     componentDidMount() {
