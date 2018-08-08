@@ -2,6 +2,7 @@ import React from 'react';
 import 'typeface-roboto'
 import Button from '@material-ui/core/Button';
 import Checkbox from '@material-ui/core/Checkbox';
+import CircularProgress from '@material-ui/core/CircularProgress';
 import FormControl from '@material-ui/core/FormControl';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import FormLabel from '@material-ui/core/FormLabel';
@@ -46,6 +47,10 @@ const styles = theme => ({
             marginLeft: 0,
             marginRight: 0,
         },
+    },
+    progress: {
+        display: 'block',
+        margin: 'auto',
     },
     optionstrans: {
         display: 'flex',
@@ -239,6 +244,15 @@ function handleErrors(response) {
         throw Error(response.status + ' ' + response.statusText);
     }
     return response.json();
+}
+function handleErrorsAndClearTimer(timer) {
+    return (response) => {
+        clearTimeout(timer);
+        if (!response.ok) {
+            throw Error(response.status + ' ' + response.statusText);
+        }
+        return response.json();
+    }
 }
 
 function righthelp(contents, help) {
@@ -564,9 +578,14 @@ class LtlResult extends React.Component {
 }
 
 class LtlRewrite extends React.Component {
+    timer = null;
 
     state = {
         result: null,
+    }
+
+    componentWillUnmount() {
+        clearTimeout(this.timer);
     }
 
     updateResult() {
@@ -590,7 +609,10 @@ class LtlRewrite extends React.Component {
         if (unabbrev !== "")
             url.searchParams.append("u", unabbrev);
 
-        fetch(url).then(handleErrors).then(
+        this.timer = setTimeout(() => {
+            this.setState({ result: () => <CircularProgress className={this.props.classes.progress} />})
+        }, 800);
+        fetch(url).then(handleErrorsAndClearTimer(this.timer)).then(
             res => {
                 this.props.handleAnyParseError(res);
                 if ('formula' in res)
@@ -650,8 +672,15 @@ class LtlRewrite extends React.Component {
 
 class LtlStudy extends React.Component {
 
+    timer = null;
+
     state = {
         result: null,
+    }
+
+
+    componentWillUnmount() {
+        clearTimeout(this.timer);
     }
 
     buildResult(res) {
@@ -734,7 +763,10 @@ class LtlStudy extends React.Component {
         }
         let url = new URL(api_endpoint() + 'study/' + this.props.formula);
 
-        fetch(url).then(handleErrors).then(
+        this.timer = setTimeout(() => {
+            this.setState({ result: () => <CircularProgress className={this.props.classes.progress} />})
+        }, 800);
+        fetch(url).then(handleErrorsAndClearTimer(this.timer)).then(
             res => {
                 this.props.handleAnyParseError(res);
                 this.setState({ result: this.buildResult(res) });
@@ -765,10 +797,15 @@ class LtlStudy extends React.Component {
 
 
 class LtlTranslate extends React.Component {
+    timer = null;
 
     state = {
         result: null,
         showfile: 0,
+    }
+
+    componentWillUnmount() {
+        clearTimeout(this.timer);
     }
 
     showfilehoa = () => {
@@ -828,7 +865,10 @@ class LtlTranslate extends React.Component {
                 if (value) url.searchParams.append("o", key);
             });
 
-        fetch(url).then(handleErrors).then(
+        this.timer = setTimeout(() => {
+            this.setState({ result: () => <CircularProgress className={this.props.classes.progress} />})
+        }, 800);
+        fetch(url).then(handleErrorsAndClearTimer(this.timer)).then(
             res => {
                 this.props.handleAnyParseError(res);
                 this.setState({ result: this.buildResult(res) });
@@ -979,11 +1019,17 @@ class LtlTranslate extends React.Component {
 
 class LtlCompare extends React.Component {
 
+    timer = null;
+
     state = {
         formula2err: null,
         formula2lbt: false,
         result: null,
     };
+
+    componentWillUnmount() {
+        clearTimeout(this.timer);
+    }
 
     setFormulaError2 = (val) => {
         this.setState({ formula2err: val });
@@ -1047,7 +1093,10 @@ class LtlCompare extends React.Component {
         let url = new URL(api_endpoint() + 'compare/' + this.props.formula);
         url.searchParams.append("g", this.props.formula2);
 
-        fetch(url).then(handleErrors).then(
+        this.timer = setTimeout(() => {
+            this.setState({ result: () => <CircularProgress className={this.props.classes.progress} />})
+        }, 800);
+        fetch(url).then(handleErrorsAndClearTimer(this.timer)).then(
             res => {
                 this.handleAnyParseError(res);
                 this.setState({ result: this.buildResult(res) });
