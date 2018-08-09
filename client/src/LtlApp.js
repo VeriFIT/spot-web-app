@@ -8,6 +8,7 @@ import FormControlLabel from "@material-ui/core/FormControlLabel";
 import FormLabel from "@material-ui/core/FormLabel";
 import FormHelperText from "@material-ui/core/FormHelperText";
 import IconButton from "@material-ui/core/IconButton";
+import InputAdornment from "@material-ui/core/InputAdornment";
 import List from "@material-ui/core/List";
 import ListItem from "@material-ui/core/ListItem";
 import ListItemText from "@material-ui/core/ListItemText";
@@ -196,6 +197,14 @@ const styles = theme => ({
   }
 });
 
+function DiceIcon(props) {
+  return (
+    <SvgIcon {...props}>
+      <path d="M5,3H19A2,2 0 0,1 21,5V19A2,2 0 0,1 19,21H5A2,2 0 0,1 3,19V5A2,2 0 0,1 5,3M7,5A2,2 0 0,0 5,7A2,2 0 0,0 7,9A2,2 0 0,0 9,7A2,2 0 0,0 7,5M17,15A2,2 0 0,0 15,17A2,2 0 0,0 17,19A2,2 0 0,0 19,17A2,2 0 0,0 17,15M17,5A2,2 0 0,0 15,7A2,2 0 0,0 17,9A2,2 0 0,0 19,7A2,2 0 0,0 17,5M12,10A2,2 0 0,0 10,12A2,2 0 0,0 12,14A2,2 0 0,0 14,12A2,2 0 0,0 12,10M7,15A2,2 0 0,0 5,17A2,2 0 0,0 7,19A2,2 0 0,0 9,17A2,2 0 0,0 7,15Z" />
+    </SvgIcon>
+  );
+}
+
 function NoteIcon(props) {
   return (
     <SvgIcon {...props}>
@@ -309,6 +318,20 @@ class LtlInput extends React.Component {
     if (e.key === "Enter") this.updateFormula();
   };
 
+  randomizeFormula = () => {
+    let url = new URL(api_endpoint() + "random");
+    console.log(this.props.expert);
+    if (this.props.expert)
+      // turn on PSL generation
+      url.searchParams.append("p", 1);
+    fetch(url)
+      .then(handleErrors)
+      .then(fmt => {
+        this.setState({ tmpformula: fmt, formula: fmt });
+        this.props.setFormula(fmt);
+      });
+  };
+
   render() {
     return (
       <div className={this.props.classes.ltlInput}>
@@ -316,12 +339,28 @@ class LtlInput extends React.Component {
           error={Boolean(this.props.formulaerr)}
           className={this.props.className}
           fullWidth
-          defaultValue={this.props.defaultValue}
+          value={this.state.tmpformula}
           label={this.props.label}
           autoFocus={this.props.autoFocus}
           onChange={this.handleChange}
           onKeyPress={this.handleKey}
           onBlur={this.updateFormula}
+          InputProps={{
+            endAdornment: (
+              <Tooltip
+                disableFocusListener={true}
+                title="Overwrite input with a random formula."
+                placement="right"
+                enterDelay={750}
+              >
+                <InputAdornment position="end">
+                  <IconButton onClick={this.randomizeFormula}>
+                    <DiceIcon color="primary" />
+                  </IconButton>
+                </InputAdornment>
+              </Tooltip>
+            )
+          }}
         />
         <FormHelperText className={this.props.classes.helperText}>
           {this.state.tmpformula !== this.state.formula && (
@@ -686,6 +725,8 @@ class LtlRewrite extends React.Component {
           this.setState({ result: <Typography>{res["formula"]}</Typography> });
         else if ("svg" in res)
           this.setState({ result: <SVGInline svg={res["svg"]} /> });
+        else if ("error" in res)
+          this.setState({ result: <Typography>{res["error"]}</Typography> });
         else this.setState({ result: null });
       })
       .catch(error => {
@@ -1448,6 +1489,7 @@ class LtlCompare extends React.Component {
           classes={this.props.classes}
           className={this.props.classes.textField2}
           label="Second formula"
+          expert={this.props.expert}
           defaultValue={this.props.formula2}
           setFormula={this.props.handleChangeFormula2}
           formulalbt={this.state.formula2lbt}
@@ -1650,6 +1692,7 @@ class LtlApp extends React.Component {
               : this.props.classes.textField
           }
           label={this.state.action === 2 ? "First formula" : "Input formula"}
+          expert={this.state.expert}
           autoFocus
           setFormula={this.handleChangeFormula}
           formulalbt={this.state.formulalbt}
@@ -1689,6 +1732,7 @@ class LtlApp extends React.Component {
             formula2={this.state.formula2}
             handleChangeFormula2={this.handleChangeFormula2}
             handleAnyParseError={this.handleAnyParseError}
+            expert={this.props.expert}
           />
         )}
         {this.state.action === 3 && (

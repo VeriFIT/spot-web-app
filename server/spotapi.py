@@ -8,6 +8,7 @@ from platform import python_version
 import subprocess
 import re
 import os
+from time import time
 
 app = Flask(__name__)
 CORS(app)
@@ -16,6 +17,19 @@ os.environ['SPOT_DOTEXTRA'] = 'size="6,6" edge[arrowhead=vee, arrowsize=.7]'
 
 import spot
 from spot.aux import str_to_svg
+from functools import wraps
+
+def cachecontrol(max_age=3600):
+    def decorate_f(f):
+        @wraps(f)
+        def wrapped_f(*args, **kwargs):
+            response = f(*args, **kwargs)
+            if ((type(response) is Flask.response_class) and
+                    (response.status_code == 200)):
+                response.cache_control.max_age = max_age
+            return response
+        return wrapped_f
+    return decorate_f
 
 def parse_ltl(input, res, errkey='parse_error', synkey='prefix_syntax'):
     env = spot.default_environment.instance()
@@ -39,6 +53,7 @@ def parse_ltl(input, res, errkey='parse_error', synkey='prefix_syntax'):
 
 # Return a Json list of triplets [[tool,version,url],...].
 @app.route('/api/versions')
+@cachecontrol()
 def versions():
     dot = subprocess.Popen(['dot', '-V'],
                            stdout=subprocess.PIPE,
@@ -55,6 +70,21 @@ def versions():
         ("Flask", flask_version, "http://flask.pocoo.org/"),
         ("GraphViz", dot_version, "https://graphviz.gitlab.io/"),
         ])
+
+
+@app.route('/api/random')
+# no cache control for this one!
+def random(method='GET'):
+    p = request.args.get('p', None)
+    gen = spot.randltl(3, tree_size=(5,25),
+                       output=('psl' if p else 'ltl'),
+                       seed=int(time()))
+    # Try 10 time to avoid true or false
+    for i in range(1, 10):
+        f = next(gen)
+        if not (f.is_tt() or f.is_ff()):
+            break;
+    return jsonify(str(f))
 
 # Rewrite a formula.
 #
@@ -80,6 +110,7 @@ def versions():
 #   on success: { formula: "text" } or { svg: "text" }
 #   on syntax error: { parse_error: "text" }
 @app.route('/api/rewrite/<path:ltlformula>')
+@cachecontrol()
 def rewrite(ltlformula, method='GET'):
 
     res = {}
@@ -128,6 +159,10 @@ def rewrite(ltlformula, method='GET'):
         s = dotsrc.str().encode('utf-8')
         return jsonify({'svg': str_to_svg(s)})
 
+    if not f.is_ltl_formula() and syntax in "li":
+        res['error'] = "The selected syntax only supports LTL formulas."
+        return jsonify(res)
+
     s = None
     if syntax == 'l':
         s = spot.str_lbt_ltl(f)
@@ -163,6 +198,7 @@ mp_class_to_english = {
 #   stutter_invariant: False   (or True, or 'no X')
 # }
 @app.route('/api/study/<path:ltlformula>')
+@cachecontrol()
 def study(ltlformula, method='GET'):
     result = {}
 
@@ -276,6 +312,7 @@ def study(ltlformula, method='GET'):
 #   note: {'text'}              (optional)
 # }
 @app.route('/api/translate/<path:ltlformula>')
+@cachecontrol()
 def translate(ltlformula, method='GET'):
 
     res = {}
@@ -514,6 +551,7 @@ def svg_compare(w1, w2, w3, w4):
     return svg_compare_list[idx]
 
 @app.route('/api/compare/<path:ltlformula>')
+@cachecontrol()
 def compare(ltlformula, method='GET'):
     result = {}
 
@@ -553,25 +591,7 @@ def compare(ltlformula, method='GET'):
     return jsonify(result)
 
 
-
-
-@app.after_request
-def add_header(response):
-    if response.status_code == 200:
-        response.cache_control.max_age = 3600
-    return response
-
 if __name__ == '__main__':
     app.run(debug=True, use_reloader=True, use_debugger=False)
 
-    # import os
-# import sys
-#
-# # 3600s = 1h
-# sys.stdout.write("""Cache-Control: max-age=3600
-# Content-Type: application/json
-#
-# """)
-#
-# from http.server import CGIHTTPRequestHandler, HTTPServer
 
