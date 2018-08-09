@@ -656,7 +656,9 @@ class LtlRewrite extends React.Component {
       this.setState({ result: "" });
       return;
     }
-    let url = new URL(api_endpoint() + "rewrite/" + this.props.formula);
+    let url = new URL(
+      api_endpoint() + "rewrite/" + encodeURIComponent(this.props.formula)
+    );
     if (this.props.simplify)
       Object.entries(this.props.ltlsimp).forEach(([key, value]) => {
         if (value) url.searchParams.append("r", key);
@@ -866,7 +868,9 @@ class LtlStudy extends React.Component {
       this.setState({ result: "" });
       return;
     }
-    let url = new URL(api_endpoint() + "study/" + this.props.formula);
+    let url = new URL(
+      api_endpoint() + "study/" + encodeURIComponent(this.props.formula)
+    );
 
     this.timer = setTimeout(() => {
       this.setState({
@@ -984,7 +988,9 @@ class LtlTranslate extends React.Component {
       this.setState({ result: "" });
       return;
     }
-    let url = new URL(api_endpoint() + "translate/" + this.props.formula);
+    let url = new URL(
+      api_endpoint() + "translate/" + encodeURIComponent(this.props.formula)
+    );
 
     url.searchParams.append("a", this.props.acc);
     url.searchParams.append("p", this.props.autpref);
@@ -1398,7 +1404,9 @@ class LtlCompare extends React.Component {
       this.setState({ result: "" });
       return;
     }
-    let url = new URL(api_endpoint() + "compare/" + this.props.formula);
+    let url = new URL(
+      api_endpoint() + "compare/" + encodeURIComponent(this.props.formula)
+    );
     url.searchParams.append("g", this.props.formula2);
 
     this.timer = setTimeout(() => {
