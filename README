@@ -7,6 +7,10 @@ It's made of
 - a client-side web application written using ReactJS,
   and calling that API.
 
+
+Development
+-----------
+
 To start developping, first launch a server on localhost:5000 with
 
   % server/spotapi.py
@@ -18,3 +22,17 @@ then launch a client with
 
 Now any save to spotapi.py or client/src/LtlApp.js will cause these
 components to reload automatically.
+
+
+Licenses
+--------
+
+Client and servers are GPLv3 (see COPYING) as they build upon Spot, which is GPLv3.
+
+Third-package used and their licenses:
+  flask: BSD
+  flask-CORR: MIT
+  ReactJS: MIT
+  Material-ui: MIT
+  nodejs: MIT
+  Spot: GPLv3
