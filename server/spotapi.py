@@ -13,7 +13,10 @@ from time import time
 app = Flask(__name__)
 CORS(app)
 
-os.environ['SPOT_DOTEXTRA'] = 'size="6,6" edge[arrowhead=vee, arrowsize=.7]'
+# We want 600px-wide SVG automata.  Dot renders using 100ppi, so we ask for a
+# 6in-wide picture.  The vertical size is less of an issue, so let's limit it
+# to twice that.
+os.environ['SPOT_DOTEXTRA'] = 'size="6,12" edge[arrowhead=vee, arrowsize=.7]'
 
 import spot
 from spot.aux import str_to_svg
@@ -352,7 +355,6 @@ def translate(ltlformula, method='GET'):
                 acc += ' ' + minmax
             if oddeven != 'any':
                 acc += ' ' + oddeven
-            print(acc)
             args.append(acc)
 
     arg_l = request.args.get('l', 'h')
@@ -438,6 +440,19 @@ def translate(ltlformula, method='GET'):
         spot.print_dot(dotsrc, aut, opt + "<30")
         automaton_svg = str_to_svg(dotsrc.str().encode('utf-8'))
         res['automaton_svg'] = automaton_svg
+        # Check if the automaton was scaled down.
+        m = re.search('transform="scale\(([.\d]+) ', automaton_svg)
+        if m:
+            scale = float(m.group(1))
+            print(scale)
+            if scale <= .9:
+                # Re-render vertically and see if the scale is better
+                dotsrc = spot.ostringstream()
+                spot.print_dot(dotsrc, aut, opt + "v<30")
+                automaton_svg = str_to_svg(dotsrc.str().encode('utf-8'))
+                m = re.search('transform="scale\(([.\d]+) ', automaton_svg)
+                if m and scale < float(m.group(1)):
+                    res['automaton_svg'] = automaton_svg
 
     aut.set_name(str(f))
 
