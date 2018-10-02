@@ -70,6 +70,12 @@ def parse_ltl(input, res, errkey='parse_error', synkey='prefix_syntax'):
         return None
     return spot.formula(str(f))
 
+def warn(res, msg):
+    if 'note' in res:
+        res['note'].append(msg)
+    else:
+        res['note'] = [msg]
+
 # Return a Json list of triplets [[tool,version,url],...].
 @app.route('/api/versions')
 @cachecontrol()
@@ -328,7 +334,7 @@ def study(ltlformula, method='GET'):
 # on syntax error: { parse_error: "text" }
 # on success:
 # { automaton_svg: '<svg...'
-#   note: {'text'}              (optional)
+#   note: ['text1','text2',...]             (optional)
 # }
 @app.route('/api/translate/<path:ltlformula>')
 @cachecontrol()
@@ -397,15 +403,15 @@ def translate(ltlformula, method='GET'):
     aut = spot.translate(f, *args)
 
     if arg_a == 'c' and not f.is_syntactic_persistence():
-        res['note'] = ("Co-Büchi automata can only represent persistence"
-                       " properties.  If your formula does not belong to this"
-                       " class, the automaton below will accept a superset of"
-                       " the intended language.")
+        warn(res, ("Co-Büchi automata can only represent persistence"
+                   " properties.  If your formula does not belong to this"
+                   " class, the automaton below will accept a superset of"
+                   " the intended language."))
     if arg_a == 'm' and not f.is_syntactic_safety():
-        res['note'] = ("Monitors can only represent safety properties.  "
-                       "If your formula does not belong to this class, "
-                       "the automaton below will accept a superset of "
-                       "the intended language.")
+        warn(res, ("Monitors can only represent safety properties.  "
+                   "If your formula does not belong to this class, "
+                   "the automaton below will accept a superset of "
+                   "the intended language."))
     if arg_a == 'p':
         accname = aut.acc().name()
         if not accname.startswith('parity'):
@@ -422,11 +428,11 @@ def translate(ltlformula, method='GET'):
                     msg += " and to 'parity {} {} 1'".format(
                         "min" if ipm else "max",
                         "odd" if ipo else "even")
-                res['note'] = msg + '.'
+                warn(res, msg + '.')
 
     opt = "arf(Lato)C(#ffffaa)"
     opt += 'B' if arg_a in ('b', 'm', 'c') else 'b'
-    if arg_a == 'm':
+    if arg_a == 'm' and aut.acc().is_t():
         opt += 'A'
 
     match_arg_display_opts = {
@@ -446,10 +452,10 @@ def translate(ltlformula, method='GET'):
 
     dodot = True
     if float(aut.num_edges())/aut.num_states() > 16:
-        res['note'] = "Automaton not displayed because it has too many edges per state."
+        warn(res, "Automaton not displayed because it has too many edges per state.")
         dodot = False;
     elif aut.num_states() > 30:
-        res['note'] = "Only the first 30 states of the automaton are displayed."
+        warn(res, "Only the first 30 states of the automaton are displayed.")
 
     if dodot:
         dotsrc = spot.ostringstream()

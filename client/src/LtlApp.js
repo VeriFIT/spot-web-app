@@ -1010,7 +1010,7 @@ class LtlTranslate extends React.Component {
               {res["edges"] > 1 ? "s" : ""}.
             </Typography>
           )}
-          {"note" in res && <NoteText text={res["note"]} />}
+          {"note" in res && res["note"].map((note) => <NoteText text={note} />)}
           {"automaton_svg" in res && (
             <SVGInline
               className={this.props.classes.automaton_svg}
