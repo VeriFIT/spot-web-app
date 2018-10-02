@@ -412,6 +412,9 @@ def translate(ltlformula, method='GET'):
                    "If your formula does not belong to this class, "
                    "the automaton below will accept a superset of "
                    "the intended language."))
+    if arg_a == 'm' and aut.acc().is_buchi() and "complete" in args:
+        warn(res, "To complete the monitor, "
+             "it has been converted to a Büchi automaton.")
     if arg_a == 'p':
         accname = aut.acc().name()
         if not accname.startswith('parity'):
