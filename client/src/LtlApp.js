@@ -140,15 +140,16 @@ const styles = theme => ({
       color: theme.palette.common.white
     }
   },
-  unabbrevbox: {
-    height: "auto",
-    width: "auto",
-    paddingLeft: "5px"
+  unabbrevboxroot: {
+    marginRight: "10px",
+  },
+  unabbrevboxlabel: {
+      marginLeft: "-10px",
   },
   unabbrevlabel: {
     ...theme.typography.body1,
-    paddingLeft: "10px",
-    paddingRight: "15px"
+    paddingLeft: "8px",
+    paddingRight: "10px"
   },
   parseerror: {
     color: theme.palette.error.main
@@ -602,9 +603,10 @@ class LtlUnabbrevOptions extends React.Component {
             disabled={syntaxId === 1 && "MW^".indexOf(key) >= 0}
             onChange={this.props.handleChangeLtlUnabbrev(key)}
             color="primary"
-            className={this.props.classes.unabbrevbox}
           />
         }
+        classes={{root: this.props.classes.unabbrevboxroot,
+                  label: this.props.classes.unabbrevboxlabel}}
         label={<code>{values[1][syntaxId]}</code>}
       />
     );
