@@ -173,7 +173,8 @@ const styles = theme => ({
   },
   menu: {},
   versions: {
-    float: "right"
+      float: "right",
+      marginTop: "8px"
   },
   vendiag: {
     float: "right"
