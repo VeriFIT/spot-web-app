@@ -140,16 +140,17 @@ const styles = theme => ({
       color: theme.palette.common.white
     }
   },
+  unabbrev: {
+    flexDirection: "row",
+    flexWrap: "wrap"
+  },
   unabbrevboxroot: {
-    marginRight: "10px",
+    marginRight: "16px",
+    marginBottom: "-8px",
+    marginTop: "-8px"
   },
   unabbrevboxlabel: {
-      marginLeft: "-10px",
-  },
-  unabbrevlabel: {
-    ...theme.typography.body1,
-    paddingLeft: "8px",
-    paddingRight: "10px"
+    marginLeft: "-8px"
   },
   parseerror: {
     color: theme.palette.error.main
@@ -174,8 +175,8 @@ const styles = theme => ({
   },
   menu: {},
   versions: {
-      float: "right",
-      marginTop: "8px"
+    float: "right",
+    marginTop: "8px"
   },
   vendiag: {
     float: "right"
@@ -581,12 +582,14 @@ class LtlSimplificationOptions extends React.Component {
 }
 
 class LtlUnabbrevOptions extends React.Component {
-  options = {
+  options1 = {
     F: ["F", "<>", "F"],
     G: ["G", "[]", "G"],
     R: ["R", "V", "R"],
     M: ["M", "M", "M"],
-    W: ["W", "W", "W"],
+    W: ["W", "W", "W"]
+  };
+  options2 = {
     i: ["->", "->", "i"],
     e: ["<->", "<->", "e"],
     "^": ["xor", "xor", "^"]
@@ -605,20 +608,32 @@ class LtlUnabbrevOptions extends React.Component {
             color="primary"
           />
         }
-        classes={{root: this.props.classes.unabbrevboxroot,
-                  label: this.props.classes.unabbrevboxlabel}}
+        classes={{
+          root: this.props.classes.unabbrevboxroot,
+          label: this.props.classes.unabbrevboxlabel
+        }}
         label={<code>{values[1][syntaxId]}</code>}
       />
     );
   };
   render() {
     return (
-      <span>
-        <FormLabel className={this.props.classes.unabbrevlabel}>
-          Unabbreviate
+      <FormControl
+        component="fieldset"
+        className={[
+          this.props.classes.borderedgroupprimary,
+          this.props.classes.unabbrev
+        ]}
+      >
+        <FormLabel component="legend">
+          {righthelp(
+            "Unabbreviate",
+            "Remove occurrances of selected operators by rewriting them using other operators."
+          )}
         </FormLabel>
-        {Object.entries(this.options).map(this.form)}
-      </span>
+        <span>{Object.entries(this.options1).map(this.form)}</span>
+        <span>{Object.entries(this.options2).map(this.form)}</span>
+      </FormControl>
     );
   }
 }
@@ -1013,7 +1028,7 @@ class LtlTranslate extends React.Component {
               {res["edges"] > 1 ? "s" : ""}.
             </Typography>
           )}
-          {"note" in res && res["note"].map((note) => <NoteText text={note} />)}
+          {"note" in res && res["note"].map(note => <NoteText text={note} />)}
           {"automaton_svg" in res && (
             <SVGInline
               className={this.props.classes.automaton_svg}
