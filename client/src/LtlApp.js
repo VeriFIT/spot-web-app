@@ -1476,7 +1476,7 @@ class LtlCompare extends React.Component {
   }
 
   updateResult() {
-    if (this.props.formula === "" || this.state.formula2 === "") {
+    if (this.props.formula === "" || this.props.formula2 === "") {
       this.setState({ result: "" });
       return;
     }
