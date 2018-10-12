@@ -502,7 +502,7 @@ svg_compare_list = [
        <text text-anchor="middle" x="50" y="53">w₄</text>
        <text text-anchor="middle" x="150" y="53">w₂</text>
        <text text-anchor="middle" x="100" y="53">w₁</text>
-       <text text-anchor="middle" x="100" y="100">w₃</text>
+       <text text-anchor="middle" x="100" y="99">w₃</text>
     </svg>""", "The two formulas are incomparable."),
     ("""<svg width="200px" height="100px" viewBox="0 0 200 100">
        <ellipse cx="100" cy="50" rx="90" ry="40" style='fill:cyan;opacity:0.3' />
