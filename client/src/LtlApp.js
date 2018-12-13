@@ -197,6 +197,9 @@ const styles = theme => ({
     paddingBottom: 10
   },
   stutterdiv: {},
+  livenessdiv: {
+    paddingBottom: 10
+  },
   wordtable: {
     width: "auto"
   },
@@ -862,6 +865,34 @@ class LtlStudy extends React.Component {
               Note that this is a <b>pathological formula</b> that would not be
               classified as precisely using only syntactic means. This usually
               means that a simpler equivalent formula exists.
+            </Typography>
+          )}
+        </div>
+        <div className={this.props.classes.livenessdiv}>
+          <Typography variant="body2" color="primary">
+            Safety-Liveness classification
+          </Typography>
+          {res["safety_liveness"] === "safety" && (
+            <Typography>
+              This formula represents <b>a safety property</b>.
+            </Typography>
+          )}
+          {res["safety_liveness"] === "liveness" && (
+            <Typography>
+              This formula represents <b>a liveness property</b>.
+            </Typography>
+          )}
+          {res["safety_liveness"] === "both" && (
+            <Typography>
+              This formula represents both <b>a safety and a
+              liveness property</b>.
+            </Typography>
+          )}
+          {res["safety_liveness"] === "none" && (
+            <Typography>
+              This formula is neither a safety nor a
+              liveness property.  However it necessarily is the
+              {' '}<b>intersection</b> of a liveness and a safety property.
             </Typography>
           )}
         </div>

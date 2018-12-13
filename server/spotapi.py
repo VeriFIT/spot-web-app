@@ -220,7 +220,8 @@ mp_class_to_english = {
 #   mp_hierarchy_svg: '<svg...'
 #   acc_word: 'word',     (an example of accepting word, or null)
 #   rej_word: 'word',     (an example of rejecting word, or null)
-#   stutter_invariant: False   (or True, or 'no X')
+#   stutter_invariant: False,   (or True, or 'no X')
+#   safety_liveness: 'safety'  (or 'liveness', or 'both', or 'none')
 # }
 @app.route('/api/study/<path:ltlformula>')
 @cachecontrol()
@@ -293,6 +294,17 @@ def study(ltlformula, method='GET'):
             result['rej_word'] = str(rej_word);
         else:
             result['rej_word'] = None;
+
+    if spot.is_liveness_automaton(pos):
+        if mp_class in ('S', 'B'):
+            result['safety_liveness'] = 'both'
+        else:
+            result['safety_liveness'] = 'liveness'
+    else:
+        if mp_class in ('S', 'B'):
+            result['safety_liveness'] = 'safety'
+        else:
+            result['safety_liveness'] = 'none'
 
     return jsonify(result)
 
