@@ -1,5 +1,5 @@
 /* -*- coding: utf-8 -*-
-** Copyright (C) 2018 Laboratoire de Recherche et Développement de
+** Copyright (C) 2018, 2019 Laboratoire de Recherche et Développement de
 ** l'Epita.
 **
 ** This application is free software; you can redistribute it and/or
@@ -20,10 +20,15 @@ import "typeface-roboto";
 import Button from "@material-ui/core/Button";
 import Checkbox from "@material-ui/core/Checkbox";
 import CircularProgress from "@material-ui/core/CircularProgress";
+import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
+import ExpansionPanel from "@material-ui/core/ExpansionPanel";
+import ExpansionPanelSummary from "@material-ui/core/ExpansionPanelSummary";
+import ExpansionPanelDetails from "@material-ui/core/ExpansionPanelDetails";
 import FormControl from "@material-ui/core/FormControl";
 import FormControlLabel from "@material-ui/core/FormControlLabel";
 import FormLabel from "@material-ui/core/FormLabel";
 import FormHelperText from "@material-ui/core/FormHelperText";
+import HelpIcon from "@material-ui/icons/Help";
 import IconButton from "@material-ui/core/IconButton";
 import InputAdornment from "@material-ui/core/InputAdornment";
 import List from "@material-ui/core/List";
@@ -56,6 +61,23 @@ const styles = theme => ({
     [theme.breakpoints.up("sm")]: {
       justifyContent: "center"
     }
+  },
+  clearfix: {
+    "&::after": {
+      clear: "both",
+      content: "",
+      display: "box"
+    }
+  },
+  help: {
+    margin: theme.spacing.unit,
+    padding: theme.spacing.unit,
+    width: 640 - 2 * theme.spacing.unit,
+    [theme.breakpoints.down("sm")]: {
+      marginLeft: 0,
+      marginRight: 0
+    },
+    "& h2": { color: theme.palette.primary.main }
   },
   root: {
     margin: theme.spacing.unit,
@@ -171,6 +193,12 @@ const styles = theme => ({
     float: "right"
   },
   winicons: {
+    float: "right"
+  },
+  helpiconsdiv: {
+    overflow: "auto"
+  },
+  helpicons: {
     float: "right"
   },
   menu: {},
@@ -884,15 +912,15 @@ class LtlStudy extends React.Component {
           )}
           {res["safety_liveness"] === "both" && (
             <Typography>
-              This formula represents both <b>a safety and a
-              liveness property</b>.
+              This formula represents both{" "}
+              <b>a safety and a liveness property</b>.
             </Typography>
           )}
           {res["safety_liveness"] === "none" && (
             <Typography>
-              This formula is neither a safety nor a
-              liveness property.  However it necessarily is the
-              {' '}<b>intersection</b> of a liveness and a safety property.
+              This formula is neither a safety nor a liveness property. However
+              it necessarily is the <b>intersection</b> of a liveness and a
+              safety property.
             </Typography>
           )}
         </div>
@@ -1830,13 +1858,468 @@ class LtlApp extends React.Component {
   }
 }
 
+function Ltl(props) {
+  return (
+    <code>
+      <b>{props.f}</b>
+    </code>
+  );
+}
+
+class Help extends React.Component {
+  render() {
+    return (
+      <Paper className={this.props.classes.help}>
+        <div className={this.props.classes.helpiconsdiv}>
+          <IconButton
+            className={this.props.classes.helpicons}
+            color="primary"
+            onClick={this.props.onClose}
+            aria-label="close"
+          >
+            <CloseIcon />
+          </IconButton>
+          <Typography
+            variant="headline"
+            color="primary"
+            align="center"
+            gutterBottom
+          >
+            Help
+          </Typography>
+        </div>
+
+        <ExpansionPanel>
+          <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography variant="title">About</Typography>
+          </ExpansionPanelSummary>
+          <ExpansionPanelDetails>
+            <Typography>
+              <Typography variant="body1" gutterBottom>
+                This web application is built using the services of{" "}
+                <a href="https://spot.lrde.epita.fr/">Spot</a> running on a
+                shared computer. For serious uses, you can answer similar
+                questions using the{" "}
+                <a href="https://spot.lrde.epita.fr/tools.html">
+                  command-line tools
+                </a>
+                , or by{" "}
+                <a href="https://spot.lrde.epita.fr/tut.html">
+                  writing some C++ or Python code
+                </a>
+                .
+              </Typography>
+              <Typography variant="body1" gutterBottom>
+                The source code for this application can be found{" "}
+                <a href="https://gitlab.lrde.epita.fr/spot/spot-web-app/">
+                  on our gitlab
+                </a>
+                , and is distributed under the{" "}
+                <a href="https://www.gnu.org/licenses/gpl-3.0.en.html">
+                  GNU GPL v3
+                </a>{" "}
+                license.
+              </Typography>
+              <Typography variant="body1" gutterBottom>
+                For any question not answered in this small help text, or for
+                reporting any bug, please send an email to{" "}
+                <a href="mailto:spot@lrde.epita.fr">the Spot mailing list</a>.
+              </Typography>
+            </Typography>
+          </ExpansionPanelDetails>
+        </ExpansionPanel>
+
+        <ExpansionPanel>
+          <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography variant="title">Operation modes</Typography>
+          </ExpansionPanelSummary>
+          <ExpansionPanelDetails>
+            <Typography variant="body1">
+              The application has four modes of operation that you can select at
+              its top:
+              <dl>
+                <dt>
+                  <Typography variant="body2">Rewrite</Typography>
+                </dt>
+                <dd>
+                  for rewriting a formula (changing syntaxes, symplifying,
+                  removing some operators)
+                </dd>
+                <dt>
+                  <Typography variant="body2">Study</Typography>
+                </dt>
+                <dd>for computing various properties of a formula</dd>
+                <dt>
+                  <Typography variant="body2">Compare</Typography>
+                </dt>
+                <dd>for comparing two LTL formulas</dd>
+                <dt>
+                  <Typography variant="body2">Translate</Typography>
+                </dt>
+                <dd>
+                  for constructing an automaton equivalent to a given formula
+                </dd>
+              </dl>
+            </Typography>
+          </ExpansionPanelDetails>
+        </ExpansionPanel>
+
+        <ExpansionPanel>
+          <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography variant="title">LTL Infix Syntax</Typography>
+          </ExpansionPanelSummary>
+          <ExpansionPanelDetails>
+            <Typography>
+              <Typography variant="body1" gutterBottom>
+                To accomodate the syntaxes of different tools, Spot supports
+                alternative representations for many operators. For the
+                semantics of all operators see{" "}
+                <a href="https://spot.lrde.epita.fr/tl.pdf">this document</a>.
+              </Typography>
+              <Typography variant="body2" color="primary">
+                Atomic propositions
+              </Typography>
+              <Typography variant="body1" gutterBottom>
+                Use alphanumeric identifiers or double-quoted strings for atomic
+                propositions, and parentheses for grouping. Identifiers cannot
+                start with the letter of a prefix operator (<Ltl f="F" />,{" "}
+                <Ltl f="G" />, or <Ltl f="X" />
+                ): for instance <Ltl f="GFa" /> means <Ltl f="G(F(a))" />. Use{" "}
+                <Ltl f="&quot;GFa&quot;" />, with double quotes, if you really
+                want to refer to <Ltl f="GFa" /> as a proposition. Conversely,
+                infix letter operators are not assumed to be operators if they
+                are part of an identifier: <Ltl f="aUb" /> is an atomic
+                proposition, unlike <Ltl f="a&nbsp;U&nbsp;b" /> and{" "}
+                <Ltl f="(a)U(b)" />.
+              </Typography>
+              <Typography variant="body2" color="primary">
+                Boolean constants
+              </Typography>
+              <Typography variant="body1" gutterBottom>
+                Use <Ltl f="1" /> or <Ltl f="0" />, or also <Ltl f="true" /> or{" "}
+                <Ltl f="false" /> (case insensitive).
+              </Typography>
+              <Typography variant="body2" color="primary">
+                Boolean operators
+              </Typography>
+              <Typography variant="body1" gutterBottom>
+                The following Boolean operators are supported:
+                <table>
+                  <tr>
+                    <td align="right">and:</td>
+                    <td>
+                      <Ltl f="&amp;" />, <Ltl f="&amp;&amp;" />, <Ltl f="/\" />
+                    </td>
+                    <td>&nbsp;&nbsp;</td>
+                    <td align="right">implies:</td>
+                    <td>
+                      <Ltl f="->" />, <Ltl f="-->" />, <Ltl f="=>" />
+                    </td>
+                    <td>&nbsp;&nbsp;</td>
+                    <td align="right">not:</td>
+                    <td>
+                      <Ltl f="!" /> (prefix), <Ltl f="~" /> (prefix)
+                    </td>
+                  </tr>
+                  <tr>
+                    <td align="right">or:</td>
+                    <td>
+                      <Ltl f="|" />, <Ltl f="||" />, <Ltl f="\/" />,{" "}
+                      <Ltl f="+" />
+                    </td>
+                    <td />
+                    <td align="right">equiv.:</td>
+                    <td>
+                      <Ltl f="<->" />, <Ltl f="<-->" />, <Ltl f="<=>" />
+                    </td>
+                    <td />
+                    <td align="right">exclusive or:</td>
+                    <td>
+                      <Ltl f="^" />, <Ltl f="xor" />
+                    </td>
+                  </tr>
+                </table>
+                For compatibility with{" "}
+                <a href="http://www.ist.tugraz.at/staff/bloem/wring.html">
+                  Wring
+                </a>
+                , atomic propositions can be followed by <Ltl f="=1" />{" "}
+                or <Ltl f="=0" /> to specify their polarity. For instance{" "}
+                <Ltl f="a=0 U b=1" /> is equivalent to <Ltl f="!a U b" />.
+              </Typography>
+              <Typography variant="body2" color="primary">
+                Temporal Operators
+              </Typography>
+              <Typography variant="body1" gutterBottom>
+                The following binary operators are supported:
+                <table>
+                  <tr>
+                    <td align="right">strong until:</td>
+                    <td>
+                      <Ltl f="U" />
+                    </td>
+                    <td>&nbsp;&nbsp;</td>
+                    <td align="right">weak until:</td>
+                    <td>
+                      <Ltl f="W" />
+                    </td>
+                  </tr>
+                  <tr>
+                    <td align="right">strong release:</td>
+                    <td>
+                      <Ltl f="M" />
+                    </td>
+                    <td>&nbsp;&nbsp;</td>
+                    <td align="right">weak release:</td>
+                    <td>
+                      <Ltl f="R" />, <Ltl f="V" />
+                    </td>
+                  </tr>
+                </table>
+                The following unary (prefix) operators are supported:
+                <table>
+                  <tr>
+                    <td align="right">next:</td>
+                    <td>
+                      <Ltl f="X" />, <Ltl f="()" />
+                    </td>
+                    <td>&nbsp;&nbsp;</td>
+                    <td align="right">eventually:</td>
+                    <td>
+                      <Ltl f="F" />, <Ltl f="<>" />
+                    </td>
+                    <td>&nbsp;&nbsp;</td>
+                    <td align="right">globally:</td>
+                    <td>
+                      <Ltl f="G" />, <Ltl f="[]" />
+                    </td>
+                  </tr>
+                </table>
+                Additionally, <Ltl f="X[n]" />, <Ltl f="F[n..m]" />, and{" "}
+                <Ltl f="G[n..m]" /> are syntactic sugar for differents types of
+                repetition of the <Ltl f="X" /> operator. For instance{" "}
+                <Ltl f="F[3..5]p" /> is short for <Ltl f="XXX(p|X(p|Xp))" />.
+              </Typography>
+            </Typography>
+          </ExpansionPanelDetails>
+        </ExpansionPanel>
+
+        <ExpansionPanel>
+          <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography variant="title">LTL Prefix Syntax</Typography>
+          </ExpansionPanelSummary>
+          <ExpansionPanelDetails>
+            <Typography>
+              <Typography variant="body1" gutterBottom>
+                If (and only if!) parsing the input formula using the infix
+                syntax failed, the application will attempt to parse the formula
+                using a prefix syntax (Polish notation) that should be a
+                superset of what tools like{" "}
+                <a href="http://www.tcs.hut.fi/Software/maria/tools/lbt/">
+                  LBT
+                </a>
+                , <a href="http://www.tcs.hut.fi/Software/lbtt/">LBTT</a>,{" "}
+                <a href="http://tcs.legacy.ics.tkk.fi/users/tlatvala/scheck/">
+                  scheck
+                </a>{" "}
+                or <a href="http://www.ltl2dstar.de/">ltl2dstar</a> can read.
+              </Typography>
+              <Typography variant="body1">
+                The following prefix operators are supported:
+                <Ltl f="t" />
+                &nbsp;(true), <Ltl f="f" />
+                &nbsp;(false), <Ltl f="!" />
+                &nbsp;(not), <Ltl f="i" />
+                &nbsp;(implication), <Ltl f="e" />
+                &nbsp;(equivalence), <Ltl f="^" />
+                &nbsp;(xor), <Ltl f="X" />
+                &nbsp;(next), <Ltl f="F" />
+                &nbsp;(eventually), <Ltl f="G" />
+                &nbsp;(globally), <Ltl f="U" />
+                &nbsp;(strong until), <Ltl f="V" />
+                &nbsp;(weak release), <Ltl f="M" />
+                &nbsp;(strong release), <Ltl f="W" />
+                &nbsp;(weak until). Double-quoted strings, as well as
+                identifiers that do not look like a operators, are assumed to be
+                atomic propositions.
+              </Typography>
+            </Typography>
+          </ExpansionPanelDetails>
+        </ExpansionPanel>
+
+        <ExpansionPanel>
+          <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography variant="title">PSL Infix Syntax</Typography>
+          </ExpansionPanelSummary>
+          <ExpansionPanelDetails>
+            <Typography>
+              <Typography variant="body1" gutterBottom>
+                A subset of PSL can be used to express linear properties that
+                are more expressive than LTL. For the semantics of all operators
+                see{" "}
+                <a href="https://spot.lrde.epita.fr/tl.pdf">this document</a>.
+              </Typography>
+              <Typography variant="body1" gutterBottom>
+                If you put the application in "expert mode", clicking on the
+                dice will generate a random PSL formula instead of generating a
+                random LTL formula.
+              </Typography>
+              <Typography variant="body2" color="primary">
+                Semi-Extended Regular Expression (SERE)
+              </Typography>
+              <Typography variant="body1" gutterBottom>
+                Those semi-extended regular expressions match finite prefixes,
+                and are constructed above Boolean expressions built using the
+                standard Boolean operators. A new constant, <Ltl f="[*0]" />{" "}
+                represents the empty word.
+              </Typography>
+              <Typography variant="body2">
+                The following binary operators are supported:
+              </Typography>
+              <Typography variant="body1" gutterBottom>
+                <table>
+                  <tr>
+                    <td align="right">concatenation:</td>
+                    <td>
+                      <Ltl f=";" />
+                    </td>
+                    <td>&nbsp;&nbsp;</td>
+                    <td align="right">fusion:</td>
+                    <td>
+                      <Ltl f=":" />
+                    </td>
+                  </tr>
+                  <tr>
+                    <td align="right">union:</td>
+                    <td>
+                      <Ltl f="|" />, <Ltl f="||" />, <Ltl f="\/" />,{" "}
+                      <Ltl f="+" />
+                    </td>
+                    <td>&nbsp;&nbsp;</td>
+                    <td align="right">intersection:</td>
+                    <td>
+                      <Ltl f="&amp;&amp;" />
+                    </td>
+                    <td>&nbsp;&nbsp;</td>
+                    <td align="right">NLM-intersection:</td>
+                    <td>
+                      <Ltl f="&amp;" />
+                    </td>
+                  </tr>
+                </table>
+                The "Non-length-matching intersection" accepts words that match
+                one operand and that have a prefix matching the other operand.
+              </Typography>
+              <Typography variant="body2">
+                The following postfix unary operators are supported:
+              </Typography>
+              <Typography variant="body1" gutterBottom>
+                <table>
+                  <tr>
+                    <td align="right">Kleene star:</td>
+                    <td>
+                      <Ltl f="*" />, <Ltl f="[*]" />, <Ltl f="[*i..j]" />
+                    </td>
+                    <td>&nbsp;&nbsp;</td>
+                    <td align="right">Kleene plus:</td>
+                    <td>
+                      <Ltl f="[+]" />
+                    </td>
+                  </tr>
+                  <tr>
+                    <td align="right">fusion star:</td>
+                    <td>
+                      <Ltl f="[:*]" />, <Ltl f="[:*i..j]" />
+                    </td>
+                    <td>&nbsp;&nbsp;</td>
+                    <td align="right">fusion plus:</td>
+                    <td>
+                      <Ltl f="[:+]" />
+                    </td>
+                  </tr>
+                  <tr>
+                    <td align="right">goto:</td>
+                    <td>
+                      <Ltl f="[->i..j]" />
+                    </td>
+                    <td>&nbsp;&nbsp;</td>
+                    <td align="right">nonconseq. rep.:</td>
+                    <td>
+                      <Ltl f="[=i..j]" />
+                    </td>
+                  </tr>
+                </table>
+              </Typography>
+              <Typography variant="body2" color="primary">
+                SERE-LTL Bindings Operators
+              </Typography>
+              <Typography variant="body1" gutterBottom>
+                In the following, <Ltl f="r" /> denotes a SERE, and{" "}
+                <Ltl f="f" /> denotes any PSL or LTL formula.
+                <table>
+                  <tr>
+                    <td>universal suffix implication (a.k.a. trigger)</td>
+                    <td>
+                      <Ltl f="{r}[]->f" />, <Ltl f="{r}|->f" />,{" "}
+                      <Ltl f="{r}(f)" />
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>existential suffix implication (a.k.a. seq)</td>
+                    <td>
+                      <Ltl f="{r}<>->f" />
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>non-overlapping universal suffix implication</td>
+                    <td>
+                      <Ltl f="{r}[]=>f" />, <Ltl f="{r}|=>f" />
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>non-overlapping existential suffix implication</td>
+                    <td>
+                      <Ltl f="{r}<>=>f" />
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>weak closure</td>
+                    <td>
+                      <Ltl f="{r}" />
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>strong closure</td>
+                    <td>
+                      <Ltl f="{r}!" />
+                    </td>
+                  </tr>
+                </table>
+              </Typography>
+            </Typography>
+          </ExpansionPanelDetails>
+        </ExpansionPanel>
+      </Paper>
+    );
+  }
+}
+
 class LtlApps extends React.Component {
   state = {
-    instances: 1
+    instances: 1,
+    show_help: 0
   };
 
   handleDup = () => {
     this.setState({ instances: 2 });
+  };
+
+  showHelp = () => {
+    this.setState({ show_help: 1 });
+  };
+
+  unshowHelp = () => {
+    this.setState({ show_help: 0 });
   };
 
   handleClose = () => {
@@ -1845,11 +2328,20 @@ class LtlApps extends React.Component {
 
   render() {
     return (
-      <React.Fragment>
-        <div className={this.props.classes.toplevel}>
-          <LtlApp
-            classes={this.props.classes}
-            topright={
+      <div className={this.props.classes.toplevel}>
+        <LtlApp
+          classes={this.props.classes}
+          topright={
+            <React.Fragment>
+              <IconButton
+                disabled={this.state.show_help === 1}
+                color="primary"
+                onClick={this.showHelp}
+                className={this.props.classes.winicons}
+                aria-label="help"
+              >
+                <HelpIcon />
+              </IconButton>
               <IconButton
                 disabled={this.state.instances === 2}
                 color="primary"
@@ -1859,25 +2351,28 @@ class LtlApps extends React.Component {
               >
                 <DupeIcon />
               </IconButton>
+            </React.Fragment>
+          }
+        />
+        {this.state.instances === 2 && (
+          <LtlApp
+            classes={this.props.classes}
+            topright={
+              <IconButton
+                className={this.props.classes.winicons}
+                color="primary"
+                onClick={this.handleClose}
+                aria-label="close"
+              >
+                <CloseIcon />
+              </IconButton>
             }
           />
-          {this.state.instances === 2 && (
-            <LtlApp
-              classes={this.props.classes}
-              topright={
-                <IconButton
-                  className={this.props.classes.winicons}
-                  color="primary"
-                  onClick={this.handleClose}
-                  aria-label="close"
-                >
-                  <CloseIcon />
-                </IconButton>
-              }
-            />
-          )}
-        </div>
-      </React.Fragment>
+        )}
+        {this.state.show_help === 1 && (
+          <Help classes={this.props.classes} onClose={this.unshowHelp} />
+        )}
+      </div>
     );
   }
 }
