@@ -62,22 +62,24 @@ const styles = theme => ({
       justifyContent: "center"
     }
   },
-  clearfix: {
-    "&::after": {
-      clear: "both",
-      content: "",
-      display: "box"
-    }
-  },
   help: {
     margin: theme.spacing.unit,
-    padding: theme.spacing.unit,
+    paddingTop: theme.spacing.unit,
     width: 640 - 2 * theme.spacing.unit,
     [theme.breakpoints.down("sm")]: {
       marginLeft: 0,
       marginRight: 0
     },
     "& h2": { color: theme.palette.primary.main }
+  },
+  helptop: {
+    padding: 4
+  },
+  helpexpanded: {
+    margin: 0,
+    "&:before": {
+      opacity: 1
+    }
   },
   optable: {
     display: "flex",
@@ -218,7 +220,8 @@ const styles = theme => ({
     overflow: "auto"
   },
   helpicons: {
-    float: "right"
+    float: "right",
+    marginRight: theme.spacing.unit
   },
   menu: {},
   versions: {
@@ -1917,13 +1920,14 @@ class Help extends React.Component {
             variant="headline"
             color="primary"
             align="center"
+            className={this.props.classes.helptop}
             gutterBottom
           >
             Help
           </Typography>
         </div>
 
-        <ExpansionPanel>
+        <ExpansionPanel classes={{ expanded: this.props.classes.helpexpanded }}>
           <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
             <Typography variant="title">About</Typography>
           </ExpansionPanelSummary>
@@ -1963,7 +1967,7 @@ class Help extends React.Component {
           </ExpansionPanelDetails>
         </ExpansionPanel>
 
-        <ExpansionPanel>
+        <ExpansionPanel classes={{ expanded: this.props.classes.helpexpanded }}>
           <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
             <Typography variant="title">Operation modes</Typography>
           </ExpansionPanelSummary>
@@ -1998,7 +2002,7 @@ class Help extends React.Component {
           </ExpansionPanelDetails>
         </ExpansionPanel>
 
-        <ExpansionPanel>
+        <ExpansionPanel classes={{ expanded: this.props.classes.helpexpanded }}>
           <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
             <Typography variant="title">LTL Infix Syntax</Typography>
           </ExpansionPanelSummary>
@@ -2144,7 +2148,7 @@ class Help extends React.Component {
           </ExpansionPanelDetails>
         </ExpansionPanel>
 
-        <ExpansionPanel>
+        <ExpansionPanel classes={{ expanded: this.props.classes.helpexpanded }}>
           <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
             <Typography variant="title">LTL Prefix Syntax</Typography>
           </ExpansionPanelSummary>
@@ -2192,7 +2196,7 @@ class Help extends React.Component {
           </ExpansionPanelDetails>
         </ExpansionPanel>
 
-        <ExpansionPanel>
+        <ExpansionPanel classes={{ expanded: this.props.classes.helpexpanded }}>
           <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
             <Typography variant="title">PSL Infix Syntax</Typography>
           </ExpansionPanelSummary>
@@ -2307,7 +2311,7 @@ class Help extends React.Component {
           </ExpansionPanelDetails>
         </ExpansionPanel>
 
-        <ExpansionPanel>
+        <ExpansionPanel classes={{ expanded: this.props.classes.helpexpanded }}>
           <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
             <Typography variant="title">Acceptance conditions</Typography>
           </ExpansionPanelSummary>
