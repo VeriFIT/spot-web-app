@@ -697,7 +697,7 @@ class AccChoice extends React.Component {
     b: "Acceptance: (state-based) Büchi",
     g: "Acceptance: Generalized Büchi",
     p: "Acceptance: parity",
-    e: "Acceptance: Emerson-Lei (generalized acceptance)"
+    e: "Acceptance: Emerson-Lei (generic acceptance)"
   };
 
   state = {
@@ -2302,6 +2302,104 @@ class Help extends React.Component {
                   "300px",
                   this.props.classes
                 )}
+              </Typography>
+            </Typography>
+          </ExpansionPanelDetails>
+        </ExpansionPanel>
+
+        <ExpansionPanel>
+          <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography variant="title">Acceptance conditions</Typography>
+          </ExpansionPanelSummary>
+          <ExpansionPanelDetails>
+            <Typography>
+              <Typography variant="body1" gutterBottom>
+                Formulas can be translated into ω-automata with various types of
+                acceptance conditions (Generalized Büchi acceptance is selected
+                by default).
+                <dl>
+                  <dt>
+                    <Typography variant="body2">monitor</Typography>
+                  </dt>
+                  <dd>
+                    In a monitor, the only words that are rejected are those
+                    that cannot be read by the automaton. Such automata will
+                    accept any finite prefix that can be extended into an
+                    infinite word accepted by the formula. Only safety
+                    properties can be recognized precisely. If a non-safety
+                    formula is translated into a monitor, the resulting
+                    automaton will accept a superset of the specified language.
+                  </dd>
+                  <dt>
+                    <Typography variant="body2">Büchi acceptance</Typography>
+                  </dt>
+                  <dd>
+                    Büchi automata have a set of accepting states represented
+                    with double circles. An infinite word is accepted if it
+                    visits some accepting state infinitely often. (For
+                    historical reason, only state-based Büchi acceptance is
+                    supported.)
+                  </dd>
+                  <dt>
+                    <Typography variant="body2">co-Büchi acceptance</Typography>
+                  </dt>
+                  <dd>
+                    Co-Büchi automata have a set of <i>rejecting states</i>{" "}
+                    represented with double circles (when state-based acceptance
+                    is used) or <i>rejecting transitions</i> annotated with a
+                    "⓿". An infinite word is accepted if it visits elements of
+                    the rejecting set a finite number of times.
+                  </dd>
+                  <dt>
+                    <Typography variant="body2">
+                      generalized Büchi acceptance
+                    </Typography>
+                  </dt>
+                  <dd>
+                    In generalized Büchi automata, multiple sets of states or
+                    transitions are used. States or transitions are anotated by
+                    circled numbers (like ⓿) denoting the sets they belong to. A
+                    run is accepted if it visits a state or transitions of each
+                    set infinitely often.
+                  </dd>
+                  <dt>
+                    <Typography variant="body2">parity acceptance</Typography>
+                  </dt>
+                  <dd>
+                    In automata with parity acceptance, multiple sets of states
+                    or transitions are used. States or transitions are anotated
+                    by circled numbers (like ⓿) denoting the sets they belong
+                    to. A run is accepted if the maximum or minimum set number
+                    visited infinitely often is odd or even. The choice between
+                    min or max, and odd or even, is indicated at the top of the
+                    automaton and can be forced with some options. The{" "}
+                    <b>colored</b> option forces each transitions (or state) to
+                    belong to exactly one acceptance set; this is usually what
+                    people working with parity automata are expecting.
+                  </dd>
+                  <dt>
+                    <Typography variant="body2">
+                      Emerson-Lei acceptance
+                    </Typography>
+                  </dt>
+                  <dd>
+                    When using Emerson-Lei acceptance, the acceptance condition
+                    produced can be any positive boolean formula over terms like{" "}
+                    <b>Fin(⓿)</b> (meaning that elements of set ⓿ should be seen{" "}
+                    <i>finitely</i> often) or <b>Inf(⓿)</b> (<i>infinitely</i>{" "}
+                    often). Multiple acceptance sets are used.
+                  </dd>
+                </dl>
+                By default, automata with transition-based acceptance are
+                produced, except for monitors (where it makes no sense) and
+                Büchi automata (for historical reasons). The translation
+                constraint "force state-based acc." can be used to force the
+                produced automata to use state-based acceptance, possibly
+                increasing the number of states. However, even when automata are
+                displayed as state-based, they are stored using transition-based
+                acceptance internally: this can be seen using the "force
+                transition-based acc." <i>display</i> option. This explains why
+                these two options are not mutually exclusive.
               </Typography>
             </Typography>
           </ExpansionPanelDetails>
