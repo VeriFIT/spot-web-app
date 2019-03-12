@@ -79,6 +79,25 @@ const styles = theme => ({
     },
     "& h2": { color: theme.palette.primary.main }
   },
+  optable: {
+    display: "flex",
+    flexDirection: "row",
+    flexWrap: "wrap",
+    width: "100%",
+    justifyContent: "space-around"
+  },
+  oppair: {
+    display: "block",
+    padding: 2,
+    margin: 2,
+    backgroundColor: "#EEEEEE"
+  },
+  opdesc: {
+    float: "left"
+  },
+  opsyn: {
+    float: "right"
+  },
   root: {
     margin: theme.spacing.unit,
     padding: theme.spacing.unit,
@@ -1858,6 +1877,21 @@ class LtlApp extends React.Component {
   }
 }
 
+function OpTable(array, width, classes) {
+  return (
+    <div className={classes.optable}>
+      {array.map(value => {
+        return (
+          <div className={classes.oppair} style={{ width: width }}>
+            <div className={classes.opdesc}>{value[0]}:</div>
+            <div className={classes.opsyn}>{value[1]}</div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 function Ltl(props) {
   return (
     <code>
@@ -2004,47 +2038,56 @@ class Help extends React.Component {
               </Typography>
               <Typography variant="body1" gutterBottom>
                 The following Boolean operators are supported:
-                <table>
-                  <tr>
-                    <td align="right">and:</td>
-                    <td>
-                      <Ltl f="&amp;" />, <Ltl f="&amp;&amp;" />, <Ltl f="/\" />
-                    </td>
-                    <td>&nbsp;&nbsp;</td>
-                    <td align="right">implies:</td>
-                    <td>
-                      <Ltl f="->" />, <Ltl f="-->" />, <Ltl f="=>" />
-                    </td>
-                    <td>&nbsp;&nbsp;</td>
-                    <td align="right">not:</td>
-                    <td>
-                      <Ltl f="!" /> (prefix), <Ltl f="~" /> (prefix)
-                    </td>
-                  </tr>
-                  <tr>
-                    <td align="right">or:</td>
-                    <td>
-                      <Ltl f="|" />, <Ltl f="||" />, <Ltl f="\/" />,{" "}
-                      <Ltl f="+" />
-                    </td>
-                    <td />
-                    <td align="right">equiv.:</td>
-                    <td>
-                      <Ltl f="<->" />, <Ltl f="<-->" />, <Ltl f="<=>" />
-                    </td>
-                    <td />
-                    <td align="right">exclusive or:</td>
-                    <td>
-                      <Ltl f="^" />, <Ltl f="xor" />
-                    </td>
-                  </tr>
-                </table>
+                {OpTable(
+                  [
+                    [
+                      "and",
+                      <>
+                        <Ltl f="&amp;" />, <Ltl f="&amp;&amp;" />,{" "}
+                        <Ltl f="/\" /*"*/ />
+                      </>
+                    ],
+                    [
+                      "or",
+                      <>
+                        <Ltl f="|" />, <Ltl f="||" />, <Ltl f="\/" />,{" "}
+                        <Ltl f="+" />
+                      </>
+                    ],
+                    [
+                      "implies",
+                      <>
+                        <Ltl f="->" />, <Ltl f="-->" />, <Ltl f="=>" />
+                      </>
+                    ],
+                    [
+                      "equivalent",
+                      <>
+                        <Ltl f="<->" />, <Ltl f="<-->" />, <Ltl f="<=>" />
+                      </>
+                    ],
+                    [
+                      "not",
+                      <>
+                        <Ltl f="!" /> (prefix), <Ltl f="~" /> (prefix)
+                      </>
+                    ],
+                    [
+                      "exclusive or",
+                      <>
+                        <Ltl f="^" />, <Ltl f="xor" />
+                      </>
+                    ]
+                  ],
+                  "180px",
+                  this.props.classes
+                )}
                 For compatibility with{" "}
                 <a href="http://www.ist.tugraz.at/staff/bloem/wring.html">
                   Wring
                 </a>
-                , atomic propositions can be followed by <Ltl f="=1" />{" "}
-                or <Ltl f="=0" /> to specify their polarity. For instance{" "}
+                , atomic propositions can be followed by <Ltl f="=1" /> or{" "}
+                <Ltl f="=0" /> to specify their polarity. For instance{" "}
                 <Ltl f="a=0 U b=1" /> is equivalent to <Ltl f="!a U b" />.
               </Typography>
               <Typography variant="body2" color="primary">
@@ -2052,49 +2095,46 @@ class Help extends React.Component {
               </Typography>
               <Typography variant="body1" gutterBottom>
                 The following binary operators are supported:
-                <table>
-                  <tr>
-                    <td align="right">strong until:</td>
-                    <td>
-                      <Ltl f="U" />
-                    </td>
-                    <td>&nbsp;&nbsp;</td>
-                    <td align="right">weak until:</td>
-                    <td>
-                      <Ltl f="W" />
-                    </td>
-                  </tr>
-                  <tr>
-                    <td align="right">strong release:</td>
-                    <td>
-                      <Ltl f="M" />
-                    </td>
-                    <td>&nbsp;&nbsp;</td>
-                    <td align="right">weak release:</td>
-                    <td>
-                      <Ltl f="R" />, <Ltl f="V" />
-                    </td>
-                  </tr>
-                </table>
+                {OpTable(
+                  [
+                    ["strong until", <Ltl f="U" />],
+                    ["weak until", <Ltl f="W" />],
+                    ["strong release", <Ltl f="M" />],
+                    [
+                      "weak release",
+                      <>
+                        <Ltl f="R" />, <Ltl f="V" />
+                      </>
+                    ]
+                  ],
+                  "120px",
+                  this.props.classes
+                )}
                 The following unary (prefix) operators are supported:
-                <table>
-                  <tr>
-                    <td align="right">next:</td>
-                    <td>
-                      <Ltl f="X" />, <Ltl f="()" />
-                    </td>
-                    <td>&nbsp;&nbsp;</td>
-                    <td align="right">eventually:</td>
-                    <td>
-                      <Ltl f="F" />, <Ltl f="<>" />
-                    </td>
-                    <td>&nbsp;&nbsp;</td>
-                    <td align="right">globally:</td>
-                    <td>
-                      <Ltl f="G" />, <Ltl f="[]" />
-                    </td>
-                  </tr>
-                </table>
+                {OpTable(
+                  [
+                    [
+                      "next",
+                      <>
+                        <Ltl f="X" />, <Ltl f="()" />
+                      </>
+                    ],
+                    [
+                      "eventually",
+                      <>
+                        <Ltl f="F" />, <Ltl f="<>" />
+                      </>
+                    ],
+                    [
+                      "globally",
+                      <>
+                        <Ltl f="G" />, <Ltl f="[]" />
+                      </>
+                    ]
+                  ],
+                  "120px",
+                  this.props.classes
+                )}
                 Additionally, <Ltl f="X[n]" />, <Ltl f="F[n..m]" />, and{" "}
                 <Ltl f="G[n..m]" /> are syntactic sugar for differents types of
                 repetition of the <Ltl f="X" /> operator. For instance{" "}
@@ -2126,22 +2166,27 @@ class Help extends React.Component {
               </Typography>
               <Typography variant="body1">
                 The following prefix operators are supported:
-                <Ltl f="t" />
-                &nbsp;(true), <Ltl f="f" />
-                &nbsp;(false), <Ltl f="!" />
-                &nbsp;(not), <Ltl f="i" />
-                &nbsp;(implication), <Ltl f="e" />
-                &nbsp;(equivalence), <Ltl f="^" />
-                &nbsp;(xor), <Ltl f="X" />
-                &nbsp;(next), <Ltl f="F" />
-                &nbsp;(eventually), <Ltl f="G" />
-                &nbsp;(globally), <Ltl f="U" />
-                &nbsp;(strong until), <Ltl f="V" />
-                &nbsp;(weak release), <Ltl f="M" />
-                &nbsp;(strong release), <Ltl f="W" />
-                &nbsp;(weak until). Double-quoted strings, as well as
-                identifiers that do not look like a operators, are assumed to be
-                atomic propositions.
+                {OpTable(
+                  [
+                    ["true", <Ltl f="t" />],
+                    ["false", <Ltl f="f" />],
+                    ["not", <Ltl f="!" />],
+                    ["implication", <Ltl f="i" />],
+                    ["equivalence", <Ltl f="e" />],
+                    ["xor", <Ltl f="^" />],
+                    ["next", <Ltl f="X" />],
+                    ["eventually", <Ltl f="F" />],
+                    ["globally", <Ltl f="G" />],
+                    ["strong until", <Ltl f="U" />],
+                    ["weak release", <Ltl f="V" />],
+                    ["strong release", <Ltl f="M" />],
+                    ["weak until", <Ltl f="W" />]
+                  ],
+                  "120px",
+                  this.props.classes
+                )}
+                Double-quoted strings, as well as identifiers that do not look
+                like a operators, are assumed to be atomic propositions.
               </Typography>
             </Typography>
           </ExpansionPanelDetails>
@@ -2177,78 +2222,50 @@ class Help extends React.Component {
                 The following binary operators are supported:
               </Typography>
               <Typography variant="body1" gutterBottom>
-                <table>
-                  <tr>
-                    <td align="right">concatenation:</td>
-                    <td>
-                      <Ltl f=";" />
-                    </td>
-                    <td>&nbsp;&nbsp;</td>
-                    <td align="right">fusion:</td>
-                    <td>
-                      <Ltl f=":" />
-                    </td>
-                  </tr>
-                  <tr>
-                    <td align="right">union:</td>
-                    <td>
-                      <Ltl f="|" />, <Ltl f="||" />, <Ltl f="\/" />,{" "}
-                      <Ltl f="+" />
-                    </td>
-                    <td>&nbsp;&nbsp;</td>
-                    <td align="right">intersection:</td>
-                    <td>
-                      <Ltl f="&amp;&amp;" />
-                    </td>
-                    <td>&nbsp;&nbsp;</td>
-                    <td align="right">NLM-intersection:</td>
-                    <td>
-                      <Ltl f="&amp;" />
-                    </td>
-                  </tr>
-                </table>
+                {OpTable(
+                  [
+                    ["concatenation", <Ltl f=";" />],
+                    ["fusion", <Ltl f=":" />],
+                    [
+                      "union",
+                      <>
+                        <Ltl f="|" />, <Ltl f="||" />, <Ltl f="\/" />,{" "}
+                        <Ltl f="+" />
+                      </>
+                    ],
+                    ["intersection", <Ltl f="&amp;&amp;" />],
+                    ["NLM-intersection", <Ltl f="&amp;" />]
+                  ],
+                  "140px",
+                  this.props.classes
+                )}
                 The "Non-length-matching intersection" accepts words that match
                 one operand and that have a prefix matching the other operand.
               </Typography>
               <Typography variant="body2">
                 The following postfix unary operators are supported:
-              </Typography>
-              <Typography variant="body1" gutterBottom>
-                <table>
-                  <tr>
-                    <td align="right">Kleene star:</td>
-                    <td>
-                      <Ltl f="*" />, <Ltl f="[*]" />, <Ltl f="[*i..j]" />
-                    </td>
-                    <td>&nbsp;&nbsp;</td>
-                    <td align="right">Kleene plus:</td>
-                    <td>
-                      <Ltl f="[+]" />
-                    </td>
-                  </tr>
-                  <tr>
-                    <td align="right">fusion star:</td>
-                    <td>
-                      <Ltl f="[:*]" />, <Ltl f="[:*i..j]" />
-                    </td>
-                    <td>&nbsp;&nbsp;</td>
-                    <td align="right">fusion plus:</td>
-                    <td>
-                      <Ltl f="[:+]" />
-                    </td>
-                  </tr>
-                  <tr>
-                    <td align="right">goto:</td>
-                    <td>
-                      <Ltl f="[->i..j]" />
-                    </td>
-                    <td>&nbsp;&nbsp;</td>
-                    <td align="right">nonconseq. rep.:</td>
-                    <td>
-                      <Ltl f="[=i..j]" />
-                    </td>
-                  </tr>
-                </table>
+                {OpTable(
+                  [
+                    [
+                      "Kleene star",
+                      <>
+                        <Ltl f="*" />, <Ltl f="[*]" />, <Ltl f="[*i..j]" />
+                      </>
+                    ],
+                    ["Kleene plus", <Ltl f="[+]" />],
+                    [
+                      "fusion star",
+                      <>
+                        <Ltl f="[:*]" />, <Ltl f="[:*i..j]" />
+                      </>
+                    ],
+                    ["fusion plus", <Ltl f="[:+]" />],
+                    ["goto", <Ltl f="[->i..j]" />],
+                    ["nonconseq. rep.", <Ltl f="[=i..j]" />]
+                  ],
+                  "200px",
+                  this.props.classes
+                )}
               </Typography>
               <Typography variant="body2" color="primary">
                 SERE-LTL Bindings Operators
@@ -2256,45 +2273,35 @@ class Help extends React.Component {
               <Typography variant="body1" gutterBottom>
                 In the following, <Ltl f="r" /> denotes a SERE, and{" "}
                 <Ltl f="f" /> denotes any PSL or LTL formula.
-                <table>
-                  <tr>
-                    <td>universal suffix implication (a.k.a. trigger)</td>
-                    <td>
-                      <Ltl f="{r}[]->f" />, <Ltl f="{r}|->f" />,{" "}
-                      <Ltl f="{r}(f)" />
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>existential suffix implication (a.k.a. seq)</td>
-                    <td>
+                {OpTable(
+                  [
+                    [
+                      "universal suffix implication (a.k.a. trigger)",
+                      <>
+                        <Ltl f="{r}[]->f" />, <Ltl f="{r}|->f" />,{" "}
+                        <Ltl f="{r}(f)" />
+                      </>
+                    ],
+                    [
+                      "existential suffix implication (a.k.a. seq)",
                       <Ltl f="{r}<>->f" />
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>non-overlapping universal suffix implication</td>
-                    <td>
-                      <Ltl f="{r}[]=>f" />, <Ltl f="{r}|=>f" />
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>non-overlapping existential suffix implication</td>
-                    <td>
+                    ],
+                    [
+                      "non-overlapping universal suffix implication",
+                      <>
+                        <Ltl f="{r}[]=>f" />, <Ltl f="{r}|=>f" />
+                      </>
+                    ],
+                    [
+                      "non-overlapping existential suffix implication",
                       <Ltl f="{r}<>=>f" />
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>weak closure</td>
-                    <td>
-                      <Ltl f="{r}" />
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>strong closure</td>
-                    <td>
-                      <Ltl f="{r}!" />
-                    </td>
-                  </tr>
-                </table>
+                    ],
+                    ["weak closure", <Ltl f="{r}" />],
+                    ["strong closure", <Ltl f="{r}!" />]
+                  ],
+                  "300px",
+                  this.props.classes
+                )}
               </Typography>
             </Typography>
           </ExpansionPanelDetails>
