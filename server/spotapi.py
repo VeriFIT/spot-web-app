@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
-# Copyright (C) 2018 Laboratoire de Recherche et Développement de
+# Copyright (C) 2018-2019 Laboratoire de Recherche et Développement de
 # l'Epita.
 #
 # This application is free software; you can redistribute it and/or
@@ -643,7 +643,16 @@ def compare(ltlformula, method='GET'):
     return jsonify(result)
 
 
+@app.route('/api/drawword/<path:word>')
+@cachecontrol()
+def drawword(word, method='GET'):
+    result = {}
+    try:
+        w = spot.parse_word(word)
+    except SyntaxError as e:
+        return jsonify({'parse_error': str(e)})
+    return jsonify({'svg': w.as_svg()})
+
+
 if __name__ == '__main__':
     app.run(debug=True, use_reloader=True, use_debugger=False)
-
-
