@@ -638,7 +638,7 @@ class LtlUnabbrevOptions extends React.Component {
   options1 = {
     F: ["F", "<>", "F"],
     G: ["G", "[]", "G"],
-    R: ["R", "V", "R"],
+    R: ["R", "V", "V"],
     M: ["M", "M", "M"],
     W: ["W", "W", "W"]
   };
