@@ -216,13 +216,19 @@ mp_class_to_english = {
 #
 # on success:
 # { mp_class: 'name',
-#   pathological: True,   (absent if not pathological)
+#   pathological: true,   (absent if not pathological)
 #   mp_hierarchy_svg: '<svg...'
 #   acc_word: 'word',     (an example of accepting word, or null)
 #   rej_word: 'word',     (an example of rejecting word, or null)
-#   stutter_invariant: False,   (or True, or 'no X')
+#   stutter_invariant: false,   (or true, or 'no X')
+#   stutter_invariant_eq: formula,  (* see below)
 #   safety_liveness: 'safety'  (or 'liveness', or 'both', or 'none')
 # }
+#
+# stutter_invariant_eq is only given if stutter_invariant=true (not 'no X'),
+# and simplifying the input ltlformula gives a syntactically stutter-invariant
+# formula.
+
 @app.route('/api/study/<path:ltlformula>')
 @cachecontrol()
 def study(ltlformula, method='GET'):
@@ -259,6 +265,11 @@ def study(ltlformula, method='GET'):
     ssi = f.is_syntactic_stutter_invariant()
 
     pos = spot.translate(f, 'med')
+
+    # f was simplified by translate.
+    if (ssi is False and f.is_syntactic_stutter_invariant()):
+        result['stutter_invariant_eq'] = str(f)
+
     neg = spot.translate(spot.formula_Not(f), 'med')
 
     if ssi:

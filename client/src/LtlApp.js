@@ -1005,6 +1005,8 @@ class LtlStudy extends React.Component {
             <Typography>
               This formula is <b>stutter-invariant</b> even if it might not look
               so syntactically.
+              {"stutter_invariant_eq" in res &&
+               (<><br/>Furthermore, it can be simplified to the following <i>syntactically sutter-invariant</i> formula:<br/><Ltl f={res["stutter_invariant_eq"]}/></>)}
             </Typography>
           )}
           {res["stutter_invariant"] === false && (
