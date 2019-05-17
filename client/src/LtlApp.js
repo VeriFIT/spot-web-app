@@ -1012,7 +1012,7 @@ class LtlStudy extends React.Component {
           {res["stutter_invariant"] === false && (
             <Typography>
               This formula is <b>stutter-sensitive</b>.<br />
-              The accepting and rejecting words given above are a proof of that,
+              The accepted and rejected words given above are a proof of that,
               as they differ only by some stuttering.
             </Typography>
           )}
