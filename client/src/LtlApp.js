@@ -800,7 +800,7 @@ class LtlRewrite extends React.Component {
 
     this.timer = setTimeout(() => {
       this.setState({
-        result: () => (
+        result: (
           <CircularProgress className={this.props.classes.progress} />
         )
       });
@@ -1033,7 +1033,7 @@ class LtlStudy extends React.Component {
 
     this.timer = setTimeout(() => {
       this.setState({
-        result: () => (
+        result: (
           <CircularProgress className={this.props.classes.progress} />
         )
       });
@@ -1570,7 +1570,7 @@ class LtlCompare extends React.Component {
 
     this.timer = setTimeout(() => {
       this.setState({
-        result: () => (
+        result: (
           <CircularProgress className={this.props.classes.progress} />
         )
       });
