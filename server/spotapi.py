@@ -238,39 +238,67 @@ def study(ltlformula, method='GET'):
     if not f:
         return jsonify(result)
 
-    mp_class = spot.mp_class(f)
+    # If the formula uses a lot of atomic propositions together, it's better to
+    # relabel it to restrict the size of AP.  We do it always, just in case.
+    relabmap = spot.relabeling_map()
+    f2 = spot.relabel_bse(f, spot.Pnn, relabmap)
+
+    # function to rever the above relabeling
+    def revert_relabel(x):
+        if x in relabmap:
+            return relabmap[x]
+        return x.map(revert_relabel)
+
+    mp_class = spot.mp_class(f2)
 
     result['mp_class'] = mp_class
     result['mp_class_text'] = mp_class_to_english[mp_class]
 
     syntactic_class = None
     if mp_class == 'R':
-        syntactic_class = f.is_syntactic_recurrence()
+        syntactic_class = f2.is_syntactic_recurrence()
     if mp_class == 'P':
-        syntactic_class = f.is_syntactic_persistence()
+        syntactic_class = f2.is_syntactic_persistence()
     if mp_class == 'O':
-        syntactic_class = f.is_syntactic_obligation()
+        syntactic_class = f2.is_syntactic_obligation()
     if mp_class == 'S':
-        syntactic_class = f.is_syntactic_safety()
+        syntactic_class = f2.is_syntactic_safety()
     if mp_class == 'G':
-        syntactic_class = f.is_syntactic_guarantee()
+        syntactic_class = f2.is_syntactic_guarantee()
     if mp_class == 'B':
-        syntactic_class = f.is_syntactic_safety() and f.is_syntactic_guarantee()
+        syntactic_class = (f2.is_syntactic_safety() and
+                           f2.is_syntactic_guarantee())
     if syntactic_class is False:
         result['pathological'] = True
 
     result['mp_hierarchy_svg'] = spot.mp_hierarchy_svg(mp_class)
 
     # This is to be done before translation, otherwise f will be simplified
-    ssi = f.is_syntactic_stutter_invariant()
+    ssi = f2.is_syntactic_stutter_invariant()
 
-    pos = spot.translate(f, 'med')
+    pos = spot.translate(f2, 'med')
 
-    # f was simplified by translate.
-    if (ssi is False and f.is_syntactic_stutter_invariant()):
-        result['stutter_invariant_eq'] = str(f)
+    # Do this check before relabeling the automaton, to limit the 2^AP
+    # explosion in is_liveness_automaton.
+    if spot.is_liveness_automaton(pos):
+        if mp_class in ('S', 'B'):
+            result['safety_liveness'] = 'both'
+        else:
+            result['safety_liveness'] = 'liveness'
+    else:
+        if mp_class in ('S', 'B'):
+            result['safety_liveness'] = 'safety'
+        else:
+            result['safety_liveness'] = 'none'
 
-    neg = spot.translate(spot.formula_Not(f), 'med')
+    # f2 was simplified by translate.
+    if (ssi is False and f2.is_syntactic_stutter_invariant()):
+        result['stutter_invariant_eq'] = str(revert_relabel(f2))
+
+    neg = spot.translate(spot.formula_Not(f2), 'med')
+
+    spot.relabel_here(pos, relabmap)
+    spot.relabel_here(neg, relabmap)
 
     if ssi:
         result['stutter_invariant'] = 'no X'
@@ -305,17 +333,6 @@ def study(ltlformula, method='GET'):
             result['rej_word'] = str(rej_word);
         else:
             result['rej_word'] = None;
-
-    if spot.is_liveness_automaton(pos):
-        if mp_class in ('S', 'B'):
-            result['safety_liveness'] = 'both'
-        else:
-            result['safety_liveness'] = 'liveness'
-    else:
-        if mp_class in ('S', 'B'):
-            result['safety_liveness'] = 'safety'
-        else:
-            result['safety_liveness'] = 'none'
 
     return jsonify(result)
 
