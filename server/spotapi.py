@@ -501,23 +501,26 @@ def translate(ltlformula, method='GET'):
         warn(res, "Only the first 30 states of the automaton are displayed.")
 
     if dodot:
-        dotsrc = spot.ostringstream()
-        spot.print_dot(dotsrc, aut, opt + "<30")
-        automaton_svg = str_to_svg(dotsrc.str().encode('utf-8'))
-        res['automaton_svg'] = automaton_svg
-        # Check if the automaton was scaled down.
-        m = re.search('transform="scale\(([.\d]+) ', automaton_svg)
-        if m:
-            scale = float(m.group(1))
-            print(scale)
-            if scale <= .9:
-                # Re-render vertically and see if the scale is better
-                dotsrc = spot.ostringstream()
-                spot.print_dot(dotsrc, aut, opt + "v<30")
-                automaton_svg = str_to_svg(dotsrc.str().encode('utf-8'))
-                m = re.search('transform="scale\(([.\d]+) ', automaton_svg)
-                if m and scale < float(m.group(1)):
-                    res['automaton_svg'] = automaton_svg
+        try:
+            dotsrc = spot.ostringstream()
+            spot.print_dot(dotsrc, aut, opt + "<30")
+            automaton_svg = str_to_svg(dotsrc.str().encode('utf-8'))
+            res['automaton_svg'] = automaton_svg
+            # Check if the automaton was scaled down.
+            m = re.search('transform="scale\(([.\d]+) ', automaton_svg)
+            if m:
+                scale = float(m.group(1))
+                print(scale)
+                if scale <= .9:
+                    # Re-render vertically and see if the scale is better
+                    dotsrc = spot.ostringstream()
+                    spot.print_dot(dotsrc, aut, opt + "v<30")
+                    automaton_svg = str_to_svg(dotsrc.str().encode('utf-8'))
+                    m = re.search('transform="scale\(([.\d]+) ', automaton_svg)
+                    if m and scale < float(m.group(1)):
+                        res['automaton_svg'] = automaton_svg
+        except subprocess.CalledProcessError as e:
+            warn(res, "Could not display automaton. " + str(e))
 
     aut.set_name(str(f))
 
