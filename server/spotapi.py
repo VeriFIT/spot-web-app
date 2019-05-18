@@ -510,7 +510,6 @@ def translate(ltlformula, method='GET'):
             m = re.search('transform="scale\(([.\d]+) ', automaton_svg)
             if m:
                 scale = float(m.group(1))
-                print(scale)
                 if scale <= .9:
                     # Re-render vertically and see if the scale is better
                     dotsrc = spot.ostringstream()
