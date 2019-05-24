@@ -35,6 +35,7 @@ CORS(app)
 os.environ['SPOT_DOTEXTRA'] = 'size="6,12" edge[arrowhead=vee, arrowsize=.7]'
 
 import spot
+import buddy
 from spot.aux import str_to_svg
 from functools import wraps
 
@@ -210,6 +211,13 @@ mp_class_to_english = {
     'T': "a reactivity property",
 }
 
+# Until Spot supports this feature, we reimplement it.
+def refine_word(word, ap):
+    for idx, letter in enumerate(word.prefix):
+        word.prefix[idx] = buddy.bdd_satoneset(letter, ap, buddy.bddfalse)
+    for idx, letter in enumerate(word.cycle):
+        word.cycle[idx] = buddy.bdd_satoneset(letter, ap, buddy.bddfalse)
+
 # Output
 #
 # on syntax error: { parse_error: "text" }
@@ -228,7 +236,6 @@ mp_class_to_english = {
 # stutter_invariant_eq is only given if stutter_invariant=true (not 'no X'),
 # and simplifying the input ltlformula gives a syntactically stutter-invariant
 # formula.
-
 @app.route('/api/study/<path:ltlformula>')
 @cachecontrol()
 def study(ltlformula, method='GET'):
@@ -310,6 +317,10 @@ def study(ltlformula, method='GET'):
         else:
             result['stutter_invariant'] = False
             word.simplify()
+            # make sure this words uses all atomic propositions, otherwise
+            # word2 might use more propositions and the diagnostic will be
+            # confusing.
+            refine_word(word, pos.ap_vars())
             waut = word.as_automaton()
             if waut.intersects(pos):
                 word2 = spot.sl2(waut).intersecting_word(neg)
