@@ -35,7 +35,6 @@ CORS(app)
 os.environ['SPOT_DOTEXTRA'] = 'size="6,12" edge[arrowhead=vee, arrowsize=.7]'
 
 import spot
-import buddy
 from spot.aux import str_to_svg
 from functools import wraps
 
@@ -211,13 +210,6 @@ mp_class_to_english = {
     'T': "a reactivity property",
 }
 
-# Until Spot supports this feature, we reimplement it.
-def refine_word(word, ap):
-    for idx, letter in enumerate(word.prefix):
-        word.prefix[idx] = buddy.bdd_satoneset(letter, ap, buddy.bddfalse)
-    for idx, letter in enumerate(word.cycle):
-        word.cycle[idx] = buddy.bdd_satoneset(letter, ap, buddy.bddfalse)
-
 # Output
 #
 # on syntax error: { parse_error: "text" }
@@ -249,12 +241,6 @@ def study(ltlformula, method='GET'):
     # relabel it to restrict the size of AP.  We do it always, just in case.
     relabmap = spot.relabeling_map()
     f2 = spot.relabel_bse(f, spot.Pnn, relabmap)
-
-    # function to rever the above relabeling
-    def revert_relabel(x):
-        if x in relabmap:
-            return relabmap[x]
-        return x.map(revert_relabel)
 
     mp_class = spot.mp_class(f2)
 
@@ -300,7 +286,7 @@ def study(ltlformula, method='GET'):
 
     # f2 was simplified by translate.
     if (ssi is False and f2.is_syntactic_stutter_invariant()):
-        result['stutter_invariant_eq'] = str(revert_relabel(f2))
+        result['stutter_invariant_eq'] = str(spot.relabel_apply(f2, relabmap))
 
     neg = spot.translate(spot.formula_Not(f2), 'med')
 
@@ -320,7 +306,7 @@ def study(ltlformula, method='GET'):
             # make sure this words uses all atomic propositions, otherwise
             # word2 might use more propositions and the diagnostic will be
             # confusing.
-            refine_word(word, pos.ap_vars())
+            word.use_all_aps(pos.ap_vars())
             waut = word.as_automaton()
             if waut.intersects(pos):
                 word2 = spot.sl2(waut).intersecting_word(neg)
