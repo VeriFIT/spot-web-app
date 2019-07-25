@@ -800,9 +800,7 @@ class LtlRewrite extends React.Component {
 
     this.timer = setTimeout(() => {
       this.setState({
-        result: (
-          <CircularProgress className={this.props.classes.progress} />
-        )
+        result: <CircularProgress className={this.props.classes.progress} />
       });
     }, 800);
     fetch(url)
@@ -1005,8 +1003,15 @@ class LtlStudy extends React.Component {
             <Typography>
               This formula is <b>stutter-invariant</b> even if it might not look
               so syntactically.
-              {"stutter_invariant_eq" in res &&
-               (<><br/>Furthermore, it can be simplified to the following <i>syntactically sutter-invariant</i> formula:<br/><Ltl f={res["stutter_invariant_eq"]}/></>)}
+              {"stutter_invariant_eq" in res && (
+                <>
+                  <br />
+                  Furthermore, it can be simplified to the following{" "}
+                  <i>syntactically sutter-invariant</i> formula:
+                  <br />
+                  <Ltl f={res["stutter_invariant_eq"]} />
+                </>
+              )}
             </Typography>
           )}
           {res["stutter_invariant"] === false && (
@@ -1033,9 +1038,7 @@ class LtlStudy extends React.Component {
 
     this.timer = setTimeout(() => {
       this.setState({
-        result: (
-          <CircularProgress className={this.props.classes.progress} />
-        )
+        result: <CircularProgress className={this.props.classes.progress} />
       });
     }, 800);
     fetch(url)
@@ -1570,9 +1573,7 @@ class LtlCompare extends React.Component {
 
     this.timer = setTimeout(() => {
       this.setState({
-        result: (
-          <CircularProgress className={this.props.classes.progress} />
-        )
+        result: <CircularProgress className={this.props.classes.progress} />
       });
     }, 800);
     fetch(url)
@@ -2230,8 +2231,18 @@ class Help extends React.Component {
               <Typography variant="body1" gutterBottom>
                 {OpTable(
                   [
-                    ["concatenation", <Ltl f=";" />],
-                    ["fusion", <Ltl f=":" />],
+                    [
+                      "concatenation",
+                      <>
+                        <Ltl f=";" />, <Ltl f="##1" />
+                      </>
+                    ],
+                    [
+                      "fusion",
+                      <>
+                        <Ltl f=":" />, <Ltl f="##0" />
+                      </>
+                    ],
                     [
                       "union",
                       <>
@@ -2268,6 +2279,21 @@ class Help extends React.Component {
                     ["fusion plus", <Ltl f="[:+]" />],
                     ["goto", <Ltl f="[->i..j]" />],
                     ["nonconseq. rep.", <Ltl f="[=i..j]" />]
+                  ],
+                  "200px",
+                  this.props.classes
+                )}
+              </Typography>
+              <Typography variant="body2">
+                The following prefix unary operator is used as a function:
+                {OpTable(
+                  [
+                    [
+                      "first match",
+                      <>
+                        <Ltl f="first_match(…)" />
+                      </>
+                    ]
                   ],
                   "200px",
                   this.props.classes
