@@ -1,5 +1,5 @@
 /* -*- coding: utf-8 -*-
-** Copyright (C) 2018, 2019 Laboratoire de Recherche et Développement de
+** Copyright (C) 2018-2020 Laboratoire de Recherche et Développement de
 ** l'Epita.
 **
 ** This application is free software; you can redistribute it and/or
@@ -247,6 +247,9 @@ const styles = theme => ({
     paddingBottom: 10
   },
   stutterdiv: {},
+  indexdiv: {
+    paddingBottom: 10
+  },
   livenessdiv: {
     paddingBottom: 10
   },
@@ -942,6 +945,41 @@ class LtlStudy extends React.Component {
               it necessarily is the <b>intersection</b> of a liveness and a
               safety property.
             </Typography>
+          )}
+        </div>
+        <div className={this.props.classes.indexdiv}>
+          <Typography variant="body2" color="primary">
+            Indices
+          </Typography>
+          {(res["Rabin_index"] !== null || res["Streett_index"] !== null) && (
+            <Table className={this.props.classes.wordtable}>
+              <TableBody>
+                <TableRow className={this.props.classes.wordtablerow}>
+                  <TableCell
+                    component="th"
+                    scope="row"
+                    className={this.props.classes.wordtablecell}
+                  >
+                    Rabin index:
+                  </TableCell>
+                  <TableCell className={this.props.classes.wordtablecellw}>
+                    {res["Rabin_index"]}
+                  </TableCell>
+                </TableRow>
+                <TableRow className={this.props.classes.wordtablerow}>
+                  <TableCell
+                    component="th"
+                    scope="row"
+                    className={this.props.classes.wordtablecell}
+                  >
+                    Streett index:
+                  </TableCell>
+                  <TableCell className={this.props.classes.wordtablecellw}>
+                    {res["Streett_index"]}
+                  </TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
           )}
         </div>
         <div className={this.props.classes.satisfiabilitydiv}>

@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
-# Copyright (C) 2018-2019 Laboratoire de Recherche et Développement de
+# Copyright (C) 2018-2020 Laboratoire de Recherche et Développement de
 # l'Epita.
 #
 # This application is free software; you can redistribute it and/or
@@ -330,6 +330,27 @@ def study(ltlformula, method='GET'):
             result['rej_word'] = str(rej_word);
         else:
             result['rej_word'] = None;
+
+    # Rabin and Streett indices
+    # This is done my calling reduce_parity() on a deterministic
+    # parity automaton.
+    # Note that f2 is relabeled, so do not attempt to reuse
+    # pos as-is after this block.
+    if not spot.is_deterministic(pos):
+        pos = spot.translate(f2, 'medium', 'generic', 'deterministic')
+    isparity, ismax, isodd = pos.acc().is_parity()
+    if not isparity:
+        pos = spot.to_parity(pos)
+    spot.complete_here(pos)
+    spot.change_parity_here(pos,
+                            spot.parity_kind_max, spot.parity_style_any)
+    pos = spot.reduce_parity(pos)
+    isparity, ismax, isodd = pos.acc().is_parity()
+    assert isparity
+    assert ismax
+    ns = pos.num_sets() + 1
+    result['Rabin_index'] = (ns + int(isodd)) // 2
+    result['Streett_index'] = (ns + int(not isodd)) // 2
 
     return jsonify(result)
 
