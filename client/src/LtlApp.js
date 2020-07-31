@@ -2231,7 +2231,7 @@ class Help extends React.Component {
                   this.props.classes
                 )}
                 Double-quoted strings, as well as identifiers that do not look
-                like a operators, are assumed to be atomic propositions.
+                like operators, are assumed to be atomic propositions.
               </Typography>
             </Typography>
           </ExpansionPanelDetails>
