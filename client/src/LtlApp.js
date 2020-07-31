@@ -2216,6 +2216,8 @@ class Help extends React.Component {
                     ["true", <Ltl f="t" />],
                     ["false", <Ltl f="f" />],
                     ["not", <Ltl f="!" />],
+                    ["and", <Ltl f="&" />],
+                    ["or", <Ltl f="|" />],
                     ["implication", <Ltl f="i" />],
                     ["equivalence", <Ltl f="e" />],
                     ["xor", <Ltl f="^" />],
