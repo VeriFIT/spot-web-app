@@ -12,6 +12,7 @@ compile:
     - npm run build
   artifacts:
     when: always
+    expire_in: 6 months
     paths:
       - ./client/build/
       - ./server/*.py
