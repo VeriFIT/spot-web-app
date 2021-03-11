@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
-# Copyright (C) 2018-2020 Laboratoire de Recherche et Développement de
+# Copyright (C) 2018-2021 Laboratoire de Recherche et Développement de
 # l'Epita.
 #
 # This application is free software; you can redistribute it and/or
@@ -545,7 +545,8 @@ def translate(ltlformula, method='GET'):
     res['edges'] = aut.num_edges()
     res['det'] = spot.is_deterministic(aut)
 
-    res['automaton_hoa'] = aut.to_str('hoa')
+    res['automaton_hoa'] = aut.to_str('hoa',
+                                      't' if 'forcetacc' in args_o else '')
 
     if aut.is_sba() or aut.acc().is_t():
         res['automaton_spin'] = aut.to_str('spin')
