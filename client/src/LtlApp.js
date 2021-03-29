@@ -1,5 +1,5 @@
 /* -*- coding: utf-8 -*-
-** Copyright (C) 2018-2020 Laboratoire de Recherche et Développement de
+** Copyright (C) 2018-2021 Laboratoire de Recherche et Développement de
 ** l'Epita.
 **
 ** This application is free software; you can redistribute it and/or
@@ -328,7 +328,6 @@ function api_endpoint() {
 }
 
 function renderError(msg) {
-  console.log(msg);
   if (!msg.startsWith("500 ")) return <pre>{msg}</pre>;
   return (
     <React.Fragment>
@@ -396,7 +395,6 @@ class LtlInput extends React.Component {
 
   randomizeFormula = () => {
     let url = new URL(api_endpoint() + "random");
-    console.log(this.props.expert);
     if (this.props.expert)
       // turn on PSL generation
       url.searchParams.append("p", 1);
@@ -1125,16 +1123,11 @@ class LtlTranslate extends React.Component {
   }
 
   showfilehoa = () => {
-    console.log("showfile:", this.state.showfile);
-    console.log("showfile:", this.state.showfile === 1);
     let newval = this.state.showfile === 1 ? 0 : 1;
-    console.log("showfile:", newval);
     this.setState({ showfile: newval });
-    console.log("showfile:", this.state.showfile);
   };
   showfilespin = () => {
     this.setState({ showfile: this.state.showfile === 2 ? 0 : 2 });
-    console.log("showfile:", this.state.showfile);
   };
 
   buildResult(res) {
