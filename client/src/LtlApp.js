@@ -132,6 +132,7 @@ const styles = (theme) => ({
     overflow: "auto",
     whiteSpace: "pre-wrap",
     width: "100%",
+    margin: 0,
   },
   ltlInput: {
     width: "100%",
