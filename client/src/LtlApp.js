@@ -1,20 +1,20 @@
 /* -*- coding: utf-8 -*-
-** Copyright (C) 2018-2021 Laboratoire de Recherche et Développement de
-** l'Epita.
-**
-** This application is free software; you can redistribute it and/or
-** modify it under the terms of the GNU General Public License as
-** published by the Free Software Foundation; either version 3 of the
-** License, or (at your option) any later version.
-**
-** This application is distributed in the hope that it will be useful,
-** but WITHOUT ANY WARRANTY; without even the implied warranty of
-** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-** General Public License for more details.
-**
-** You should have received a copy of the GNU General Public License
-** along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ ** Copyright (C) 2018-2021 Laboratoire de Recherche et Développement de
+ ** l'Epita.
+ **
+ ** This application is free software; you can redistribute it and/or
+ ** modify it under the terms of the GNU General Public License as
+ ** published by the Free Software Foundation; either version 3 of the
+ ** License, or (at your option) any later version.
+ **
+ ** This application is distributed in the hope that it will be useful,
+ ** but WITHOUT ANY WARRANTY; without even the implied warranty of
+ ** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ ** General Public License for more details.
+ **
+ ** You should have received a copy of the GNU General Public License
+ ** along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 import React from "react";
 import "typeface-roboto";
 import Button from "@material-ui/core/Button";
@@ -53,14 +53,14 @@ import Tooltip from "@material-ui/core/Tooltip";
 import Typography from "@material-ui/core/Typography";
 import { withStyles } from "@material-ui/core/styles";
 
-const styles = theme => ({
+const styles = (theme) => ({
   toplevel: {
     display: "flex",
     flexWrap: "wrap",
     alignItems: "flex-start",
     [theme.breakpoints.up("sm")]: {
-      justifyContent: "center"
-    }
+      justifyContent: "center",
+    },
   },
   help: {
     margin: theme.spacing.unit,
@@ -68,37 +68,37 @@ const styles = theme => ({
     width: 640 - 2 * theme.spacing.unit,
     [theme.breakpoints.down("sm")]: {
       marginLeft: 0,
-      marginRight: 0
+      marginRight: 0,
     },
-    "& h2": { color: theme.palette.primary.main }
+    "& h2": { color: theme.palette.primary.main },
   },
   helptop: {
-    padding: 4
+    padding: 4,
   },
   helpexpanded: {
     margin: 0,
     "&:before": {
-      opacity: 1
-    }
+      opacity: 1,
+    },
   },
   optable: {
     display: "flex",
     flexDirection: "row",
     flexWrap: "wrap",
     width: "100%",
-    justifyContent: "space-around"
+    justifyContent: "space-around",
   },
   oppair: {
     display: "block",
     padding: 2,
     margin: 2,
-    backgroundColor: "#EEEEEE"
+    backgroundColor: "#EEEEEE",
   },
   opdesc: {
-    float: "left"
+    float: "left",
   },
   opsyn: {
-    float: "right"
+    float: "right",
   },
   root: {
     margin: theme.spacing.unit,
@@ -106,40 +106,40 @@ const styles = theme => ({
     width: 640 - 2 * theme.spacing.unit,
     [theme.breakpoints.down("sm")]: {
       marginLeft: 0,
-      marginRight: 0
-    }
+      marginRight: 0,
+    },
   },
   progress: {
     display: "block",
-    margin: "auto"
+    margin: "auto",
   },
   optionstrans: {
     display: "flex",
     flexWrap: "wrap",
-    alignItems: "flex-start"
+    alignItems: "flex-start",
   },
   tab: {
     maxWidth: 150,
-    minWidth: 50
+    minWidth: 50,
   },
   tablabel: {
-    fontSize: theme.typography.pxToRem(14)
+    fontSize: theme.typography.pxToRem(14),
   },
   fclvertical: {
-    marginRight: 0
+    marginRight: 0,
   },
   pre: {
     overflow: "auto",
     whiteSpace: "pre-wrap",
-    width: "100%"
+    width: "100%",
   },
   ltlInput: {
     width: "100%",
-    overflow: "hidden"
+    overflow: "hidden",
   },
   ltlsyntax: {},
   helperText: {
-    marginTop: 0
+    marginTop: 0,
   },
   borderedgroupprimary: {
     padding: 8,
@@ -152,8 +152,8 @@ const styles = theme => ({
       paddingLeft: 8,
       paddingRight: 8,
       backgroundColor: "white",
-      color: theme.palette.primary.light
-    }
+      color: theme.palette.primary.light,
+    },
   },
   borderedgroupsecondary: {
     padding: 8,
@@ -166,111 +166,111 @@ const styles = theme => ({
       paddingLeft: 8,
       paddingRight: 8,
       backgroundColor: "white",
-      color: theme.palette.secondary.light
+      color: theme.palette.secondary.light,
     },
     "& legend$focused": {
-      color: theme.palette.secondary.main
-    }
+      color: theme.palette.secondary.main,
+    },
   },
   flexhoriz: {
-    flexDirection: "row"
+    flexDirection: "row",
   },
   focused: {},
 
   choicemenuitem: {
     "&:focus": {
       backgroundColor: theme.palette.primary.main,
-      color: theme.palette.common.white
-    }
+      color: theme.palette.common.white,
+    },
   },
   unabbrev: {
     flexDirection: "row",
-    flexWrap: "wrap"
+    flexWrap: "wrap",
   },
   unabbrevboxroot: {
     marginRight: "16px",
     marginBottom: "-8px",
-    marginTop: "-8px"
+    marginTop: "-8px",
   },
   unabbrevboxlabel: {
-    marginLeft: "-8px"
+    marginLeft: "-8px",
   },
   parseerror: {
-    color: theme.palette.error.main
+    color: theme.palette.error.main,
   },
   textField: {
-    overflow: "hidden"
+    overflow: "hidden",
   },
   textField1: {
     overflow: "hidden",
-    backgroundColor: "#b2ffff"
+    backgroundColor: "#b2ffff",
   },
   textField2: {
     overflow: "hidden",
-    backgroundColor: "#ffccff"
+    backgroundColor: "#ffccff",
   },
   update: {
     width: "100px",
-    float: "right"
+    float: "right",
   },
   winicons: {
-    float: "right"
+    float: "right",
   },
   helpiconsdiv: {
-    overflow: "auto"
+    overflow: "auto",
   },
   helpicons: {
     float: "right",
-    marginRight: theme.spacing.unit
+    marginRight: theme.spacing.unit,
   },
   menu: {},
   versions: {
     float: "right",
-    marginTop: "8px"
+    marginTop: "8px",
   },
   vendiag: {
-    float: "right"
+    float: "right",
   },
   versiontable: {},
   results: {
     width: "100%",
     padding: theme.spacing.unit,
-    overflow: "auto"
+    overflow: "auto",
   },
   hierarchy_svg: {
-    float: "right"
+    float: "right",
   },
   hierarchydiv: {
-    paddingBottom: 10
+    paddingBottom: 10,
   },
   satisfiabilitydiv: {
-    paddingBottom: 10
+    paddingBottom: 10,
   },
   stutterdiv: {},
   indexdiv: {
-    paddingBottom: 10
+    paddingBottom: 10,
   },
   livenessdiv: {
-    paddingBottom: 10
+    paddingBottom: 10,
   },
   wordtable: {
-    width: "auto"
+    width: "auto",
   },
   wordtablerow: {
-    height: "auto"
+    height: "auto",
   },
   wordtablecell: {
-    borderBottom: "none"
+    borderBottom: "none",
   },
   wordtablecellw: {
     borderBottom: "none",
-    fontWeight: "bold"
+    fontWeight: "bold",
   },
   automaton_svg: {
     overflow: "auto",
     marginLeft: -4,
-    marginRight: -4
-  }
+    marginRight: -4,
+  },
 });
 
 function DiceIcon(props) {
@@ -356,7 +356,7 @@ function handleErrors(response) {
   return response.json();
 }
 function handleErrorsAndClearTimer(timer) {
-  return response => {
+  return (response) => {
     clearTimeout(timer);
     if (!response.ok) {
       throw Error(response.status + " " + response.statusText);
@@ -376,10 +376,10 @@ function righthelp(contents, help) {
 class LtlInput extends React.Component {
   state = {
     tmpformula: this.props.defaultValue || "",
-    formula: this.props.defaultValue || ""
+    formula: this.props.defaultValue || "",
   };
 
-  handleChange = e => {
+  handleChange = (e) => {
     this.setState({ tmpformula: e.target.value });
   };
 
@@ -389,7 +389,7 @@ class LtlInput extends React.Component {
     this.props.setFormula(fmt);
   };
 
-  handleKey = e => {
+  handleKey = (e) => {
     if (e.key === "Enter") this.updateFormula();
   };
 
@@ -400,7 +400,7 @@ class LtlInput extends React.Component {
       url.searchParams.append("p", 1);
     fetch(url)
       .then(handleErrors)
-      .then(fmt => {
+      .then((fmt) => {
         this.setState({ tmpformula: fmt, formula: fmt });
         this.props.setFormula(fmt);
       });
@@ -433,7 +433,7 @@ class LtlInput extends React.Component {
                   </IconButton>
                 </InputAdornment>
               </Tooltip>
-            )
+            ),
           }}
         />
         <FormHelperText className={this.props.classes.helperText}>
@@ -465,10 +465,10 @@ class LtlInput extends React.Component {
 class Versions extends React.Component {
   state = {
     anchorEl: null,
-    versions: []
+    versions: [],
   };
 
-  handleOpen = event => {
+  handleOpen = (event) => {
     this.setState({ anchorEl: event.currentTarget });
   };
 
@@ -479,11 +479,11 @@ class Versions extends React.Component {
   componentDidMount() {
     fetch(api_endpoint() + "versions")
       .then(handleErrors)
-      .then(vers => {
+      .then((vers) => {
         vers.push(["React", React.version, "https://reactjs.org/"]);
         this.setState({ versions: vers });
       })
-      .catch(error =>
+      .catch((error) =>
         this.setState({ versions: [[error.message, null, null]] })
       );
   }
@@ -533,14 +533,14 @@ class LtlSyntaxChoice extends React.Component {
     o: "Output syntax: Spot",
     l: "Output syntax: LBT/LTL2DSTAR",
     i: "Output syntax: Spin",
-    g: "Show Abstract Syntax Tree"
+    g: "Show Abstract Syntax Tree",
   };
 
   state = {
-    anchorEl: null
+    anchorEl: null,
   };
 
-  handleClickListItem = event => {
+  handleClickListItem = (event) => {
     this.setState({ anchorEl: event.currentTarget });
   };
 
@@ -581,7 +581,7 @@ class LtlSyntaxChoice extends React.Component {
               key={key}
               className={classes.choicemenuitem}
               selected={key === this.props.syntax}
-              onClick={event => this.handleMenuItemClick(event, key)}
+              onClick={(event) => this.handleMenuItemClick(event, key)}
             >
               {option}
             </MenuItem>
@@ -601,7 +601,7 @@ class LtlSimplificationOptions extends React.Component {
     lc: "reduction based on automata-based containements",
     fs: "enable rules that favor suspendable formules at the top level",
     pn: "NNF rewriting should stop on Boolean subformulas",
-    bi: "rewrite Boolean subformulas to irredundant-sum-of-products"
+    bi: "rewrite Boolean subformulas to irredundant-sum-of-products",
   };
   form = ([key, value]) => {
     return (
@@ -641,14 +641,14 @@ class LtlUnabbrevOptions extends React.Component {
     G: ["G", "[]", "G"],
     R: ["R", "V", "V"],
     M: ["M", "M", "M"],
-    W: ["W", "W", "W"]
+    W: ["W", "W", "W"],
   };
   options2 = {
     i: ["->", "->", "i"],
     e: ["<->", "<->", "e"],
-    "^": ["xor", "xor", "^"]
+    "^": ["xor", "xor", "^"],
   };
-  form = values => {
+  form = (values) => {
     let syntaxId =
       this.props.syntax === "i" ? 1 : this.props.syntax === "l" ? 2 : 0;
     let key = values[0];
@@ -664,7 +664,7 @@ class LtlUnabbrevOptions extends React.Component {
         }
         classes={{
           root: this.props.classes.unabbrevboxroot,
-          label: this.props.classes.unabbrevboxlabel
+          label: this.props.classes.unabbrevboxlabel,
         }}
         label={<code>{values[1][syntaxId]}</code>}
       />
@@ -676,7 +676,7 @@ class LtlUnabbrevOptions extends React.Component {
         component="fieldset"
         className={[
           this.props.classes.borderedgroupprimary,
-          this.props.classes.unabbrev
+          this.props.classes.unabbrev,
         ]}
       >
         <FormLabel component="legend">
@@ -701,14 +701,14 @@ class AccChoice extends React.Component {
     b: "Acceptance: (state-based) Büchi",
     g: "Acceptance: Generalized Büchi",
     p: "Acceptance: parity",
-    e: "Acceptance: Emerson-Lei (generic acceptance)"
+    e: "Acceptance: Emerson-Lei (generic acceptance)",
   };
 
   state = {
-    anchorEl: null
+    anchorEl: null,
   };
 
-  handleClickListItem = event => {
+  handleClickListItem = (event) => {
     this.setState({ anchorEl: event.currentTarget });
   };
 
@@ -749,7 +749,7 @@ class AccChoice extends React.Component {
               key={key}
               className={classes.choicemenuitem}
               selected={key === this.props.acc}
-              onClick={event => this.handleMenuItemClick(event, key)}
+              onClick={(event) => this.handleMenuItemClick(event, key)}
             >
               {option}
             </MenuItem>
@@ -772,7 +772,7 @@ class LtlRewrite extends React.Component {
   timer = null;
 
   state = {
-    result: null
+    result: null,
   };
 
   componentWillUnmount() {
@@ -801,12 +801,12 @@ class LtlRewrite extends React.Component {
 
     this.timer = setTimeout(() => {
       this.setState({
-        result: <CircularProgress className={this.props.classes.progress} />
+        result: <CircularProgress className={this.props.classes.progress} />,
       });
     }, 800);
     fetch(url)
       .then(handleErrorsAndClearTimer(this.timer))
-      .then(res => {
+      .then((res) => {
         this.props.handleAnyParseError(res);
         if ("formula" in res)
           this.setState({ result: <Typography>{res["formula"]}</Typography> });
@@ -816,7 +816,7 @@ class LtlRewrite extends React.Component {
           this.setState({ result: <Typography>{res["error"]}</Typography> });
         else this.setState({ result: null });
       })
-      .catch(error => {
+      .catch((error) => {
         clearTimeout(this.timer);
         this.setState({ result: renderError(error.message) });
       });
@@ -887,7 +887,7 @@ class LtlStudy extends React.Component {
   timer = null;
 
   state = {
-    result: null
+    result: null,
   };
 
   componentWillUnmount() {
@@ -994,37 +994,36 @@ class LtlStudy extends React.Component {
               This formula is <b>unsatisfiable</b>.
             </Typography>
           )}
-          {res["acc_word"] !== null &&
-            res["rej_word"] !== null && (
-              <Table className={this.props.classes.wordtable}>
-                <TableBody>
-                  <TableRow className={this.props.classes.wordtablerow}>
-                    <TableCell
-                      component="th"
-                      scope="row"
-                      className={this.props.classes.wordtablecell}
-                    >
-                      Accepted word:
-                    </TableCell>
-                    <TableCell className={this.props.classes.wordtablecellw}>
-                      {res["acc_word"]}
-                    </TableCell>
-                  </TableRow>
-                  <TableRow className={this.props.classes.wordtablerow}>
-                    <TableCell
-                      component="th"
-                      scope="row"
-                      className={this.props.classes.wordtablecell}
-                    >
-                      Rejected word:
-                    </TableCell>
-                    <TableCell className={this.props.classes.wordtablecellw}>
-                      {res["rej_word"]}
-                    </TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
-            )}
+          {res["acc_word"] !== null && res["rej_word"] !== null && (
+            <Table className={this.props.classes.wordtable}>
+              <TableBody>
+                <TableRow className={this.props.classes.wordtablerow}>
+                  <TableCell
+                    component="th"
+                    scope="row"
+                    className={this.props.classes.wordtablecell}
+                  >
+                    Accepted word:
+                  </TableCell>
+                  <TableCell className={this.props.classes.wordtablecellw}>
+                    {res["acc_word"]}
+                  </TableCell>
+                </TableRow>
+                <TableRow className={this.props.classes.wordtablerow}>
+                  <TableCell
+                    component="th"
+                    scope="row"
+                    className={this.props.classes.wordtablecell}
+                  >
+                    Rejected word:
+                  </TableCell>
+                  <TableCell className={this.props.classes.wordtablecellw}>
+                    {res["rej_word"]}
+                  </TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          )}
         </div>
         <div className={this.props.classes.stutterdiv}>
           <Typography variant="body2" color="primary">
@@ -1074,16 +1073,16 @@ class LtlStudy extends React.Component {
 
     this.timer = setTimeout(() => {
       this.setState({
-        result: <CircularProgress className={this.props.classes.progress} />
+        result: <CircularProgress className={this.props.classes.progress} />,
       });
     }, 800);
     fetch(url)
       .then(handleErrorsAndClearTimer(this.timer))
-      .then(res => {
+      .then((res) => {
         this.props.handleAnyParseError(res);
         this.setState({ result: this.buildResult(res) });
       })
-      .catch(error => {
+      .catch((error) => {
         clearTimeout(this.timer);
         this.setState({ result: renderError(error.message) });
       });
@@ -1115,7 +1114,7 @@ class LtlTranslate extends React.Component {
 
   state = {
     result: null,
-    showfile: 0
+    showfile: 0,
   };
 
   componentWillUnmount() {
@@ -1145,7 +1144,7 @@ class LtlTranslate extends React.Component {
               {res["edges"] > 1 ? "s" : ""}.
             </Typography>
           )}
-          {"note" in res && res["note"].map(note => <NoteText text={note} />)}
+          {"note" in res && res["note"].map((note) => <NoteText text={note} />)}
           {"automaton_svg" in res && (
             <SVGInline
               className={this.props.classes.automaton_svg}
@@ -1200,16 +1199,16 @@ class LtlTranslate extends React.Component {
       this.setState({
         result: () => (
           <CircularProgress className={this.props.classes.progress} />
-        )
+        ),
       });
     }, 800);
     fetch(url)
       .then(handleErrorsAndClearTimer(this.timer))
-      .then(res => {
+      .then((res) => {
         this.props.handleAnyParseError(res);
         this.setState({ result: this.buildResult(res) });
       })
-      .catch(error => {
+      .catch((error) => {
         clearTimeout(this.timer);
         this.setState({ result: () => renderError(error.message) });
       });
@@ -1499,21 +1498,21 @@ class LtlCompare extends React.Component {
   state = {
     formula2err: null,
     formula2lbt: false,
-    result: null
+    result: null,
   };
 
   componentWillUnmount() {
     clearTimeout(this.timer);
   }
 
-  setFormulaError2 = val => {
+  setFormulaError2 = (val) => {
     this.setState({ formula2err: val });
   };
-  setPrefixSyntax2 = val => {
+  setPrefixSyntax2 = (val) => {
     this.setState({ formula2lbt: val });
   };
 
-  handleAnyParseError = res => {
+  handleAnyParseError = (res) => {
     this.props.handleAnyParseError(res); // first formula
     if ("parse_error2" in res) this.setFormulaError2(res["parse_error2"]);
     else this.setFormulaError2(null);
@@ -1604,16 +1603,16 @@ class LtlCompare extends React.Component {
 
     this.timer = setTimeout(() => {
       this.setState({
-        result: <CircularProgress className={this.props.classes.progress} />
+        result: <CircularProgress className={this.props.classes.progress} />,
       });
     }, 800);
     fetch(url)
       .then(handleErrorsAndClearTimer(this.timer))
-      .then(res => {
+      .then((res) => {
         this.handleAnyParseError(res);
         this.setState({ result: this.buildResult(res) });
       })
-      .catch(error => {
+      .catch((error) => {
         clearTimeout(this.timer);
         this.setState({ result: renderError(error.message) });
       });
@@ -1679,7 +1678,7 @@ class LtlApp extends React.Component {
       showndet: false,
       forcetacc: false,
       // parity options
-      colored: false
+      colored: false,
     },
     ltlunabbrev: {
       M: false,
@@ -1689,7 +1688,7 @@ class LtlApp extends React.Component {
       F: false,
       e: false,
       i: false,
-      "^": false
+      "^": false,
     },
     ltlsimp: {
       br: true,
@@ -1699,47 +1698,47 @@ class LtlApp extends React.Component {
       lc: true,
       fs: false,
       pn: false,
-      bi: false
-    }
+      bi: false,
+    },
   };
-  handleChangeLtlSimp = key => () => {
+  handleChangeLtlSimp = (key) => () => {
     let newltlsimp = Object.assign({}, this.state.ltlsimp);
     newltlsimp[key] = !newltlsimp[key];
     this.setState({ ltlsimp: newltlsimp });
   };
-  handleChangeTransOpts = key => () => {
+  handleChangeTransOpts = (key) => () => {
     let newtransopts = Object.assign({}, this.state.transopts);
     newtransopts[key] = !newtransopts[key];
     this.setState({ transopts: newtransopts });
   };
 
-  handleChangeLtlUnabbrev = key => () => {
+  handleChangeLtlUnabbrev = (key) => () => {
     let newltlunabbrev = Object.assign({}, this.state.ltlunabbrev);
     newltlunabbrev[key] = !newltlunabbrev[key];
     this.setState({ ltlunabbrev: newltlunabbrev });
   };
 
-  changeAutpref = event => {
+  changeAutpref = (event) => {
     this.setState({ autpref: event.target.value });
   };
-  changeOptLevel = event => {
+  changeOptLevel = (event) => {
     this.setState({ optlevel: event.target.value });
   };
-  changeOddEven = event => {
+  changeOddEven = (event) => {
     this.setState({ oddeven: event.target.value });
   };
-  changeMinMax = event => {
+  changeMinMax = (event) => {
     this.setState({ minmax: event.target.value });
   };
 
-  setFormulaError = val => {
+  setFormulaError = (val) => {
     this.setState({ formulaerr: val });
   };
-  setPrefixSyntax = val => {
+  setPrefixSyntax = (val) => {
     this.setState({ formulalbt: val });
   };
 
-  handleAnyParseError = res => {
+  handleAnyParseError = (res) => {
     if ("parse_error" in res) this.setFormulaError(res["parse_error"]);
     else this.setFormulaError(null);
     this.setPrefixSyntax(res["prefix_syntax"] === true);
@@ -1748,19 +1747,19 @@ class LtlApp extends React.Component {
   changeAction = (event, value) => {
     this.setState({ action: value });
   };
-  changeSyntax = key => {
+  changeSyntax = (key) => {
     this.setState({ syntax: key });
   };
-  changeAcc = key => {
+  changeAcc = (key) => {
     this.setState({ acc: key });
   };
-  handleChecked = name => event => {
+  handleChecked = (name) => (event) => {
     this.setState({ [name]: event.target.checked });
   };
-  handleChangeFormula = str => {
+  handleChangeFormula = (str) => {
     this.setState({ formula: str });
   };
-  handleChangeFormula2 = str => {
+  handleChangeFormula2 = (str) => {
     this.setState({ formula2: str });
   };
 
@@ -1805,7 +1804,7 @@ class LtlApp extends React.Component {
             value={0}
             classes={{
               root: this.props.classes.tab,
-              label: this.props.classes.tablabel
+              label: this.props.classes.tablabel,
             }}
             label="Rewrite"
           />
@@ -1813,7 +1812,7 @@ class LtlApp extends React.Component {
             value={1}
             classes={{
               root: this.props.classes.tab,
-              label: this.props.classes.tablabel
+              label: this.props.classes.tablabel,
             }}
             label="Study"
           />
@@ -1821,7 +1820,7 @@ class LtlApp extends React.Component {
             value={2}
             classes={{
               root: this.props.classes.tab,
-              label: this.props.classes.tablabel
+              label: this.props.classes.tablabel,
             }}
             label="Compare"
           />
@@ -1829,7 +1828,7 @@ class LtlApp extends React.Component {
             value={3}
             classes={{
               root: this.props.classes.tab,
-              label: this.props.classes.tablabel
+              label: this.props.classes.tablabel,
             }}
             label="Translate"
           />
@@ -1917,7 +1916,7 @@ class LtlApp extends React.Component {
 function OpTable(array, width, classes) {
   return (
     <div className={classes.optable}>
-      {array.map(value => {
+      {array.map((value) => {
         return (
           <div className={classes.oppair} style={{ width: width }}>
             <div className={classes.opdesc}>{value[0]}:</div>
@@ -2057,12 +2056,11 @@ class Help extends React.Component {
                 start with the letter of a prefix operator (<Ltl f="F" />,{" "}
                 <Ltl f="G" />, or <Ltl f="X" />
                 ): for instance <Ltl f="GFa" /> means <Ltl f="G(F(a))" />. Use{" "}
-                <Ltl f="&quot;GFa&quot;" />, with double quotes, if you really
-                want to refer to <Ltl f="GFa" /> as a proposition. Conversely,
-                infix letter operators are not assumed to be operators if they
-                are part of an identifier: <Ltl f="aUb" /> is an atomic
-                proposition, unlike <Ltl f="a&nbsp;U&nbsp;b" /> and{" "}
-                <Ltl f="(a)U(b)" />.
+                <Ltl f='"GFa"' />, with double quotes, if you really want to
+                refer to <Ltl f="GFa" /> as a proposition. Conversely, infix
+                letter operators are not assumed to be operators if they are
+                part of an identifier: <Ltl f="aUb" /> is an atomic proposition,
+                unlike <Ltl f="a&nbsp;U&nbsp;b" /> and <Ltl f="(a)U(b)" />.
               </Typography>
               <Typography variant="body2" color="primary">
                 Boolean constants
@@ -2083,39 +2081,39 @@ class Help extends React.Component {
                       <>
                         <Ltl f="&amp;" />, <Ltl f="&amp;&amp;" />,{" "}
                         <Ltl f="/\" /*"*/ />
-                      </>
+                      </>,
                     ],
                     [
                       "or",
                       <>
                         <Ltl f="|" />, <Ltl f="||" />, <Ltl f="\/" />,{" "}
                         <Ltl f="+" />
-                      </>
+                      </>,
                     ],
                     [
                       "implies",
                       <>
                         <Ltl f="->" />, <Ltl f="-->" />, <Ltl f="=>" />
-                      </>
+                      </>,
                     ],
                     [
                       "equivalent",
                       <>
                         <Ltl f="<->" />, <Ltl f="<-->" />, <Ltl f="<=>" />
-                      </>
+                      </>,
                     ],
                     [
                       "not",
                       <>
                         <Ltl f="!" /> (prefix), <Ltl f="~" /> (prefix)
-                      </>
+                      </>,
                     ],
                     [
                       "exclusive or",
                       <>
                         <Ltl f="^" />, <Ltl f="xor" />
-                      </>
-                    ]
+                      </>,
+                    ],
                   ],
                   "180px",
                   this.props.classes
@@ -2142,8 +2140,8 @@ class Help extends React.Component {
                       "weak release",
                       <>
                         <Ltl f="R" />, <Ltl f="V" />
-                      </>
-                    ]
+                      </>,
+                    ],
                   ],
                   "120px",
                   this.props.classes
@@ -2155,20 +2153,20 @@ class Help extends React.Component {
                       "next",
                       <>
                         <Ltl f="X" />, <Ltl f="()" />
-                      </>
+                      </>,
                     ],
                     [
                       "eventually",
                       <>
                         <Ltl f="F" />, <Ltl f="<>" />
-                      </>
+                      </>,
                     ],
                     [
                       "globally",
                       <>
                         <Ltl f="G" />, <Ltl f="[]" />
-                      </>
-                    ]
+                      </>,
+                    ],
                   ],
                   "120px",
                   this.props.classes
@@ -2220,7 +2218,7 @@ class Help extends React.Component {
                     ["strong until", <Ltl f="U" />],
                     ["weak release", <Ltl f="V" />],
                     ["strong release", <Ltl f="M" />],
-                    ["weak until", <Ltl f="W" />]
+                    ["weak until", <Ltl f="W" />],
                   ],
                   "120px",
                   this.props.classes
@@ -2268,23 +2266,23 @@ class Help extends React.Component {
                       "concatenation",
                       <>
                         <Ltl f=";" />, <Ltl f="##1" />
-                      </>
+                      </>,
                     ],
                     [
                       "fusion",
                       <>
                         <Ltl f=":" />, <Ltl f="##0" />
-                      </>
+                      </>,
                     ],
                     [
                       "union",
                       <>
                         <Ltl f="|" />, <Ltl f="||" />, <Ltl f="\/" />,{" "}
                         <Ltl f="+" />
-                      </>
+                      </>,
                     ],
                     ["intersection", <Ltl f="&amp;&amp;" />],
-                    ["NLM-intersection", <Ltl f="&amp;" />]
+                    ["NLM-intersection", <Ltl f="&amp;" />],
                   ],
                   "140px",
                   this.props.classes
@@ -2300,18 +2298,18 @@ class Help extends React.Component {
                       "Kleene star",
                       <>
                         <Ltl f="*" />, <Ltl f="[*]" />, <Ltl f="[*i..j]" />
-                      </>
+                      </>,
                     ],
                     ["Kleene plus", <Ltl f="[+]" />],
                     [
                       "fusion star",
                       <>
                         <Ltl f="[:*]" />, <Ltl f="[:*i..j]" />
-                      </>
+                      </>,
                     ],
                     ["fusion plus", <Ltl f="[:+]" />],
                     ["goto", <Ltl f="[->i..j]" />],
-                    ["nonconseq. rep.", <Ltl f="[=i..j]" />]
+                    ["nonconseq. rep.", <Ltl f="[=i..j]" />],
                   ],
                   "200px",
                   this.props.classes
@@ -2325,8 +2323,8 @@ class Help extends React.Component {
                       "first match",
                       <>
                         <Ltl f="first_match(…)" />
-                      </>
-                    ]
+                      </>,
+                    ],
                   ],
                   "200px",
                   this.props.classes
@@ -2345,24 +2343,24 @@ class Help extends React.Component {
                       <>
                         <Ltl f="{r}[]->f" />, <Ltl f="{r}|->f" />,{" "}
                         <Ltl f="{r}(f)" />
-                      </>
+                      </>,
                     ],
                     [
                       "existential suffix implication (a.k.a. seq)",
-                      <Ltl f="{r}<>->f" />
+                      <Ltl f="{r}<>->f" />,
                     ],
                     [
                       "non-overlapping universal suffix implication",
                       <>
                         <Ltl f="{r}[]=>f" />, <Ltl f="{r}|=>f" />
-                      </>
+                      </>,
                     ],
                     [
                       "non-overlapping existential suffix implication",
-                      <Ltl f="{r}<>=>f" />
+                      <Ltl f="{r}<>=>f" />,
                     ],
                     ["weak closure", <Ltl f="{r}" />],
-                    ["strong closure", <Ltl f="{r}!" />]
+                    ["strong closure", <Ltl f="{r}!" />],
                   ],
                   "300px",
                   this.props.classes
@@ -2477,7 +2475,7 @@ class Help extends React.Component {
 class LtlApps extends React.Component {
   state = {
     instances: 1,
-    show_help: 0
+    show_help: 0,
   };
 
   handleDup = () => {
