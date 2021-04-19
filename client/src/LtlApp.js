@@ -218,10 +218,10 @@ const styles = (theme) => ({
   },
   helpiconsdiv: {
     overflow: "auto",
+    marginRight: theme.spacing.unit,
   },
   helpicons: {
     float: "right",
-    marginRight: theme.spacing.unit,
   },
   menu: {},
   versions: {
