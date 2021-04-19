@@ -11,17 +11,39 @@ It's made of
 Development
 -----------
 
-To start developping, first launch a server on localhost:5000 with
+To start developping, first install Spot (see http://spot.lrde.epita.fr/instal.html)
+with its Python bindings.  Then launch an API server on localhost:5000 with
 
   % server/spotapi.py
 
-then launch a client with
+finally launch a web client with
 
   % cd client
   % npm run start
 
 Now any save to spotapi.py or client/src/LtlApp.js will cause these
 components to reload automatically.
+
+
+Using remotely or locally
+-------------------------
+
+This application is live at https://spot.lrde.epita.fr/app/
+
+However this public server may be subject to occasional down time.  If
+you absolutely need the application for critical work (e.g, student
+exam) you should run it locally on your own computer.  This can be
+done from git using the development instruction above, or more simply
+by downloading a copy of the docker container that runs the Spot web
+site:
+
+   sudo docker pull gitlab-registry.lrde.epita.fr/spot/spot-web
+   sudo docker run --rm=true -p 8080:80 gitlab-registry.lrde.epita.fr/spot/spot-web
+
+The first command is optionnal and can be used to update an old local
+copy of the container.  The second command will run the container and
+map its internal 80 port to 8080 on the local host, so you can point
+your browser to localhost:8080/app/ to access the application.
 
 
 Licenses

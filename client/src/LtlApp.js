@@ -319,10 +319,19 @@ function NoteText(props) {
 }
 
 function api_endpoint() {
+  /* REACT_APP_API_ENDPOINT and REACT_APP_API_PORT are defined in
+   * files client/.env.{production,development}
+   *
+   * When developing, the API and web pages are running on different
+   * ports, but in production we assume they are served from the
+   * same server.
+   */
   return (
     window.location.protocol +
     "//" +
-    window.location.hostname +
+    (process.env.REACT_APP_API_PORT
+      ? window.location.hostname + process.env.REACT_APP_API_PORT
+      : window.location.host) +
     process.env.REACT_APP_API_ENDPOINT
   );
 }
