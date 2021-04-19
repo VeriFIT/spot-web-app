@@ -558,12 +558,12 @@ def translate(ltlformula, method='GET'):
 
 svg_compare_list = [
     ("""<svg width="200px" height="100px" viewBox="0 0 200 100">
-       <ellipse cx="66" cy="50" rx="60" ry="40" style='fill:cyan;opacity:0.3' />
-       <ellipse cx="132" cy="50" rx="60" ry="40" style='fill:magenta;opacity:0.2' />
-       <text text-anchor="middle" x="50" y="53">w₄</text>
-       <text text-anchor="middle" x="150" y="53">w₂</text>
-       <text text-anchor="middle" x="100" y="53">w₁</text>
-       <text text-anchor="middle" x="100" y="99">w₃</text>
+       <ellipse cx="66" cy="48" rx="60" ry="40" style='fill:cyan;opacity:0.3' />
+       <ellipse cx="132" cy="48" rx="60" ry="40" style='fill:magenta;opacity:0.2' />
+       <text text-anchor="middle" x="50" y="51">w₄</text>
+       <text text-anchor="middle" x="150" y="51">w₂</text>
+       <text text-anchor="middle" x="100" y="51">w₁</text>
+       <text text-anchor="middle" x="100" y="96">w₃</text>
     </svg>""", "The two formulas are incomparable."),
     ("""<svg width="200px" height="100px" viewBox="0 0 200 100">
        <ellipse cx="100" cy="50" rx="90" ry="40" style='fill:cyan;opacity:0.3' />
