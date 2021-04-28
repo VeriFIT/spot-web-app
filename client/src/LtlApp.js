@@ -914,7 +914,7 @@ class LtlStudy extends React.Component {
             svg={res["mp_hierarchy_svg"]}
           />
           <Typography variant="body2" color="primary">
-            Hierarchy of Mana and Pnueli
+            Hierarchy of Manna and Pnueli
           </Typography>
           <Typography>
             This formula describes <b>{res["mp_class_text"]}</b>.
