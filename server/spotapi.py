@@ -591,7 +591,7 @@ svg_compare_list = [
        <text text-anchor="middle" x="50" y="53">w₄</text>
        <text text-anchor="middle" x="150" y="53">w₂</text>
        <text text-anchor="middle" x="100" y="90">w₃</text>
-    </svg>""", "The two formula are disjoint."),
+    </svg>""", "The two formulas are disjoint."),
     ("""<svg width="200px" height="100px" viewBox="0 0 200 100">
        <ellipse cx="50" cy="50" rx="45" ry="40" style='fill:cyan;opacity:0.3' />
        <text text-anchor="middle" x="50" y="53">w₄</text>
