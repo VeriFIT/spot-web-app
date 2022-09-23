@@ -5,7 +5,7 @@ compile:
   stage: build
   except:
     - /wip/
-  image: gitlab-registry.lrde.epita.fr/spot/buildenv/debian-node
+  image: gitlab-registry.lre.epita.fr/spot/buildenv/debian-node
   script:
     - cd client
     - npm install

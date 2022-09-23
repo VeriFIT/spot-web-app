@@ -37,8 +37,8 @@ done from git using the development instruction above, or more simply
 by downloading a copy of the docker container that runs the Spot web
 site:
 
-   sudo docker pull gitlab-registry.lrde.epita.fr/spot/spot-web
-   sudo docker run --rm=true -p 8080:80 gitlab-registry.lrde.epita.fr/spot/spot-web
+   sudo docker pull gitlab-registry.lre.epita.fr/spot/spot-web
+   sudo docker run --rm=true -p 8080:80 gitlab-registry.lre.epita.fr/spot/spot-web
 
 The first command is optionnal and can be used to update an old local
 copy of the container.  The second command will run the container and
