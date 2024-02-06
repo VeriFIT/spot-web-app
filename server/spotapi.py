@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
-# Copyright (C) 2018-2021 Laboratoire de Recherche et Développement de
-# l'Epita.
+# Copyright (C) 2018-2021, 2024 Laboratoire de Recherche et
+# Développement de l'Epita.
 #
 # This application is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License as
@@ -64,11 +64,7 @@ def parse_ltl(input, res, errkey='parse_error', synkey='prefix_syntax'):
         else:
             f = pg.f
             res[synkey] = True
-    # starting with Spot 2.6.1 we can do "return f", but before that f is a
-    # pointer into the pf/pg structure, so we cannot return it.
-    if not f:
-        return None
-    return spot.formula(str(f))
+    return f
 
 def warn(res, msg):
     if 'note' in res:
