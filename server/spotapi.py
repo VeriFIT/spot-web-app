@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
-# Copyright (C) 2018-2021, 2024 Laboratoire de Recherche et
+# Copyright (C) 2018-2021, 2024, 2025 Laboratoire de Recherche et
 # Développement de l'Epita.
 #
 # This application is free software; you can redistribute it and/or
@@ -521,7 +521,7 @@ def translate(ltlformula, method='GET'):
             automaton_svg = str_to_svg(dotsrc.str().encode('utf-8'))
             res['automaton_svg'] = automaton_svg
             # Check if the automaton was scaled down.
-            m = re.search('transform="scale\(([.\d]+) ', automaton_svg)
+            m = re.search(r'transform="scale\(([.\d]+) ', automaton_svg)
             if m:
                 scale = float(m.group(1))
                 if scale <= .9:
@@ -529,7 +529,7 @@ def translate(ltlformula, method='GET'):
                     dotsrc = spot.ostringstream()
                     spot.print_dot(dotsrc, aut, opt + "v<30")
                     automaton_svg = str_to_svg(dotsrc.str().encode('utf-8'))
-                    m = re.search('transform="scale\(([.\d]+) ', automaton_svg)
+                    m = re.search(r'transform="scale\(([.\d]+) ', automaton_svg)
                     if m and scale < float(m.group(1)):
                         res['automaton_svg'] = automaton_svg
         except subprocess.CalledProcessError as e:
