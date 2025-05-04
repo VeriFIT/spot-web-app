@@ -11,7 +11,7 @@ It's made of
 Development
 -----------
 
-To start developping, first install Spot (see http://spot.lrde.epita.fr/instal.html)
+To start developping, first install Spot (see http://spot.lre.epita.fr/install.html)
 with its Python bindings.  Then launch an API server on localhost:5000 with
 
   % server/spotapi.py
@@ -28,7 +28,7 @@ components to reload automatically.
 Using remotely or locally
 -------------------------
 
-This application is live at https://spot.lrde.epita.fr/app/
+This application is live at https://spot.lre.epita.fr/app/
 
 However this public server may be subject to occasional down time.  If
 you absolutely need the application for critical work (e.g, student

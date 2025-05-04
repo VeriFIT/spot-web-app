@@ -1,7 +1,7 @@
 {
   "name": "spot-web-app",
   "version": "0.1.2",
-  "homepage": "http://spot.lrde.epita.fr/app/",
+  "homepage": "http://spot.lre.epita.fr/app/",
   "private": true,
   "license": "GPL-3.0",
   "dependencies": {
