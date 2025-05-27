@@ -127,6 +127,8 @@ def random(method='GET'):
 #
 # u=ops   unabbreviate(f, ops)
 #
+# d=2     to delta2
+#
 # Output:
 #   on success: { formula: "text" } or { svg: "text" }
 #   on syntax error: { parse_error: "text" }
@@ -172,6 +174,10 @@ def rewrite(ltlformula, method='GET'):
     if unabbrev:
         f = spot.unabbreviate(f, unabbrev);
 
+    d = request.args.get('d', None)
+    if d == '2':
+        f = spot.to_delta2(f)
+
     syntax = request.args.get('ff', 'o')
 
     if syntax == 'g':
@@ -206,12 +212,58 @@ mp_class_to_english = {
     'T': "a reactivity property",
 }
 
+sfh_class_to_english = {
+    '': "It has too many alternation between strong and weak operators.",
+    'Δ₀': "It has no temporal operator except X.",
+    'Σ₁': "It uses only strong temporal operators (F, U, M, ...) or X.",
+    'Π₁': "It uses only weak temporal operators (G, W, R, ...) or X.",
+    'Δ₁': ("Ignoring X operators, each branch of the syntax tree uses "
+           "only only weak temporal operators (G, W, R, ...) or "
+           "strong temporal operators (F, U, M, ...)."),
+    'Σ₂': ("Ignoring X operators, in each branch of the syntax tree, "
+           "strong temporal operators (F, U, M, ...) appear above "
+           "weak operators (G, W, R, ...)."),
+    'Π₂': ("Ignoring X operators, in each branch of the syntax tree, "
+           "weak temporal operators (G, W, R, ...) appear above strong "
+           "operators (F, U, M, ...)."),
+    'Δ₂': ("Ignoring X operators, in each branch of the syntax tree, "
+           "either weak temporal operators (G, W, R, ...) appear above"
+           "strong operators (F, U, M, ...), or strong operators appear "
+           "above weak operatos."),
+}
+
+
+def get_sfh_class(f2):
+    if f2.is_delta2():
+        if f2.is_delta1():
+            if f2.is_syntactic_safety():
+                if f2.is_syntactic_guarantee():
+                    sfh_class = 'Δ₀'
+                else:
+                    sfh_class = 'Π₁'
+            elif f2.is_syntactic_guarantee():
+                sfh_class = 'Σ₁'
+            else:
+                sfh_class = 'Δ₁'
+        elif f2.is_sigma2():
+            sfh_class = 'Σ₂'
+        elif f2.is_pi2():
+            sfh_class = 'Π₂'
+        else:
+            sfh_class = 'Δ₂'
+    else:
+        sfh_class = ''
+    return sfh_class
+
 # Output
 #
 # on syntax error: { parse_error: "text" }
 #
 # on success:
 # { mp_class: 'name',
+#   mp_class_text: 'description of the class',
+#   sfh_class: 'name',
+#   sfh_class_text: 'description of the class',
 #   pathological: true,   (absent if not pathological)
 #   mp_hierarchy_svg: '<svg...'
 #   acc_word: 'word',     (an example of accepting word, or null)
@@ -261,6 +313,17 @@ def study(ltlformula, method='GET'):
         result['pathological'] = True
 
     result['mp_hierarchy_svg'] = spot.mp_hierarchy_svg(mp_class)
+
+    # syntactic-future hierarchy
+    sfh_class = get_sfh_class(f2)
+    result['sfh_class'] = sfh_class
+    result['sfh_class_text'] = sfh_class_to_english[sfh_class]
+
+    if ((syntactic_class is True)
+        and ((mp_class == 'O' and sfh_class != 'Δ₁')
+             or (mp_class == 'R' and sfh_class != 'Π₂')
+             or (mp_class == 'P' and sfh_class != 'Σ₂'))):
+        result['pathological'] = 'sfh'
 
     # This is to be done before translation, otherwise f will be simplified
     ssi = f2.is_syntactic_stutter_invariant()
@@ -684,6 +747,15 @@ def compare(ltlformula, method='GET'):
             result['w3'] = str(w3)
         if w4:
             result['w4'] = str(w4)
+
+    if "equivalent" in txt:
+        sfh1 = get_sfh_class(f)
+        sfh2 = get_sfh_class(g)
+        if sfh1 != sfh2:
+            result['sfh1'] = sfh1
+            result['sfh1_text'] = sfh_class_to_english[sfh1]
+            result['sfh2'] = sfh2
+            result['sfh2_text'] = sfh_class_to_english[sfh2]
 
     return jsonify(result)
 

@@ -62,6 +62,7 @@ const styles = (theme) => ({
       justifyContent: "center",
     },
   },
+  nottopmargin: { marginTop: 0, },
   help: {
     margin: theme.spacing.unit,
     paddingTop: theme.spacing.unit,
@@ -376,11 +377,24 @@ function handleErrorsAndClearTimer(timer) {
 }
 
 function righthelp(contents, help) {
-  return (
-    <Tooltip title={help} placement="right" enterDelay={750}>
-      <div>{contents}</div>
-    </Tooltip>
-  );
+    return (
+        <Tooltip title={help} placement="right" enterDelay={750}>
+            <div>{contents}</div>
+        </Tooltip>
+    );
+}
+function classhelp(contents, help) {
+    if (contents === "")
+        contents = "a class above Δ₂";
+    else
+        contents = "class " + contents;
+    return (
+        <React.Fragment>
+            <Tooltip title={help} placement="right" enterDelay={750}>
+                <b>{contents}</b>
+            </Tooltip>
+        </React.Fragment>
+    );
 }
 
 class LtlInput extends React.Component {
@@ -801,6 +815,7 @@ class LtlRewrite extends React.Component {
       Object.entries(this.props.ltlsimp).forEach(([key, value]) => {
         if (value) url.searchParams.append("r", key);
       });
+    if (this.props.delta2) url.searchParams.append("d", 2);
     url.searchParams.append("ff", this.props.syntax);
 
     let unabbrev = "";
@@ -842,6 +857,7 @@ class LtlRewrite extends React.Component {
       prevProps.ltlsimp !== this.props.ltlsimp ||
       prevProps.simplify !== this.props.simplify ||
       prevProps.unabbrev !== this.props.unabbrev ||
+      prevProps.delta2 !== this.props.delta2 ||
       prevProps.formula !== this.props.formula
     ) {
       this.updateResult();
@@ -883,6 +899,17 @@ class LtlRewrite extends React.Component {
                 handleChangeLtlSimp={this.props.handleChangeLtlSimp}
               />
             )}
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={this.props.delta2}
+                  onChange={this.props.handleChecked("delta2")}
+                  value="delta2"
+                  color="primary"
+                />
+              }
+              label="Rewrite as Δ₂"
+            />
           </React.Fragment>
         )}
         {this.state.result && (
@@ -919,11 +946,21 @@ class LtlStudy extends React.Component {
           <Typography>
             This formula describes <b>{res["mp_class_text"]}</b>.
           </Typography>
-          {"pathological" in res && (
+            {("pathological" in res) && (res["pathological"] === true) && (
             <Typography>
               Note that this is a <b>pathological formula</b> that would not be
               classified as precisely using only syntactic means. This usually
               means that a simpler equivalent formula exists.
+            </Typography>
+          )}
+          <Typography variant="body2" color="primary">
+            Syntactic-Future Hierarchy
+          </Typography>
+            <Typography>This formula belongs to {classhelp(res["sfh_class"], res["sfh_class_text"])}.</Typography>
+            {("pathological" in res) && (res["pathological"] === "sfh") && (
+            <Typography>
+                Note this syntactic class is above the corresponding class from the Manna and Pnueli hierachy, this means
+              that an equivalent formula exists in a lower syntactic class.
             </Typography>
           )}
         </div>
@@ -1595,6 +1632,13 @@ class LtlCompare extends React.Component {
             )}
           </TableBody>
         </Table>
+          {"sfh1" in res &&
+           <Typography>Although they are equivalent,
+               <ul className={this.props.classes.nottopmargin}>
+                   <li>First formula belongs to {classhelp(res["sfh1"], res["sfh1_text"])},</li>
+                   <li>Second formula belongs to {classhelp(res["sfh2"], res["sfh2_text"])}.</li>
+               </ul>
+           </Typography>}
       </React.Fragment>
     );
   }
@@ -1670,6 +1714,7 @@ class LtlApp extends React.Component {
     expert: false,
     hideoptions: false,
     simplify: true,
+    delta2: false,
     formula: "",
     formula2: "",
     formulaerr: null,
@@ -1867,6 +1912,7 @@ class LtlApp extends React.Component {
             handleChecked={this.handleChecked}
             simplify={this.state.simplify}
             unabbrev={this.state.ltlunabbrev}
+            delta2={this.state.delta2}
             handleChangeLtlSimp={this.handleChangeLtlSimp}
             handleChangeLtlUnabbrev={this.handleChangeLtlUnabbrev}
             handleAnyParseError={this.handleAnyParseError}
