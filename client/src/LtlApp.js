@@ -708,7 +708,7 @@ class AccChoice extends React.Component {
   options = {
     m: "Acceptance: monitor (all runs accepting)",
     c: "Acceptance: co-Büchi",
-    b: "Acceptance: (state-based) Büchi",
+    b: "Acceptance: Büchi",
     g: "Acceptance: Generalized Büchi",
     p: "Acceptance: parity",
     e: "Acceptance: Emerson-Lei (generic acceptance)",
@@ -1327,9 +1327,7 @@ class LtlTranslate extends React.Component {
                     <Checkbox
                       checked={this.props.transopts["statebased"]}
                       color="primary"
-                      disabled={
-                        this.props.acc === "m" || this.props.acc === "b"
-                      }
+                      disabled={ this.props.acc === "m" }
                       onChange={this.props.handleChangeTransOpts("statebased")}
                     />
                   }
