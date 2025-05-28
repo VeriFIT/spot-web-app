@@ -238,22 +238,21 @@ def get_sfh_class(f2):
         if f2.is_delta1():
             if f2.is_syntactic_safety():
                 if f2.is_syntactic_guarantee():
-                    sfh_class = 'Δ₀'
+                    return 'Δ₀'
                 else:
-                    sfh_class = 'Π₁'
+                    return 'Π₁'
             elif f2.is_syntactic_guarantee():
-                sfh_class = 'Σ₁'
+                return 'Σ₁'
             else:
-                sfh_class = 'Δ₁'
+                return 'Δ₁'
         elif f2.is_sigma2():
-            sfh_class = 'Σ₂'
+            return 'Σ₂'
         elif f2.is_pi2():
-            sfh_class = 'Π₂'
+            return 'Π₂'
         else:
-            sfh_class = 'Δ₂'
+            return 'Δ₂'
     else:
-        sfh_class = ''
-    return sfh_class
+        return ''
 
 # Output
 #
@@ -723,6 +722,10 @@ def compare(ltlformula, method='GET'):
     if not f or not g:
         return jsonify(result)
 
+    # Get classes before translations, because spot.translate() update the formulas
+    sfh1 = get_sfh_class(f)
+    sfh2 = get_sfh_class(g)
+
     pos_f = spot.translate(f, 'low')
     neg_f = spot.translate(spot.formula_Not(f), 'low')
     pos_g = spot.translate(g, 'low')
@@ -748,14 +751,11 @@ def compare(ltlformula, method='GET'):
         if w4:
             result['w4'] = str(w4)
 
-    if "equivalent" in txt:
-        sfh1 = get_sfh_class(f)
-        sfh2 = get_sfh_class(g)
-        if sfh1 != sfh2:
-            result['sfh1'] = sfh1
-            result['sfh1_text'] = sfh_class_to_english[sfh1]
-            result['sfh2'] = sfh2
-            result['sfh2_text'] = sfh_class_to_english[sfh2]
+    if (sfh1 != sfh2) and ("equivalent" in txt):
+        result['sfh1'] = sfh1
+        result['sfh1_text'] = sfh_class_to_english[sfh1]
+        result['sfh2'] = sfh2
+        result['sfh2_text'] = sfh_class_to_english[sfh2]
 
     return jsonify(result)
 
