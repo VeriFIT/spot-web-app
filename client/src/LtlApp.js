@@ -1,5 +1,5 @@
 /* -*- coding: utf-8 -*-
- ** Copyright (C) 2018-2021 Laboratoire de Recherche et Développement de
+ ** Copyright (C) 2018-2021, 2026 Laboratoire de Recherche et Développement de
  ** l'Epita.
  **
  ** This application is free software; you can redistribute it and/or
@@ -16,42 +16,47 @@
  ** along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 import React from "react";
-import "typeface-roboto";
-import Button from "@material-ui/core/Button";
-import Checkbox from "@material-ui/core/Checkbox";
-import CircularProgress from "@material-ui/core/CircularProgress";
-import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
-import ExpansionPanel from "@material-ui/core/ExpansionPanel";
-import ExpansionPanelSummary from "@material-ui/core/ExpansionPanelSummary";
-import ExpansionPanelDetails from "@material-ui/core/ExpansionPanelDetails";
-import FormControl from "@material-ui/core/FormControl";
-import FormControlLabel from "@material-ui/core/FormControlLabel";
-import FormLabel from "@material-ui/core/FormLabel";
-import FormHelperText from "@material-ui/core/FormHelperText";
-import HelpIcon from "@material-ui/icons/Help";
-import IconButton from "@material-ui/core/IconButton";
-import InputAdornment from "@material-ui/core/InputAdornment";
-import List from "@material-ui/core/List";
-import ListItem from "@material-ui/core/ListItem";
-import ListItemText from "@material-ui/core/ListItemText";
-import Menu from "@material-ui/core/Menu";
-import MenuItem from "@material-ui/core/MenuItem";
-import Paper from "@material-ui/core/Paper";
-import Radio from "@material-ui/core/Radio";
-import RadioGroup from "@material-ui/core/RadioGroup";
-import SvgIcon from "@material-ui/core/SvgIcon";
-import SVGInline from "react-svg-inline";
-import Switch from "@material-ui/core/Switch";
-import Tab from "@material-ui/core/Tab";
-import TableBody from "@material-ui/core/TableBody";
-import TableCell from "@material-ui/core/TableCell";
-import Table from "@material-ui/core/Table";
-import TableRow from "@material-ui/core/TableRow";
-import Tabs from "@material-ui/core/Tabs";
-import TextField from "@material-ui/core/TextField";
-import Tooltip from "@material-ui/core/Tooltip";
-import Typography from "@material-ui/core/Typography";
-import { withStyles } from "@material-ui/core/styles";
+import "@fontsource/roboto";
+import Button from "@mui/material/Button";
+import Checkbox from "@mui/material/Checkbox";
+import CircularProgress from "@mui/material/CircularProgress";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import Accordion from "@mui/material/Accordion";
+import AccordionSummary from "@mui/material/AccordionSummary";
+import AccordionDetails from "@mui/material/AccordionDetails";
+import FormControl from "@mui/material/FormControl";
+import FormControlLabel from "@mui/material/FormControlLabel";
+import FormLabel from "@mui/material/FormLabel";
+import FormHelperText from "@mui/material/FormHelperText";
+import HelpIcon from "@mui/icons-material/Help";
+import IconButton from "@mui/material/IconButton";
+import InputAdornment from "@mui/material/InputAdornment";
+import List from "@mui/material/List";
+import ListItem from "@mui/material/ListItem";
+import ListItemText from "@mui/material/ListItemText";
+import Menu from "@mui/material/Menu";
+import MenuItem from "@mui/material/MenuItem";
+import Paper from "@mui/material/Paper";
+import Radio from "@mui/material/Radio";
+import RadioGroup from "@mui/material/RadioGroup";
+import SvgIcon from "@mui/material/SvgIcon";
+import Switch from "@mui/material/Switch";
+import Tab from "@mui/material/Tab";
+import TableBody from "@mui/material/TableBody";
+import TableCell from "@mui/material/TableCell";
+import Table from "@mui/material/Table";
+import TableRow from "@mui/material/TableRow";
+import Tabs from "@mui/material/Tabs";
+import TextField from "@mui/material/TextField";
+import Tooltip from "@mui/material/Tooltip";
+import Typography from "@mui/material/Typography";
+import { styled } from "@mui/material/styles";
+import { withStyles } from "@mui/styles";
+
+// Helper component to render SVG strings
+function SVGInline({ svg, className }) {
+  return <span className={className} dangerouslySetInnerHTML={{ __html: svg }} />;
+}
 
 const styles = (theme) => ({
   toplevel: {
@@ -64,9 +69,9 @@ const styles = (theme) => ({
   },
   nottopmargin: { marginTop: 0, },
   help: {
-    margin: theme.spacing.unit,
-    paddingTop: theme.spacing.unit,
-    width: 640 - 2 * theme.spacing.unit,
+    margin: theme.spacing(1),
+    paddingTop: theme.spacing(1),
+    width: 640 - 16,
     [theme.breakpoints.down("sm")]: {
       marginLeft: 0,
       marginRight: 0,
@@ -102,9 +107,10 @@ const styles = (theme) => ({
     float: "right",
   },
   root: {
-    margin: theme.spacing.unit,
-    padding: theme.spacing.unit,
-    width: 640 - 2 * theme.spacing.unit,
+    margin: theme.spacing(1),
+    padding: theme.spacing(1),
+    width: 624,
+    minWidth: 624,
     [theme.breakpoints.down("sm")]: {
       marginLeft: 0,
       marginRight: 0,
@@ -137,7 +143,6 @@ const styles = (theme) => ({
   },
   ltlInput: {
     width: "100%",
-    overflow: "hidden",
   },
   ltlsyntax: {},
   helperText: {
@@ -200,15 +205,11 @@ const styles = (theme) => ({
   parseerror: {
     color: theme.palette.error.main,
   },
-  textField: {
-    overflow: "hidden",
-  },
+  textField: {},
   textField1: {
-    overflow: "hidden",
     backgroundColor: "#b2ffff",
   },
   textField2: {
-    overflow: "hidden",
     backgroundColor: "#ffccff",
   },
   update: {
@@ -220,7 +221,7 @@ const styles = (theme) => ({
   },
   helpiconsdiv: {
     overflow: "auto",
-    marginRight: theme.spacing.unit,
+    marginRight: theme.spacing(1),
   },
   helpicons: {
     float: "right",
@@ -236,7 +237,7 @@ const styles = (theme) => ({
   versiontable: {},
   results: {
     width: "100%",
-    padding: theme.spacing.unit,
+    padding: theme.spacing(1),
     overflow: "auto",
   },
   hierarchy_svg: {
@@ -272,6 +273,7 @@ const styles = (theme) => ({
     overflow: "auto",
     marginLeft: -4,
     marginRight: -4,
+    display: "block",
   },
 });
 
@@ -678,6 +680,7 @@ class LtlUnabbrevOptions extends React.Component {
     let key = values[0];
     return (
       <FormControlLabel
+        key={key}
         control={
           <Checkbox
             checked={this.props.unabbrev[key]}
@@ -698,10 +701,7 @@ class LtlUnabbrevOptions extends React.Component {
     return (
       <FormControl
         component="fieldset"
-        className={[
-          this.props.classes.borderedgroupprimary,
-          this.props.classes.unabbrev,
-        ]}
+        className={`${this.props.classes.borderedgroupprimary} ${this.props.classes.unabbrev}`}
       >
         <FormLabel component="legend">
           {righthelp(
@@ -1822,6 +1822,7 @@ class LtlApp extends React.Component {
         {this.props.topright}
         {this.state.expert && <Versions classes={this.props.classes} />}
         <FormControlLabel
+          style={{ marginLeft: 0 }}
           control={
             <Switch
               checked={this.state.expert}
@@ -1848,7 +1849,6 @@ class LtlApp extends React.Component {
         <Tabs
           value={this.state.action}
           onChange={this.changeAction}
-          scrollable
           centered
           indicatorColor="primary"
           textColor="primary"
@@ -2014,11 +2014,11 @@ class Help extends React.Component {
           </Typography>
         </div>
 
-        <ExpansionPanel classes={{ expanded: this.props.classes.helpexpanded }}>
-          <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography variant="title">About</Typography>
-          </ExpansionPanelSummary>
-          <ExpansionPanelDetails>
+        <Accordion classes={{ expanded: this.props.classes.helpexpanded }}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography variant="h6">About</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
             <Typography>
               <Typography variant="body1" gutterBottom>
                 This web application is built using the services of{" "}
@@ -2051,14 +2051,14 @@ class Help extends React.Component {
                 <a href="mailto:spot@lrde.epita.fr">the Spot mailing list</a>.
               </Typography>
             </Typography>
-          </ExpansionPanelDetails>
-        </ExpansionPanel>
+          </AccordionDetails>
+        </Accordion>
 
-        <ExpansionPanel classes={{ expanded: this.props.classes.helpexpanded }}>
-          <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography variant="title">Operation modes</Typography>
-          </ExpansionPanelSummary>
-          <ExpansionPanelDetails>
+        <Accordion classes={{ expanded: this.props.classes.helpexpanded }}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography variant="h6">Operation modes</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
             <Typography variant="body1">
               The application has four modes of operation that you can select at
               its top:
@@ -2086,14 +2086,14 @@ class Help extends React.Component {
                 </dd>
               </dl>
             </Typography>
-          </ExpansionPanelDetails>
-        </ExpansionPanel>
+          </AccordionDetails>
+        </Accordion>
 
-        <ExpansionPanel classes={{ expanded: this.props.classes.helpexpanded }}>
-          <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography variant="title">LTL Infix Syntax</Typography>
-          </ExpansionPanelSummary>
-          <ExpansionPanelDetails>
+        <Accordion classes={{ expanded: this.props.classes.helpexpanded }}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography variant="h6">LTL Infix Syntax</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
             <Typography>
               <Typography variant="body1" gutterBottom>
                 To accomodate the syntaxes of different tools, Spot supports
@@ -2231,14 +2231,14 @@ class Help extends React.Component {
                 <Ltl f="F[3..5]p" /> is short for <Ltl f="XXX(p|X(p|Xp))" />.
               </Typography>
             </Typography>
-          </ExpansionPanelDetails>
-        </ExpansionPanel>
+          </AccordionDetails>
+        </Accordion>
 
-        <ExpansionPanel classes={{ expanded: this.props.classes.helpexpanded }}>
-          <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography variant="title">LTL Prefix Syntax</Typography>
-          </ExpansionPanelSummary>
-          <ExpansionPanelDetails>
+        <Accordion classes={{ expanded: this.props.classes.helpexpanded }}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography variant="h6">LTL Prefix Syntax</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
             <Typography>
               <Typography variant="body1" gutterBottom>
                 If (and only if!) parsing the input formula using the infix
@@ -2281,14 +2281,14 @@ class Help extends React.Component {
                 like operators, are assumed to be atomic propositions.
               </Typography>
             </Typography>
-          </ExpansionPanelDetails>
-        </ExpansionPanel>
+          </AccordionDetails>
+        </Accordion>
 
-        <ExpansionPanel classes={{ expanded: this.props.classes.helpexpanded }}>
-          <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography variant="title">PSL Infix Syntax</Typography>
-          </ExpansionPanelSummary>
-          <ExpansionPanelDetails>
+        <Accordion classes={{ expanded: this.props.classes.helpexpanded }}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography variant="h6">PSL Infix Syntax</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
             <Typography>
               <Typography variant="body1" gutterBottom>
                 A subset of PSL can be used to express linear properties that
@@ -2421,14 +2421,14 @@ class Help extends React.Component {
                 )}
               </Typography>
             </Typography>
-          </ExpansionPanelDetails>
-        </ExpansionPanel>
+          </AccordionDetails>
+        </Accordion>
 
-        <ExpansionPanel classes={{ expanded: this.props.classes.helpexpanded }}>
-          <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography variant="title">Acceptance conditions</Typography>
-          </ExpansionPanelSummary>
-          <ExpansionPanelDetails>
+        <Accordion classes={{ expanded: this.props.classes.helpexpanded }}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography variant="h6">Acceptance conditions</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
             <Typography>
               <Typography variant="body1" gutterBottom>
                 Formulas can be translated into ω-automata with various types of
@@ -2519,8 +2519,8 @@ class Help extends React.Component {
                 these two options are not mutually exclusive.
               </Typography>
             </Typography>
-          </ExpansionPanelDetails>
-        </ExpansionPanel>
+          </AccordionDetails>
+        </Accordion>
       </Paper>
     );
   }
