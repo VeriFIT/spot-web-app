@@ -100,7 +100,7 @@ def random(method='GET'):
     gen = spot.randltl(3, tree_size=(5,25),
                        output=('psl' if p else 'ltl'),
                        seed=int(time()))
-    # Try 10 time to avoid true or false
+    # Try 10 times to avoid true or false
     for i in range(1, 10):
         f = next(gen)
         if not (f.is_tt() or f.is_ff()):
@@ -218,7 +218,7 @@ sfh_class_to_english = {
     'Σ₁': "It uses only strong temporal operators (F, U, M, ...) or X.",
     'Π₁': "It uses only weak temporal operators (G, W, R, ...) or X.",
     'Δ₁': ("Ignoring X operators, each branch of the syntax tree uses "
-           "only only weak temporal operators (G, W, R, ...) or "
+           "only weak temporal operators (G, W, R, ...) or "
            "strong temporal operators (F, U, M, ...)."),
     'Σ₂': ("Ignoring X operators, in each branch of the syntax tree, "
            "strong temporal operators (F, U, M, ...) appear above "
@@ -227,9 +227,9 @@ sfh_class_to_english = {
            "weak temporal operators (G, W, R, ...) appear above strong "
            "operators (F, U, M, ...)."),
     'Δ₂': ("Ignoring X operators, in each branch of the syntax tree, "
-           "either weak temporal operators (G, W, R, ...) appear above"
+           "either weak temporal operators (G, W, R, ...) appear above "
            "strong operators (F, U, M, ...), or strong operators appear "
-           "above weak operatos."),
+           "above weak operators."),
 }
 
 
@@ -390,7 +390,7 @@ def study(ltlformula, method='GET'):
             result['rej_word'] = None;
 
     # Rabin and Streett indices
-    # This is done my calling reduce_parity() on a deterministic
+    # This is done by calling reduce_parity() on a deterministic
     # parity automaton.
     # Note that f2 is relabeled, so do not attempt to reuse
     # pos as-is after this block.
@@ -702,7 +702,7 @@ svg_compare_list = [
     ("""<svg width="200px" height="100px" viewBox="0 0 200 100">
        <rect x="0" y="0" width="200" height="100" style='fill:magenta;opacity:0.2' />
        <text text-anchor="middle" x="185" y="90" style='fill:#00aaff'>∅</text>
-    </svg>""", "The first formula is unsatisfiable, the second one is a a tautology; that makes them complementary.")
+    </svg>""", "The first formula is unsatisfiable, the second one is a tautology; that makes them complementary.")
     ]
 
 def svg_compare(w1, w2, w3, w4):

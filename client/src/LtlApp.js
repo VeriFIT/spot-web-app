@@ -624,8 +624,8 @@ class LtlSimplificationOptions extends React.Component {
     lf: "allow simplified formulas to be larger",
     si: "reductions based on syntactic implications",
     eu: "reductions based on pure eventualities and purely universal formulas",
-    lc: "reduction based on automata-based containements",
-    fs: "enable rules that favor suspendable formules at the top level",
+    lc: "reduction based on automata-based containments",
+    fs: "enable rules that favor suspendable formulas at the top level",
     pn: "NNF rewriting should stop on Boolean subformulas",
     bi: "rewrite Boolean subformulas to irredundant-sum-of-products",
   };
@@ -706,7 +706,7 @@ class LtlUnabbrevOptions extends React.Component {
         <FormLabel component="legend">
           {righthelp(
             "Unabbreviate",
-            "Remove occurrances of selected operators by rewriting them using other operators."
+            "Remove occurrences of selected operators by rewriting them using other operators."
           )}
         </FormLabel>
         <span>{Object.entries(this.options1).map(this.form)}</span>
@@ -959,7 +959,7 @@ class LtlStudy extends React.Component {
             <Typography>This formula belongs to {classhelp(res["sfh_class"], res["sfh_class_text"])}.</Typography>
             {("pathological" in res) && (res["pathological"] === "sfh") && (
             <Typography>
-                Note this syntactic class is above the corresponding class from the Manna and Pnueli hierachy, this means
+                Note this syntactic class is above the corresponding class from the Manna and Pnueli hierarchy, this means
               that an equivalent formula exists in a lower syntactic class.
             </Typography>
           )}
@@ -1089,7 +1089,7 @@ class LtlStudy extends React.Component {
                 <>
                   <br />
                   Furthermore, it can be simplified to the following{" "}
-                  <i>syntactically sutter-invariant</i> formula:
+                  <i>syntactically stutter-invariant</i> formula:
                   <br />
                   <Ltl f={res["stutter_invariant_eq"]} />
                 </>
@@ -1390,7 +1390,7 @@ class LtlTranslate extends React.Component {
                   }
                   label={righthelp(
                     "show SCCs",
-                    "Strongly Connected Components will be highlighted in green (accepting), red (rejecting), black (transiant), and gray (rejecting and useless)."
+                    "Strongly Connected Components will be highlighted in green (accepting), red (rejecting), black (transient), and gray (rejecting and useless)."
                   )}
                 />
                 <FormControlLabel
@@ -1416,7 +1416,7 @@ class LtlTranslate extends React.Component {
                   }
                   label={righthelp(
                     "force transition-based acc.",
-                    "If an automaton with state-based acceptance has ben built, move the acceptance marks of each state to its outgoing transitions.  (This is actually how automata are stored in Spot.)"
+                    "If an automaton with state-based acceptance has been built, move the acceptance marks of each state to its outgoing transitions.  (This is actually how automata are stored in Spot.)"
                   )}
                 />
               </FormControl>
@@ -2067,7 +2067,7 @@ class Help extends React.Component {
                   <Typography variant="body2">Rewrite</Typography>
                 </dt>
                 <dd>
-                  for rewriting a formula (changing syntaxes, symplifying,
+                  for rewriting a formula (changing syntaxes, simplifying,
                   removing some operators)
                 </dd>
                 <dt>
@@ -2096,7 +2096,7 @@ class Help extends React.Component {
           <AccordionDetails>
             <Typography>
               <Typography variant="body1" gutterBottom>
-                To accomodate the syntaxes of different tools, Spot supports
+                To accommodate the syntaxes of different tools, Spot supports
                 alternative representations for many operators. For the
                 semantics of all operators see{" "}
                 <a href="https://spot.lrde.epita.fr/tl.pdf">this document</a>.
@@ -2474,7 +2474,7 @@ class Help extends React.Component {
                   </dt>
                   <dd>
                     In generalized Büchi automata, multiple sets of states or
-                    transitions are used. States or transitions are anotated by
+                    transitions are used. States or transitions are annotated by
                     circled numbers (like ⓿) denoting the sets they belong to. A
                     run is accepted if it visits a state or transitions of each
                     set infinitely often.
@@ -2484,7 +2484,7 @@ class Help extends React.Component {
                   </dt>
                   <dd>
                     In automata with parity acceptance, multiple sets of states
-                    or transitions are used. States or transitions are anotated
+                    or transitions are used. States or transitions are annotated
                     by circled numbers (like ⓿) denoting the sets they belong
                     to. A run is accepted if the maximum or minimum set number
                     visited infinitely often is odd or even. The choice between
