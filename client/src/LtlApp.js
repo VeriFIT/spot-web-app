@@ -355,7 +355,7 @@ function renderError(msg) {
         </a>
         .<br />
         If you <i>do</i> think that is the case, please consider{" "}
-        <a href="https://spot.lrde.epita.fr/install.html">installing Spot</a> to
+        <a href="https://spot.lre.epita.fr/install.html">installing Spot</a> to
         run your experiments locally; this is a shared service.
       </Typography>
     </React.Fragment>
@@ -2022,21 +2022,21 @@ class Help extends React.Component {
             <Typography>
               <Typography variant="body1" gutterBottom>
                 This web application is built using the services of{" "}
-                <a href="https://spot.lrde.epita.fr/">Spot</a> running on a
+                <a href="https://spot.lre.epita.fr/">Spot</a> running on a
                 shared computer. For serious uses, you can answer similar
                 questions using the{" "}
-                <a href="https://spot.lrde.epita.fr/tools.html">
+                <a href="https://spot.lre.epita.fr/tools.html">
                   command-line tools
                 </a>
                 , or by{" "}
-                <a href="https://spot.lrde.epita.fr/tut.html">
+                <a href="https://spot.lre.epita.fr/tut.html">
                   writing some C++ or Python code
                 </a>
                 .
               </Typography>
               <Typography variant="body1" gutterBottom>
                 The source code for this application can be found{" "}
-                <a href="https://gitlab.lrde.epita.fr/spot/spot-web-app/">
+                <a href="https://gitlab.lre.epita.fr/spot/spot-web-app/">
                   on our gitlab
                 </a>
                 , and is distributed under the{" "}
@@ -2099,7 +2099,7 @@ class Help extends React.Component {
                 To accommodate the syntaxes of different tools, Spot supports
                 alternative representations for many operators. For the
                 semantics of all operators see{" "}
-                <a href="https://spot.lrde.epita.fr/tl.pdf">this document</a>.
+                <a href="https://spot.lre.epita.fr/tl.pdf">this document</a>.
               </Typography>
               <Typography variant="body2" color="primary">
                 Atomic propositions
@@ -2294,7 +2294,7 @@ class Help extends React.Component {
                 A subset of PSL can be used to express linear properties that
                 are more expressive than LTL. For the semantics of all operators
                 see{" "}
-                <a href="https://spot.lrde.epita.fr/tl.pdf">this document</a>.
+                <a href="https://spot.lre.epita.fr/tl.pdf">this document</a>.
               </Typography>
               <Typography variant="body1" gutterBottom>
                 If you put the application in "expert mode", clicking on the
