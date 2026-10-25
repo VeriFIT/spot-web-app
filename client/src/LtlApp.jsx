@@ -190,6 +190,23 @@ const styles = (theme) => ({
       color: theme.palette.common.white,
     },
   },
+  choicelistitem: {
+    borderWidth: 1,
+    borderStyle: "solid",
+    borderRadius: 4,
+    borderColor: theme.palette.divider,
+    backgroundColor: theme.palette.background.paper,
+    "&:hover": {
+      backgroundColor: theme.palette.action.hover,
+    },
+    "&.Mui-focusVisible": {
+      outline: `2px solid ${theme.palette.primary.main}`,
+      outlineOffset: 2,
+    },
+  },
+  choiceicon: {
+    color: theme.palette.primary.main,
+  },
   unabbrev: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -589,15 +606,18 @@ class LtlSyntaxChoice extends React.Component {
           <ListItem
             button
             aria-haspopup="true"
-            aria-controls="lock-menu"
+            aria-controls="syntax-menu"
             aria-label="LTL syntax to output"
+            aria-expanded={Boolean(anchorEl)}
+            className={classes.choicelistitem}
             onClick={this.handleClickListItem}
           >
             <ListItemText primary={this.options[this.props.syntax]} />
+            <ExpandMoreIcon className={classes.choiceicon} />
           </ListItem>
         </List>
         <Menu
-          id="lock-menu"
+          id="syntax-menu"
           anchorEl={anchorEl}
           open={Boolean(anchorEl)}
           onClose={this.handleClose}
@@ -755,15 +775,18 @@ class AccChoice extends React.Component {
           <ListItem
             button
             aria-haspopup="true"
-            aria-controls="lock-menu"
+            aria-controls="acc-menu"
             aria-label="Acceptance to use"
+            aria-expanded={Boolean(anchorEl)}
+            className={classes.choicelistitem}
             onClick={this.handleClickListItem}
           >
             <ListItemText primary={this.options[this.props.acc]} />
+            <ExpandMoreIcon className={classes.choiceicon} />
           </ListItem>
         </List>
         <Menu
-          id="lock-menu"
+          id="acc-menu"
           anchorEl={anchorEl}
           open={Boolean(anchorEl)}
           onClose={this.handleClose}
