@@ -10,15 +10,13 @@ import {
 import { useState, version as reactVersion } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import {
-  LtlApp,
-  LtlCompare,
-  LtlInput,
-  LtlRewrite,
-  LtlStudy,
-  LtlTranslate,
-  Versions,
-} from "./LtlApp";
+import App, { LtlApp } from "./App";
+import { LtlInput } from "./components/LtlInput";
+import { Versions } from "./components/Versions";
+import { LtlCompare } from "./features/compare/LtlCompare";
+import { LtlRewrite } from "./features/rewrite/LtlRewrite";
+import { LtlStudy } from "./features/study/LtlStudy";
+import { LtlTranslate } from "./features/translate/LtlTranslate";
 
 interface PendingRequest {
   url: string;
@@ -890,6 +888,38 @@ describe("Versions", () => {
     // The client is not part of the server's list, so it appends itself.
     expect(screen.getByText("React")).toBeTruthy();
     expect(screen.getByText(reactVersion)).toBeTruthy();
+  });
+});
+
+describe("app shell", () => {
+  afterEach(() => {
+    cleanup();
+    vi.unstubAllGlobals();
+  });
+
+  it("opens the help panel and duplicates the app", () => {
+    stubFetch();
+    render(<App />);
+
+    expect(screen.getByRole("tab", { name: "Translate" })).toBeTruthy();
+    expect(screen.getByLabelText("Input formula")).toBeTruthy();
+
+    fireEvent.click(screen.getByRole("button", { name: "help" }));
+
+    // The help panel is one long document; check that it rendered with its
+    // sections, and that its own close button removes it again.
+    expect(screen.getByText("Help")).toBeTruthy();
+    expect(screen.getByText("About")).toBeTruthy();
+    expect(screen.getByText("Operation modes")).toBeTruthy();
+
+    fireEvent.click(screen.getByRole("button", { name: "close" }));
+    expect(screen.queryByText("Operation modes")).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: "dup" }));
+    expect(screen.getAllByLabelText("Input formula")).toHaveLength(2);
+
+    fireEvent.click(screen.getByRole("button", { name: "close" }));
+    expect(screen.getAllByLabelText("Input formula")).toHaveLength(1);
   });
 });
 

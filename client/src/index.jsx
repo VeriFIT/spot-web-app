@@ -1,5 +1,5 @@
 import { createRoot } from "react-dom/client";
-import LtlApps from "./LtlApp.jsx";
+import App from "./App.jsx";
 import CssBaseline from "@mui/material/CssBaseline";
 import { ThemeProvider, createTheme, StyledEngineProvider } from "@mui/material/styles";
 
@@ -30,7 +30,7 @@ root.render(
   <StyledEngineProvider injectFirst>
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <LtlApps />
+      <App />
     </ThemeProvider>
   </StyledEngineProvider>
 );

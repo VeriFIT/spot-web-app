@@ -1,6 +1,8 @@
 import { defineConfig } from "vitest/config";
 
 export default defineConfig({
+  // Transform JSX with the automatic runtime, like the production build.
+  esbuild: { jsx: "automatic" },
   test: {
     environment: "jsdom",
     // The app is served under /app/, and the API URL helpers read
