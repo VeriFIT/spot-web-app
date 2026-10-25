@@ -1,4 +1,12 @@
-import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import { useState, version as reactVersion } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -608,6 +616,17 @@ describe("LtlTranslate", () => {
     };
   }
 
+  /**
+   * The translate tab with the acceptance condition its parent owns, so the
+   * acceptance menu really drives the request.
+   */
+  function TranslateTab() {
+    const [acc, setAcc] = useState("p");
+    return (
+      <LtlTranslate {...translateProps({ acc, changeAcc: setAcc, hideoptions: false })} />
+    );
+  }
+
   it("requests the translation and shows the automaton sources on demand", async () => {
     const { requests } = stubFetch();
     render(<LtlTranslate {...translateProps()} />);
@@ -672,6 +691,45 @@ describe("LtlTranslate", () => {
 
     expect(handleChangeTransOpts).toHaveBeenCalledWith("showscc");
   });
+
+  it("requests the acceptance picked from its menu", async () => {
+    const { requests } = stubFetch();
+    render(<TranslateTab />);
+
+    expect(searchParams(requests[0].url).get("a")).toBe("p");
+    expect(searchParams(requests[0].url).get("m")).toBe("max");
+
+    const menuButton = screen.getByRole("button", { name: "Acceptance to use" });
+    fireEvent.click(menuButton);
+
+    expect(screen.getAllByRole("menuitem").map((item) => item.textContent)).toEqual([
+      "Acceptance: monitor (all runs accepting)",
+      "Acceptance: co-Büchi",
+      "Acceptance: Büchi",
+      "Acceptance: Generalized Büchi",
+      "Acceptance: parity",
+      "Acceptance: Emerson-Lei (generic acceptance)",
+    ]);
+    // The acceptance in use is the one highlighted in the menu.
+    expect(
+      screen.getByRole("menuitem", { name: "Acceptance: parity" }).className
+    ).toContain("Mui-selected");
+
+    fireEvent.click(screen.getByRole("menuitem", { name: "Acceptance: co-Büchi" }));
+
+    expect(requests).toHaveLength(2);
+    const url = searchParams(requests[1].url);
+    expect(url.get("a")).toBe("c");
+    // The parity-only parameters go away with the parity acceptance, and the
+    // rest of the request is untouched.
+    expect(url.has("m")).toBe(false);
+    expect(url.has("e")).toBe(false);
+    expect(url.get("p")).toBe("s");
+    expect(url.getAll("o")).toEqual(["complete"]);
+
+    expect(menuButton.getAttribute("aria-expanded")).toBe("false");
+    await waitFor(() => expect(menuButton.textContent).toContain("Acceptance: co-Büchi"));
+  });
 });
 
 describe("LtlRewrite options", () => {
@@ -728,6 +786,36 @@ describe("LtlRewrite options", () => {
 
     expect(screen.getByText("b U a")).toBeTruthy();
     expect(screen.getByText("Output syntax: Spin")).toBeTruthy();
+  });
+
+  it("lists every output syntax and marks the current one", async () => {
+    stubFetch();
+    render(<RewriteTab />);
+
+    const menuButton = screen.getByRole("button", { name: "LTL syntax to output" });
+    expect(screen.queryByRole("menu")).toBeNull();
+
+    fireEvent.click(menuButton);
+
+    expect(menuButton.getAttribute("aria-expanded")).toBe("true");
+    expect(screen.getAllByRole("menuitem").map((item) => item.textContent)).toEqual([
+      "Output syntax: Spot",
+      "Output syntax: LBT/LTL2DSTAR",
+      "Output syntax: Spin",
+      "Show Abstract Syntax Tree",
+    ]);
+    // The syntax in use is the one highlighted in the menu.
+    expect(
+      screen.getByRole("menuitem", { name: "Output syntax: Spot" }).className
+    ).toContain("Mui-selected");
+    expect(
+      screen.getByRole("menuitem", { name: "Output syntax: Spin" }).className
+    ).not.toContain("Mui-selected");
+
+    fireEvent.click(screen.getByRole("menuitem", { name: "Output syntax: Spin" }));
+
+    expect(menuButton.getAttribute("aria-expanded")).toBe("false");
+    await waitFor(() => expect(menuButton.textContent).toContain("Output syntax: Spin"));
   });
 
   it("sends the selected un-abbreviations and drops them again", async () => {

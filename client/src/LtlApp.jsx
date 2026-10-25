@@ -528,245 +528,212 @@ function Versions(props) {
   );
 }
 
-class LtlSyntaxChoice extends React.Component {
-  button = null;
+/** Entries of the output-syntax menu, in display order. */
+const SYNTAX_OPTIONS = {
+  o: "Output syntax: Spot",
+  l: "Output syntax: LBT/LTL2DSTAR",
+  i: "Output syntax: Spin",
+  g: "Show Abstract Syntax Tree",
+};
 
-  options = {
-    o: "Output syntax: Spot",
-    l: "Output syntax: LBT/LTL2DSTAR",
-    i: "Output syntax: Spin",
-    g: "Show Abstract Syntax Tree",
+function LtlSyntaxChoice(props) {
+  const [anchorEl, setAnchorEl] = React.useState(null);
+  const { classes } = props;
+
+  const chooseSyntax = (key) => {
+    props.changeSyntax(key);
+    setAnchorEl(null);
   };
 
-  state = {
-    anchorEl: null,
-  };
-
-  handleClickListItem = (event) => {
-    this.setState({ anchorEl: event.currentTarget });
-  };
-
-  handleMenuItemClick = (event, key) => {
-    this.props.changeSyntax(key);
-    this.setState({ anchorEl: null });
-  };
-
-  handleClose = () => {
-    this.setState({ anchorEl: null });
-  };
-
-  render() {
-    const { classes } = this.props;
-    const { anchorEl } = this.state;
-
-    return (
-      <div className={classes.ltlsyntax}>
-        <List component="nav">
-          <ListItem
-            button
-            aria-haspopup="true"
-            aria-controls="syntax-menu"
-            aria-label="LTL syntax to output"
-            aria-expanded={Boolean(anchorEl)}
-            className={classes.choicelistitem}
-            onClick={this.handleClickListItem}
-          >
-            <ListItemText primary={this.options[this.props.syntax]} />
-            <ExpandMoreIcon className={classes.choiceicon} />
-          </ListItem>
-        </List>
-        <Menu
-          id="syntax-menu"
-          anchorEl={anchorEl}
-          open={Boolean(anchorEl)}
-          onClose={this.handleClose}
+  return (
+    <div className={classes.ltlsyntax}>
+      <List component="nav">
+        <ListItem
+          button
+          aria-haspopup="true"
+          aria-controls="syntax-menu"
+          aria-label="LTL syntax to output"
+          aria-expanded={Boolean(anchorEl)}
+          className={classes.choicelistitem}
+          onClick={(event) => setAnchorEl(event.currentTarget)}
         >
-          {Object.entries(this.options).map(([key, option]) => (
-            <MenuItem
-              key={key}
-              className={classes.choicemenuitem}
-              selected={key === this.props.syntax}
-              onClick={(event) => this.handleMenuItemClick(event, key)}
-            >
-              {option}
-            </MenuItem>
-          ))}
-        </Menu>
-      </div>
-    );
-  }
-}
-
-class LtlSimplificationOptions extends React.Component {
-  options = {
-    br: "basic rewritings",
-    lf: "allow simplified formulas to be larger",
-    si: "reductions based on syntactic implications",
-    eu: "reductions based on pure eventualities and purely universal formulas",
-    lc: "reduction based on automata-based containments",
-    fs: "enable rules that favor suspendable formulas at the top level",
-    pn: "NNF rewriting should stop on Boolean subformulas",
-    bi: "rewrite Boolean subformulas to irredundant-sum-of-products",
-  };
-  form = ([key, value]) => {
-    return (
-      <FormControlLabel
-        key={key}
-        disabled={!this.props.simplify}
-        control={
-          <Checkbox
-            checked={this.props.ltlsimp[key]}
-            onChange={this.props.handleChangeLtlSimp(key)}
-          />
-        }
-        label={value}
-      />
-    );
-  };
-  render() {
-    return (
-      <FormControl
-        component="fieldset"
-        className={this.props.classes.borderedgroupsecondary}
+          <ListItemText primary={SYNTAX_OPTIONS[props.syntax]} />
+          <ExpandMoreIcon className={classes.choiceicon} />
+        </ListItem>
+      </List>
+      <Menu
+        id="syntax-menu"
+        anchorEl={anchorEl}
+        open={Boolean(anchorEl)}
+        onClose={() => setAnchorEl(null)}
       >
-        <FormLabel component="legend" classes={{ focused: this.props.classes.focused }}>
-          Simplification options
-        </FormLabel>
-        {Object.entries(this.options).map(this.form)}
-      </FormControl>
-    );
-  }
-}
-
-class LtlUnabbrevOptions extends React.Component {
-  options1 = {
-    F: ["F", "<>", "F"],
-    G: ["G", "[]", "G"],
-    R: ["R", "V", "V"],
-    M: ["M", "M", "M"],
-    W: ["W", "W", "W"],
-  };
-  options2 = {
-    i: ["->", "->", "i"],
-    e: ["<->", "<->", "e"],
-    "^": ["xor", "xor", "^"],
-  };
-  form = (values) => {
-    let syntaxId = this.props.syntax === "i" ? 1 : this.props.syntax === "l" ? 2 : 0;
-    let key = values[0];
-    return (
-      <FormControlLabel
-        key={key}
-        control={
-          <Checkbox
-            checked={this.props.unabbrev[key]}
-            disabled={syntaxId === 1 && "MW^".indexOf(key) >= 0}
-            onChange={this.props.handleChangeLtlUnabbrev(key)}
-            color="primary"
-          />
-        }
-        classes={{
-          root: this.props.classes.unabbrevboxroot,
-          label: this.props.classes.unabbrevboxlabel,
-        }}
-        label={<code>{values[1][syntaxId]}</code>}
-      />
-    );
-  };
-  render() {
-    return (
-      <FormControl
-        component="fieldset"
-        className={`${this.props.classes.borderedgroupprimary} ${this.props.classes.unabbrev}`}
-      >
-        <FormLabel component="legend">
-          {righthelp(
-            "Unabbreviate",
-            "Remove occurrences of selected operators by rewriting them using other operators."
-          )}
-        </FormLabel>
-        <span>{Object.entries(this.options1).map(this.form)}</span>
-        <span>{Object.entries(this.options2).map(this.form)}</span>
-      </FormControl>
-    );
-  }
-}
-
-class AccChoice extends React.Component {
-  button = null;
-
-  options = {
-    m: "Acceptance: monitor (all runs accepting)",
-    c: "Acceptance: co-Büchi",
-    b: "Acceptance: Büchi",
-    g: "Acceptance: Generalized Büchi",
-    p: "Acceptance: parity",
-    e: "Acceptance: Emerson-Lei (generic acceptance)",
-  };
-
-  state = {
-    anchorEl: null,
-  };
-
-  handleClickListItem = (event) => {
-    this.setState({ anchorEl: event.currentTarget });
-  };
-
-  handleMenuItemClick = (event, key) => {
-    this.props.changeAcc(key);
-    this.setState({ anchorEl: null });
-  };
-
-  handleClose = () => {
-    this.setState({ anchorEl: null });
-  };
-
-  render() {
-    const { classes } = this.props;
-    const { anchorEl } = this.state;
-
-    return (
-      <div className={classes.ltlsyntax}>
-        <List component="nav">
-          <ListItem
-            button
-            aria-haspopup="true"
-            aria-controls="acc-menu"
-            aria-label="Acceptance to use"
-            aria-expanded={Boolean(anchorEl)}
-            className={classes.choicelistitem}
-            onClick={this.handleClickListItem}
+        {Object.entries(SYNTAX_OPTIONS).map(([key, option]) => (
+          <MenuItem
+            key={key}
+            className={classes.choicemenuitem}
+            selected={key === props.syntax}
+            onClick={() => chooseSyntax(key)}
           >
-            <ListItemText primary={this.options[this.props.acc]} />
-            <ExpandMoreIcon className={classes.choiceicon} />
-          </ListItem>
-        </List>
-        <Menu
-          id="acc-menu"
-          anchorEl={anchorEl}
-          open={Boolean(anchorEl)}
-          onClose={this.handleClose}
-        >
-          {Object.entries(this.options).map(([key, option]) => (
-            <MenuItem
-              key={key}
-              className={classes.choicemenuitem}
-              selected={key === this.props.acc}
-              onClick={(event) => this.handleMenuItemClick(event, key)}
-            >
-              {option}
-            </MenuItem>
-          ))}
-        </Menu>
-      </div>
-    );
-  }
+            {option}
+          </MenuItem>
+        ))}
+      </Menu>
+    </div>
+  );
 }
 
-class LtlResult extends React.Component {
-  render() {
-    return <Paper className={this.props.classes.results}>{this.props.result}</Paper>;
-  }
+/** Entries of the simplification options, in display order. */
+const SIMPLIFICATION_OPTIONS = {
+  br: "basic rewritings",
+  lf: "allow simplified formulas to be larger",
+  si: "reductions based on syntactic implications",
+  eu: "reductions based on pure eventualities and purely universal formulas",
+  lc: "reduction based on automata-based containments",
+  fs: "enable rules that favor suspendable formulas at the top level",
+  pn: "NNF rewriting should stop on Boolean subformulas",
+  bi: "rewrite Boolean subformulas to irredundant-sum-of-products",
+};
+
+function LtlSimplificationOptions(props) {
+  const { classes } = props;
+
+  return (
+    <FormControl component="fieldset" className={classes.borderedgroupsecondary}>
+      <FormLabel component="legend" classes={{ focused: classes.focused }}>
+        Simplification options
+      </FormLabel>
+      {Object.entries(SIMPLIFICATION_OPTIONS).map(([key, value]) => (
+        <FormControlLabel
+          key={key}
+          disabled={!props.simplify}
+          control={
+            <Checkbox
+              checked={props.ltlsimp[key]}
+              onChange={props.handleChangeLtlSimp(key)}
+            />
+          }
+          label={value}
+        />
+      ))}
+    </FormControl>
+  );
+}
+
+/** Un-abbreviation options of the infix syntaxes, in display order. */
+const UNABBREV_OPTIONS_1 = {
+  F: ["F", "<>", "F"],
+  G: ["G", "[]", "G"],
+  R: ["R", "V", "V"],
+  M: ["M", "M", "M"],
+  W: ["W", "W", "W"],
+};
+
+/** Un-abbreviation options of the infix syntaxes, continuing `UNABBREV_OPTIONS_1`. */
+const UNABBREV_OPTIONS_2 = {
+  i: ["->", "->", "i"],
+  e: ["<->", "<->", "e"],
+  "^": ["xor", "xor", "^"],
+};
+
+function LtlUnabbrevOptions(props) {
+  // Each option is labelled with its notation in the selected output syntax.
+  const syntaxId = props.syntax === "i" ? 1 : props.syntax === "l" ? 2 : 0;
+  const { classes } = props;
+
+  const option = ([key, values]) => (
+    <FormControlLabel
+      key={key}
+      control={
+        <Checkbox
+          checked={props.unabbrev[key]}
+          disabled={syntaxId === 1 && "MW^".indexOf(key) >= 0}
+          onChange={props.handleChangeLtlUnabbrev(key)}
+          color="primary"
+        />
+      }
+      classes={{
+        root: classes.unabbrevboxroot,
+        label: classes.unabbrevboxlabel,
+      }}
+      label={<code>{values[syntaxId]}</code>}
+    />
+  );
+
+  return (
+    <FormControl
+      component="fieldset"
+      className={`${classes.borderedgroupprimary} ${classes.unabbrev}`}
+    >
+      <FormLabel component="legend">
+        {righthelp(
+          "Unabbreviate",
+          "Remove occurrences of selected operators by rewriting them using other operators."
+        )}
+      </FormLabel>
+      <span>{Object.entries(UNABBREV_OPTIONS_1).map(option)}</span>
+      <span>{Object.entries(UNABBREV_OPTIONS_2).map(option)}</span>
+    </FormControl>
+  );
+}
+
+/** Entries of the acceptance-condition menu, in display order. */
+const ACCEPTANCE_OPTIONS = {
+  m: "Acceptance: monitor (all runs accepting)",
+  c: "Acceptance: co-Büchi",
+  b: "Acceptance: Büchi",
+  g: "Acceptance: Generalized Büchi",
+  p: "Acceptance: parity",
+  e: "Acceptance: Emerson-Lei (generic acceptance)",
+};
+
+function AccChoice(props) {
+  const [anchorEl, setAnchorEl] = React.useState(null);
+  const { classes } = props;
+
+  const chooseAcc = (key) => {
+    props.changeAcc(key);
+    setAnchorEl(null);
+  };
+
+  return (
+    <div className={classes.ltlsyntax}>
+      <List component="nav">
+        <ListItem
+          button
+          aria-haspopup="true"
+          aria-controls="acc-menu"
+          aria-label="Acceptance to use"
+          aria-expanded={Boolean(anchorEl)}
+          className={classes.choicelistitem}
+          onClick={(event) => setAnchorEl(event.currentTarget)}
+        >
+          <ListItemText primary={ACCEPTANCE_OPTIONS[props.acc]} />
+          <ExpandMoreIcon className={classes.choiceicon} />
+        </ListItem>
+      </List>
+      <Menu
+        id="acc-menu"
+        anchorEl={anchorEl}
+        open={Boolean(anchorEl)}
+        onClose={() => setAnchorEl(null)}
+      >
+        {Object.entries(ACCEPTANCE_OPTIONS).map(([key, option]) => (
+          <MenuItem
+            key={key}
+            className={classes.choicemenuitem}
+            selected={key === props.acc}
+            onClick={() => chooseAcc(key)}
+          >
+            {option}
+          </MenuItem>
+        ))}
+      </Menu>
+    </div>
+  );
+}
+
+function LtlResult(props) {
+  return <Paper className={props.classes.results}>{props.result}</Paper>;
 }
 
 function LtlRewrite(props) {
