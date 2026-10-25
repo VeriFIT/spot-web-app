@@ -47,6 +47,18 @@ npm run format        # Prettier, writes in place
 npm run format:check  # Prettier, check only (used by CI)
 ```
 
+## Tests
+
+```bash
+npm run test          # Vitest, single run (used by CI)
+npm run test:watch    # Vitest, watch mode
+```
+
+Tests live next to the code as `*.test.ts`. `vitest.config.ts` sets the jsdom
+environment and a `/app/` page URL, because the API helpers read `window.location`.
+`src/api/client.test.ts` pins the query-string contract with `spotapi.py`;
+`src/hooks/useApiQuery.test.ts` covers aborting, stale responses and error handling.
+
 TypeScript is adopted incrementally: `tsconfig.json` has `allowJs` with `checkJs`
 disabled, so existing `.jsx` sources are parsed but not type-checked, while new modules
 (`src/api/`, `src/hooks/`) are checked in strict mode and converted one component at a
