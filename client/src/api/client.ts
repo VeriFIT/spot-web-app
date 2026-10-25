@@ -1,4 +1,11 @@
-import type { RewriteResponse } from "./types";
+import type {
+  CompareResponse,
+  RandomResponse,
+  RewriteResponse,
+  StudyResponse,
+  TranslateResponse,
+  VersionsResponse,
+} from "./types";
 
 /**
  * HTTP error carrying the status code, so the UI can branch on it instead of
@@ -77,4 +84,98 @@ export function rewriteUrl(formula: string, options: RewriteOptions): string {
 /** Loader for `useApiQuery`: the request URL doubles as the query key. */
 export function getRewrite(url: string, signal: AbortSignal): Promise<RewriteResponse> {
   return fetchJson<RewriteResponse>(url, signal);
+}
+
+/**
+ * URL of a random formula; `expert` asks for PSL instead of LTL. Unlike the
+ * other endpoints this one must not be cached, so it is fetched on demand.
+ */
+export function randomUrl(expert: boolean): string {
+  const url = new URL(apiEndpoint() + "random");
+  if (expert) url.searchParams.append("p", "1");
+  return url.toString();
+}
+
+/** Loader for the random-formula button of the formula input. */
+export function getRandomFormula(
+  url: string,
+  signal?: AbortSignal
+): Promise<RandomResponse> {
+  return fetchJson<RandomResponse>(url, signal);
+}
+
+/** URL of the versions list; see `spotapi.py:versions`. */
+export function versionsUrl(): string {
+  return new URL(apiEndpoint() + "versions").toString();
+}
+
+/** Loader for the versions menu. */
+export function getVersions(
+  url: string,
+  signal?: AbortSignal
+): Promise<VersionsResponse> {
+  return fetchJson<VersionsResponse>(url, signal);
+}
+
+/** URL of the study request for `formula`; see `spotapi.py:study`. */
+export function studyUrl(formula: string): string {
+  return new URL(apiEndpoint() + "study/" + encodeURIComponent(formula)).toString();
+}
+
+/** Loader for the study tab. */
+export function getStudy(url: string, signal: AbortSignal): Promise<StudyResponse> {
+  return fetchJson<StudyResponse>(url, signal);
+}
+
+/** URL of the comparison of `formula` (first) with `formula2` (second). */
+export function compareUrl(formula: string, formula2: string): string {
+  const url = new URL(apiEndpoint() + "compare/" + encodeURIComponent(formula));
+  url.searchParams.append("g", formula2);
+  return url.toString();
+}
+
+/** Loader for the compare tab. */
+export function getCompare(url: string, signal: AbortSignal): Promise<CompareResponse> {
+  return fetchJson<CompareResponse>(url, signal);
+}
+
+export interface TranslateOptions {
+  /** Acceptance condition: `g` (TGBA) by default, or `p` (parity), `e`, … */
+  acc: string;
+  /** Translation preference: `s` (small), `d` (deterministic) or `a` (any). */
+  autpref: string;
+  /** Optimization level, used in expert mode: `h`, `m` or `l`. */
+  optlevel: string;
+  /** Parity min/max preference; only sent with `acc: "p"`. */
+  minmax: string;
+  /** Parity odd/even preference; only sent with `acc: "p"`. */
+  oddeven: string;
+  /** Extra translation and display options, sent as one `o` each. */
+  transopts: Record<string, boolean>;
+}
+
+/** Build the translation request URL; the counterpart of `spotapi.py:translate`. */
+export function translateUrl(formula: string, options: TranslateOptions): string {
+  const url = new URL(apiEndpoint() + "translate/" + encodeURIComponent(formula));
+
+  url.searchParams.append("a", options.acc);
+  url.searchParams.append("p", options.autpref);
+  url.searchParams.append("l", options.optlevel);
+  if (options.acc === "p") {
+    url.searchParams.append("m", options.minmax);
+    url.searchParams.append("e", options.oddeven);
+  }
+  for (const [key, enabled] of Object.entries(options.transopts)) {
+    if (enabled) url.searchParams.append("o", key);
+  }
+
+  return url.toString();
+}
+
+/** Loader for the translate tab. */
+export function getTranslate(
+  url: string,
+  signal: AbortSignal
+): Promise<TranslateResponse> {
+  return fetchJson<TranslateResponse>(url, signal);
 }

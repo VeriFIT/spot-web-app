@@ -1,8 +1,16 @@
-import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { useState } from "react";
+import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
+import { useState, version as reactVersion } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { LtlInput, LtlRewrite } from "./LtlApp";
+import {
+  LtlApp,
+  LtlCompare,
+  LtlInput,
+  LtlRewrite,
+  LtlStudy,
+  LtlTranslate,
+  Versions,
+} from "./LtlApp";
 
 interface PendingRequest {
   url: string;
@@ -472,6 +480,200 @@ describe("LtlInput", () => {
   });
 });
 
+describe("LtlStudy", () => {
+  afterEach(() => {
+    cleanup();
+    vi.unstubAllGlobals();
+  });
+
+  /** Props of the study tab; `classes` is the styled-injection prop. */
+  function studyProps(overrides: Record<string, unknown> = {}) {
+    return { classes: {}, formula: "G a", handleAnyParseError: () => {}, ...overrides };
+  }
+
+  it("requests the formula and describes its class", async () => {
+    const { requests } = stubFetch();
+    const handleAnyParseError = vi.fn();
+    render(<LtlStudy {...studyProps({ handleAnyParseError })} />);
+
+    expect(requests).toHaveLength(1);
+    expect(new URL(requests[0].url).pathname).toBe("/api/study/G%20a");
+
+    const response = {
+      mp_class_text: "a safety property",
+      mp_hierarchy_svg: "<svg></svg>",
+      sfh_class: "Π₁",
+      sfh_class_text: "It uses only weak temporal operators.",
+    };
+    await act(async () => requests[0].respond(response));
+
+    expect(handleAnyParseError).toHaveBeenCalledWith(response);
+    expect(screen.getByText("a safety property")).toBeTruthy();
+    expect(screen.getByText("Safety-Liveness classification")).toBeTruthy();
+  });
+
+  it("does not query an empty formula and clears a previous parse error", async () => {
+    const handleAnyParseError = vi.fn();
+    const { fetchMock } = stubFetch();
+    render(<LtlStudy {...studyProps({ formula: "", handleAnyParseError })} />);
+
+    await act(async () => {});
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(handleAnyParseError).toHaveBeenCalledWith({});
+  });
+});
+
+describe("LtlCompare", () => {
+  afterEach(() => {
+    cleanup();
+    vi.unstubAllGlobals();
+  });
+
+  function compareProps(overrides: Record<string, unknown> = {}) {
+    return {
+      classes: {},
+      formula: "a U b",
+      formula2: "b U a",
+      expert: false,
+      hideoptions: true,
+      handleChangeFormula2: () => {},
+      handleAnyParseError: () => {},
+      ...overrides,
+    };
+  }
+
+  it("requests both formulas and reports each parse error", async () => {
+    const { requests } = stubFetch();
+    const handleAnyParseError = vi.fn();
+    render(<LtlCompare {...compareProps({ handleAnyParseError })} />);
+
+    expect(requests).toHaveLength(1);
+    const url = new URL(requests[0].url);
+    expect(url.pathname).toBe("/api/compare/a%20U%20b");
+    expect(url.searchParams.get("g")).toBe("b U a");
+
+    const response = {
+      txt: "The two formulas are equivalent.",
+      svg: "<svg></svg>",
+      parse_error2: "syntax error in the second formula",
+      prefix_syntax2: true,
+    };
+    await act(async () => requests[0].respond(response));
+
+    // The first formula's parse information goes to the parent, the second
+    // one to the input the tab renders itself.
+    expect(handleAnyParseError).toHaveBeenCalledWith(response);
+    expect(screen.getByText("The two formulas are equivalent.")).toBeTruthy();
+    expect(screen.getByText("syntax error in the second formula")).toBeTruthy();
+    expect(screen.getByText(PREFIX_NOTE)).toBeTruthy();
+  });
+
+  it("does not query while the second formula is empty", async () => {
+    const { fetchMock } = stubFetch();
+    render(<LtlCompare {...compareProps({ formula2: "" })} />);
+
+    await act(async () => {});
+
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+});
+
+describe("LtlTranslate", () => {
+  afterEach(() => {
+    cleanup();
+    vi.unstubAllGlobals();
+  });
+
+  function translateProps(overrides: Record<string, unknown> = {}) {
+    return {
+      classes: {},
+      formula: "a U b",
+      acc: "p",
+      autpref: "s",
+      optlevel: "h",
+      minmax: "max",
+      oddeven: "odd",
+      transopts: { complete: true, unambiguous: false, colored: false },
+      expert: false,
+      hideoptions: true,
+      handleAnyParseError: () => {},
+      changeAcc: () => {},
+      changeAutpref: () => {},
+      changeOptLevel: () => {},
+      changeMinMax: () => {},
+      changeOddEven: () => {},
+      handleChangeTransOpts: () => () => {},
+      ...overrides,
+    };
+  }
+
+  it("requests the translation and shows the automaton sources on demand", async () => {
+    const { requests } = stubFetch();
+    render(<LtlTranslate {...translateProps()} />);
+
+    expect(requests).toHaveLength(1);
+    const url = new URL(requests[0].url);
+    expect(url.pathname).toBe("/api/translate/a%20U%20b");
+    expect([...url.searchParams.entries()]).toEqual([
+      ["a", "p"],
+      ["p", "s"],
+      ["l", "h"],
+      ["m", "max"],
+      ["e", "odd"],
+      ["o", "complete"],
+    ]);
+
+    await act(async () =>
+      requests[0].respond({
+        states: 3,
+        edges: 4,
+        det: true,
+        automaton_svg: "<svg></svg>",
+        automaton_hoa: "HOA source",
+        automaton_spin: "never claim source",
+      })
+    );
+
+    expect(screen.getByText(/automaton with 3 states and 4 edges/)).toBeTruthy();
+    // The sources stay hidden until their button is clicked, one at a time.
+    expect(screen.queryByText("HOA source")).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: "HOA" }));
+    expect(screen.getByText("HOA source")).toBeTruthy();
+
+    fireEvent.click(screen.getByRole("button", { name: "NeverClaim" }));
+    expect(screen.queryByText("HOA source")).toBeNull();
+    expect(screen.getByText("never claim source")).toBeTruthy();
+  });
+
+  it("does not query an empty formula", async () => {
+    const { fetchMock } = stubFetch();
+    render(<LtlTranslate {...translateProps({ formula: "" })} />);
+
+    await act(async () => {});
+
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("renders its options when they are not hidden", () => {
+    stubFetch();
+    const handleChangeTransOpts = vi.fn(() => () => {});
+    render(
+      <LtlTranslate {...translateProps({ hideoptions: false, handleChangeTransOpts })} />
+    );
+
+    expect(
+      screen.getByRole("radiogroup", { name: "Translation preferences" })
+    ).toBeTruthy();
+    expect(screen.getByLabelText("complete")).toBeTruthy();
+
+    fireEvent.click(screen.getByLabelText("show SCCs"));
+
+    expect(handleChangeTransOpts).toHaveBeenCalledWith("showscc");
+  });
+});
+
 describe("LtlRewrite options", () => {
   afterEach(() => {
     cleanup();
@@ -570,5 +772,72 @@ describe("LtlRewrite options", () => {
 
     expect(requests).toHaveLength(3);
     expect(searchParams(requests[2].url).has("d")).toBe(false);
+  });
+});
+
+describe("Versions", () => {
+  afterEach(() => {
+    cleanup();
+    vi.unstubAllGlobals();
+  });
+
+  it("lists the versions reported by the server, plus React", async () => {
+    const { requests } = stubFetch();
+    render(<Versions classes={{}} />);
+
+    expect(requests).toHaveLength(1);
+    expect(new URL(requests[0].url).pathname).toBe("/api/versions");
+
+    await act(async () =>
+      requests[0].respond([
+        ["Spot", "2.11.6", "https://spot.lrde.epita.fr/"],
+        ["Flask", "2.2.2", "http://flask.pocoo.org/"],
+      ])
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Versions" }));
+
+    expect(await screen.findByText("Spot")).toBeTruthy();
+    expect(screen.getByText("2.11.6")).toBeTruthy();
+    // The client is not part of the server's list, so it appends itself.
+    expect(screen.getByText("React")).toBeTruthy();
+    expect(screen.getByText(reactVersion)).toBeTruthy();
+  });
+});
+
+describe("LtlApp expert mode", () => {
+  afterEach(() => {
+    cleanup();
+    vi.unstubAllGlobals();
+  });
+
+  /** Random-formula requests, i.e. those the dice buttons sent. */
+  function randomRequests(requests: PendingRequest[]) {
+    return requests
+      .map((request) => new URL(request.url))
+      .filter((url) => url.pathname === "/api/random");
+  }
+
+  /** The dice button of the input whose textbox is `input`. */
+  function randomButtonFor(input: HTMLElement) {
+    // The button is the input's adornment, next to it in the same wrapper.
+    return within(input.parentElement as HTMLElement).getByRole("button");
+  }
+
+  it("reaches the compare tab's second formula input", () => {
+    const { requests } = stubFetch();
+    render(<LtlApp classes={{}} />);
+
+    fireEvent.click(screen.getByRole("tab", { name: "Compare" }));
+
+    // Without expert mode the generator produces LTL.
+    fireEvent.click(randomButtonFor(screen.getByLabelText("Second formula")));
+    expect(randomRequests(requests).at(-1)?.searchParams.has("p")).toBe(false);
+
+    fireEvent.click(screen.getByLabelText("Expert mode"));
+    fireEvent.click(randomButtonFor(screen.getByLabelText("Second formula")));
+
+    // Expert mode asks the server for a PSL formula.
+    expect(randomRequests(requests).at(-1)?.searchParams.get("p")).toBe("1");
   });
 });

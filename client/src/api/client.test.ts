@@ -1,7 +1,15 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { apiEndpoint, rewriteUrl } from "./client";
-import type { RewriteOptions } from "./client";
+import {
+  apiEndpoint,
+  compareUrl,
+  randomUrl,
+  rewriteUrl,
+  studyUrl,
+  translateUrl,
+  versionsUrl,
+} from "./client";
+import type { RewriteOptions, TranslateOptions } from "./client";
 
 /*
  * The query string built here is the contract with `server/spotapi.py:rewrite`:
@@ -135,5 +143,93 @@ describe("rewriteUrl", () => {
       ["ff", "l"],
       ["u", "F"],
     ]);
+  });
+});
+
+describe("randomUrl", () => {
+  it("asks for an LTL formula by default", () => {
+    const { pathname, params } = inspect(randomUrl(false));
+
+    expect(pathname).toBe("/api/random");
+    expect([...params.entries()]).toEqual([]);
+  });
+
+  it("asks for a PSL formula in expert mode", () => {
+    expect([...inspect(randomUrl(true)).params.entries()]).toEqual([["p", "1"]]);
+  });
+});
+
+describe("versionsUrl", () => {
+  it("targets the versions route", () => {
+    expect(inspect(versionsUrl()).pathname).toBe("/api/versions");
+  });
+});
+
+describe("studyUrl", () => {
+  it("targets the study route with no options", () => {
+    const { pathname, params } = inspect(studyUrl("G (a U b)"));
+
+    expect(pathname).toBe("/api/study/G%20(a%20U%20b)");
+    expect([...params.entries()]).toEqual([]);
+  });
+});
+
+describe("compareUrl", () => {
+  it("puts the second formula in g", () => {
+    const { pathname, params } = inspect(compareUrl("a U b", "b U a"));
+
+    expect(pathname).toBe("/api/compare/a%20U%20b");
+    expect([...params.entries()]).toEqual([["g", "b U a"]]);
+  });
+});
+
+describe("translateUrl", () => {
+  const translateDefaults: TranslateOptions = {
+    acc: "g",
+    autpref: "s",
+    optlevel: "h",
+    minmax: "any",
+    oddeven: "any",
+    transopts: {},
+  };
+
+  function translateOptions(overrides: Partial<TranslateOptions>): TranslateOptions {
+    return { ...translateDefaults, ...overrides };
+  }
+
+  it("sends the acceptance, preference and optimization level", () => {
+    const { pathname, params } = inspect(translateUrl("a U b", translateDefaults));
+
+    expect(pathname).toBe("/api/translate/a%20U%20b");
+    expect([...params.entries()]).toEqual([
+      ["a", "g"],
+      ["p", "s"],
+      ["l", "h"],
+    ]);
+  });
+
+  it("sends the parity style only for parity acceptance", () => {
+    expect(inspect(translateUrl("a", translateDefaults)).params.has("m")).toBe(false);
+
+    const { params } = inspect(
+      translateUrl("a", translateOptions({ acc: "p", minmax: "max", oddeven: "odd" }))
+    );
+
+    expect(params.get("a")).toBe("p");
+    expect(params.get("m")).toBe("max");
+    expect(params.get("e")).toBe("odd");
+  });
+
+  it("sends one o parameter per enabled translation option", () => {
+    const { params } = inspect(
+      translateUrl(
+        "a",
+        translateOptions({
+          transopts: { complete: true, colored: false, showscc: true },
+        })
+      )
+    );
+
+    expect(params.getAll("o")).toEqual(["complete", "showscc"]);
   });
 });

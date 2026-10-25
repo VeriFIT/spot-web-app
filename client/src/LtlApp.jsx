@@ -51,7 +51,20 @@ import TextField from "@mui/material/TextField";
 import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 import { withStyles } from "tss-react/mui";
-import { apiEndpoint, ApiError, getRewrite, rewriteUrl } from "./api/client";
+import {
+  compareUrl,
+  getCompare,
+  getRandomFormula,
+  getRewrite,
+  getStudy,
+  getTranslate,
+  getVersions,
+  randomUrl,
+  rewriteUrl,
+  studyUrl,
+  translateUrl,
+  versionsUrl,
+} from "./api/client";
 import { useApiQuery } from "./hooks/useApiQuery";
 import { useDelayedFlag } from "./hooks/useDelayedFlag";
 
@@ -366,19 +379,6 @@ function renderError(error) {
   );
 }
 
-function handleErrors(response) {
-  if (!response.ok) {
-    throw new ApiError(response);
-  }
-  return response.json();
-}
-function handleErrorsAndClearTimer(timer) {
-  return (response) => {
-    clearTimeout(timer);
-    return handleErrors(response);
-  };
-}
-
 function righthelp(contents, help) {
   return (
     <Tooltip title={help} placement="right" enterDelay={750}>
@@ -398,153 +398,134 @@ function classhelp(contents, help) {
   );
 }
 
-class LtlInput extends React.Component {
-  state = {
-    tmpformula: this.props.defaultValue || "",
-    formula: this.props.defaultValue || "",
+function LtlInput(props) {
+  // The text being typed, and the formula the app actually queries. They
+  // differ while the user has not confirmed the edit with Enter or Tab.
+  const [tmpformula, setTmpformula] = React.useState(props.defaultValue || "");
+  const [formula, setFormula] = React.useState(props.defaultValue || "");
+
+  const handleChange = (event) => setTmpformula(event.target.value);
+
+  const updateFormula = () => {
+    setFormula(tmpformula);
+    props.setFormula(tmpformula);
   };
 
-  handleChange = (e) => {
-    this.setState({ tmpformula: e.target.value });
+  const handleKey = (event) => {
+    if (event.key === "Enter") updateFormula();
   };
 
-  updateFormula = () => {
-    let fmt = this.state.tmpformula;
-    this.setState({ formula: fmt });
-    this.props.setFormula(fmt);
+  const randomizeFormula = () => {
+    getRandomFormula(randomUrl(props.expert)).then((fmt) => {
+      setTmpformula(fmt);
+      setFormula(fmt);
+      props.setFormula(fmt);
+    });
   };
 
-  handleKey = (e) => {
-    if (e.key === "Enter") this.updateFormula();
-  };
-
-  randomizeFormula = () => {
-    let url = new URL(apiEndpoint() + "random");
-    if (this.props.expert)
-      // turn on PSL generation
-      url.searchParams.append("p", 1);
-    fetch(url)
-      .then(handleErrors)
-      .then((fmt) => {
-        this.setState({ tmpformula: fmt, formula: fmt });
-        this.props.setFormula(fmt);
-      });
-  };
-
-  render() {
-    return (
-      <div className={this.props.classes.ltlInput}>
-        <TextField
-          error={Boolean(this.props.formulaerr)}
-          className={this.props.className}
-          fullWidth
-          value={this.state.tmpformula}
-          label={this.props.label}
-          autoFocus={this.props.autoFocus}
-          onChange={this.handleChange}
-          onKeyDown={this.handleKey}
-          onBlur={this.updateFormula}
-          InputProps={{
-            endAdornment: (
-              <Tooltip
-                disableFocusListener={true}
-                title="Overwrite input with a random formula."
-                placement="right"
-                enterDelay={750}
-              >
-                <InputAdornment position="end">
-                  <IconButton onClick={this.randomizeFormula}>
-                    <DiceIcon color="primary" />
-                  </IconButton>
-                </InputAdornment>
-              </Tooltip>
-            ),
-          }}
+  return (
+    <div className={props.classes.ltlInput}>
+      <TextField
+        error={Boolean(props.formulaerr)}
+        className={props.className}
+        fullWidth
+        value={tmpformula}
+        label={props.label}
+        autoFocus={props.autoFocus}
+        onChange={handleChange}
+        onKeyDown={handleKey}
+        onBlur={updateFormula}
+        InputProps={{
+          endAdornment: (
+            <Tooltip
+              disableFocusListener={true}
+              title="Overwrite input with a random formula."
+              placement="right"
+              enterDelay={750}
+            >
+              <InputAdornment position="end">
+                <IconButton onClick={randomizeFormula}>
+                  <DiceIcon color="primary" />
+                </IconButton>
+              </InputAdornment>
+            </Tooltip>
+          ),
+        }}
+      />
+      <FormHelperText className={props.classes.helperText}>
+        {tmpformula !== formula && (
+          <span>
+            Hit <i>Enter</i> or <i>Tab</i> to update the results.
+          </span>
+        )}
+      </FormHelperText>
+      {props.formulalbt && (
+        <NoteText
+          text={
+            "Assuming a prefix syntax in the style of " +
+            "LBT/LTL2DSTAR, as the standard parser for " +
+            "infix syntaxes failed."
+          }
         />
-        <FormHelperText className={this.props.classes.helperText}>
-          {this.state.tmpformula !== this.state.formula && (
-            <span>
-              Hit <i>Enter</i> or <i>Tab</i> to update the results.
-            </span>
-          )}
-        </FormHelperText>
-        {this.props.formulalbt && (
-          <NoteText
-            text={
-              "Assuming a prefix syntax in the style of " +
-              "LBT/LTL2DSTAR, as the standard parser for " +
-              "infix syntaxes failed."
-            }
-          />
-        )}
-        {this.props.formulaerr && (
-          <pre className={this.props.classes.parseerror}>{this.props.formulaerr}</pre>
-        )}
-      </div>
-    );
-  }
+      )}
+      {props.formulaerr && (
+        <pre className={props.classes.parseerror}>{props.formulaerr}</pre>
+      )}
+    </div>
+  );
 }
 
-class Versions extends React.Component {
-  state = {
-    anchorEl: null,
-    versions: [],
-  };
+function Versions(props) {
+  const [anchorEl, setAnchorEl] = React.useState(null);
+  const [versions, setVersions] = React.useState([]);
 
-  handleOpen = (event) => {
-    this.setState({ anchorEl: event.currentTarget });
-  };
-
-  handleClose = () => {
-    this.setState({ anchorEl: null });
-  };
-
-  componentDidMount() {
-    fetch(apiEndpoint() + "versions")
-      .then(handleErrors)
+  // The list is fetched once; abort it if the menu goes away before it lands.
+  React.useEffect(() => {
+    const controller = new AbortController();
+    getVersions(versionsUrl(), controller.signal)
       .then((vers) => {
-        vers.push(["React", React.version, "https://reactjs.org/"]);
-        this.setState({ versions: vers });
+        if (controller.signal.aborted) return;
+        setVersions([...vers, ["React", React.version, "https://reactjs.org/"]]);
       })
-      .catch((error) => this.setState({ versions: [[error.message, null, null]] }));
-  }
+      .catch((error) => {
+        if (controller.signal.aborted) return;
+        setVersions([[error.message, null, null]]);
+      });
+    return () => controller.abort();
+  }, []);
 
-  render() {
-    const { classes } = this.props;
-    const { anchorEl } = this.state;
-    return (
-      <div>
-        <Button
-          className={this.props.classes.versions}
-          color="secondary"
-          onClick={this.handleOpen}
-        >
-          Versions
-        </Button>
-        <Menu
-          id="lock-menu"
-          anchorEl={anchorEl}
-          open={Boolean(anchorEl)}
-          onClose={this.handleClose}
-        >
-          <Table className={classes.versiontable}>
-            <TableBody>
-              {this.state.versions.map(([tool, version, url]) => {
-                return (
-                  <TableRow key={tool}>
-                    <TableCell component="th" scope="row">
-                      <a href={url}>{tool}</a>
-                    </TableCell>
-                    <TableCell>{version}</TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </Menu>
-      </div>
-    );
-  }
+  const handleOpen = (event) => setAnchorEl(event.currentTarget);
+  const handleClose = () => setAnchorEl(null);
+
+  const { classes } = props;
+  return (
+    <div>
+      <Button className={classes.versions} color="secondary" onClick={handleOpen}>
+        Versions
+      </Button>
+      <Menu
+        id="lock-menu"
+        anchorEl={anchorEl}
+        open={Boolean(anchorEl)}
+        onClose={handleClose}
+      >
+        <Table className={classes.versiontable}>
+          <TableBody>
+            {versions.map(([tool, version, url]) => {
+              return (
+                <TableRow key={tool}>
+                  <TableCell component="th" scope="row">
+                    <a href={url}>{tool}</a>
+                  </TableCell>
+                  <TableCell>{version}</TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </Menu>
+    </div>
+  );
 }
 
 class LtlSyntaxChoice extends React.Component {
@@ -871,789 +852,616 @@ function LtlRewrite(props) {
   );
 }
 
-class LtlStudy extends React.Component {
-  timer = null;
-
-  state = {
-    result: null,
-  };
-
-  componentWillUnmount() {
-    clearTimeout(this.timer);
-  }
-
-  buildResult(res) {
-    if (!("mp_class_text" in res)) return;
-    return (
-      <React.Fragment>
-        <div className={this.props.classes.hierarchydiv}>
-          <SVGInline
-            className={this.props.classes.hierarchy_svg}
-            svg={res["mp_hierarchy_svg"]}
-          />
-          <Typography variant="body2" color="primary">
-            Hierarchy of Manna and Pnueli
-          </Typography>
+/** Body of the study tab, as a function of the answer so it stays pure. */
+function studyResult(res, classes) {
+  if (!("mp_class_text" in res)) return null;
+  return (
+    <React.Fragment>
+      <div className={classes.hierarchydiv}>
+        <SVGInline className={classes.hierarchy_svg} svg={res["mp_hierarchy_svg"]} />
+        <Typography variant="body2" color="primary">
+          Hierarchy of Manna and Pnueli
+        </Typography>
+        <Typography>
+          This formula describes <b>{res["mp_class_text"]}</b>.
+        </Typography>
+        {"pathological" in res && res["pathological"] === true && (
           <Typography>
-            This formula describes <b>{res["mp_class_text"]}</b>.
+            Note that this is a <b>pathological formula</b> that would not be classified
+            as precisely using only syntactic means. This usually means that a simpler
+            equivalent formula exists.
           </Typography>
-          {"pathological" in res && res["pathological"] === true && (
-            <Typography>
-              Note that this is a <b>pathological formula</b> that would not be classified
-              as precisely using only syntactic means. This usually means that a simpler
-              equivalent formula exists.
-            </Typography>
-          )}
-          <Typography variant="body2" color="primary">
-            Syntactic-Future Hierarchy
-          </Typography>
+        )}
+        <Typography variant="body2" color="primary">
+          Syntactic-Future Hierarchy
+        </Typography>
+        <Typography>
+          This formula belongs to {classhelp(res["sfh_class"], res["sfh_class_text"])}.
+        </Typography>
+        {"pathological" in res && res["pathological"] === "sfh" && (
           <Typography>
-            This formula belongs to {classhelp(res["sfh_class"], res["sfh_class_text"])}.
+            Note this syntactic class is above the corresponding class from the Manna and
+            Pnueli hierarchy, this means that an equivalent formula exists in a lower
+            syntactic class.
           </Typography>
-          {"pathological" in res && res["pathological"] === "sfh" && (
-            <Typography>
-              Note this syntactic class is above the corresponding class from the Manna
-              and Pnueli hierarchy, this means that an equivalent formula exists in a
-              lower syntactic class.
-            </Typography>
-          )}
-        </div>
-        <div className={this.props.classes.livenessdiv}>
-          <Typography variant="body2" color="primary">
-            Safety-Liveness classification
-          </Typography>
-          {res["safety_liveness"] === "safety" && (
-            <Typography>
-              This formula represents <b>a safety property</b>.
-            </Typography>
-          )}
-          {res["safety_liveness"] === "liveness" && (
-            <Typography>
-              This formula represents <b>a liveness property</b>.
-            </Typography>
-          )}
-          {res["safety_liveness"] === "both" && (
-            <Typography>
-              This formula represents both <b>a safety and a liveness property</b>.
-            </Typography>
-          )}
-          {res["safety_liveness"] === "none" && (
-            <Typography>
-              This formula is neither a safety nor a liveness property. However it
-              necessarily is the <b>intersection</b> of a liveness and a safety property.
-            </Typography>
-          )}
-        </div>
-        <div className={this.props.classes.indexdiv}>
-          <Typography variant="body2" color="primary">
-            Indices
-          </Typography>
-          {(res["Rabin_index"] !== null || res["Streett_index"] !== null) && (
-            <Table className={this.props.classes.wordtable}>
-              <TableBody>
-                <TableRow className={this.props.classes.wordtablerow}>
-                  <TableCell
-                    component="th"
-                    scope="row"
-                    className={this.props.classes.wordtablecell}
-                  >
-                    Rabin index:
-                  </TableCell>
-                  <TableCell className={this.props.classes.wordtablecellw}>
-                    {res["Rabin_index"]}
-                  </TableCell>
-                </TableRow>
-                <TableRow className={this.props.classes.wordtablerow}>
-                  <TableCell
-                    component="th"
-                    scope="row"
-                    className={this.props.classes.wordtablecell}
-                  >
-                    Streett index:
-                  </TableCell>
-                  <TableCell className={this.props.classes.wordtablecellw}>
-                    {res["Streett_index"]}
-                  </TableCell>
-                </TableRow>
-              </TableBody>
-            </Table>
-          )}
-        </div>
-        <div className={this.props.classes.satisfiabilitydiv}>
-          <Typography variant="body2" color="primary">
-            Satisfiability
-          </Typography>
-          {res["rej_word"] === null && (
-            <Typography>
-              This formula is a <b>tautology</b>: it accepts all words.
-            </Typography>
-          )}
-          {res["acc_word"] === null && (
-            <Typography>
-              This formula is <b>unsatisfiable</b>.
-            </Typography>
-          )}
-          {res["acc_word"] !== null && res["rej_word"] !== null && (
-            <Table className={this.props.classes.wordtable}>
-              <TableBody>
-                <TableRow className={this.props.classes.wordtablerow}>
-                  <TableCell
-                    component="th"
-                    scope="row"
-                    className={this.props.classes.wordtablecell}
-                  >
-                    Accepted word:
-                  </TableCell>
-                  <TableCell className={this.props.classes.wordtablecellw}>
-                    {res["acc_word"]}
-                  </TableCell>
-                </TableRow>
-                <TableRow className={this.props.classes.wordtablerow}>
-                  <TableCell
-                    component="th"
-                    scope="row"
-                    className={this.props.classes.wordtablecell}
-                  >
-                    Rejected word:
-                  </TableCell>
-                  <TableCell className={this.props.classes.wordtablecellw}>
-                    {res["rej_word"]}
-                  </TableCell>
-                </TableRow>
-              </TableBody>
-            </Table>
-          )}
-        </div>
-        <div className={this.props.classes.stutterdiv}>
-          <Typography variant="body2" color="primary">
-            Stutter invariance
-          </Typography>
-          {res["stutter_invariant"] === "no X" && (
-            <Typography>
-              This formula is (syntactically) <b>stutter-invariant</b>.
-            </Typography>
-          )}
-          {res["stutter_invariant"] === true && (
-            <Typography>
-              This formula is <b>stutter-invariant</b> even if it might not look so
-              syntactically.
-              {"stutter_invariant_eq" in res && (
-                <>
-                  <br />
-                  Furthermore, it can be simplified to the following{" "}
-                  <i>syntactically stutter-invariant</i> formula:
-                  <br />
-                  <Ltl f={res["stutter_invariant_eq"]} />
-                </>
-              )}
-            </Typography>
-          )}
-          {res["stutter_invariant"] === false && (
-            <Typography>
-              This formula is <b>stutter-sensitive</b>.<br />
-              The accepted and rejected words given above are a proof of that, as they
-              differ only by some stuttering.
-            </Typography>
-          )}
-        </div>
-      </React.Fragment>
-    );
-  }
-
-  updateResult() {
-    if (this.props.formula === "") {
-      this.props.handleAnyParseError({});
-      this.setState({ result: "" });
-      return;
-    }
-    let url = new URL(apiEndpoint() + "study/" + encodeURIComponent(this.props.formula));
-
-    this.timer = setTimeout(() => {
-      this.setState({
-        result: <CircularProgress className={this.props.classes.progress} />,
-      });
-    }, 800);
-    fetch(url)
-      .then(handleErrorsAndClearTimer(this.timer))
-      .then((res) => {
-        this.props.handleAnyParseError(res);
-        this.setState({ result: this.buildResult(res) });
-      })
-      .catch((error) => {
-        clearTimeout(this.timer);
-        this.setState({ result: renderError(error) });
-      });
-  }
-
-  componentDidMount() {
-    this.updateResult();
-  }
-
-  componentDidUpdate(prevProps) {
-    if (prevProps.formula !== this.props.formula) {
-      this.updateResult();
-    }
-  }
-
-  render() {
-    return (
-      <div>
-        {this.state.result && (
-          <LtlResult classes={this.props.classes} result={this.state.result} />
         )}
       </div>
-    );
-  }
-}
-
-class LtlTranslate extends React.Component {
-  timer = null;
-
-  state = {
-    result: null,
-    showfile: 0,
-  };
-
-  componentWillUnmount() {
-    clearTimeout(this.timer);
-  }
-
-  showfilehoa = () => {
-    let newval = this.state.showfile === 1 ? 0 : 1;
-    this.setState({ showfile: newval });
-  };
-  showfilespin = () => {
-    this.setState({ showfile: this.state.showfile === 2 ? 0 : 2 });
-  };
-
-  buildResult(res) {
-    // Return a lambda so we capture res, and can easily re-render
-    // the results on events (such as clicking on HOA or
-    // NeverClaim).
-    const Result = () => {
-      return (
-        <React.Fragment>
-          {"states" in res && (
-            <Typography>
-              {res["det"] ? "D" : "Non-d"}
-              eterministic automaton with {res["states"]} state
-              {res["states"] > 1 ? "s" : ""} and {res["edges"]} edge
-              {res["edges"] > 1 ? "s" : ""}.
-            </Typography>
-          )}
-          {"note" in res &&
-            res["note"].map((note) => <NoteText key={note} text={note} />)}
-          {"automaton_svg" in res && (
-            <SVGInline
-              className={this.props.classes.automaton_svg}
-              component="div"
-              svg={res["automaton_svg"]}
-            />
-          )}
-          {"automaton_hoa" in res && (
-            <Button color="primary" onClick={this.showfilehoa}>
-              HOA
-            </Button>
-          )}
-          {"automaton_spin" in res && (
-            <Button color="primary" onClick={this.showfilespin}>
-              NeverClaim
-            </Button>
-          )}
-          {this.state.showfile === 1 && (
-            <pre className={this.props.classes.pre}>{res["automaton_hoa"]}</pre>
-          )}
-          {this.state.showfile === 2 && (
-            <pre className={this.props.classes.pre}>{res["automaton_spin"]}</pre>
-          )}
-        </React.Fragment>
-      );
-    };
-    // Not a component in the usual sense (render calls this.state.result()),
-    // but naming it keeps ESLint and React DevTools happy.
-    Result.displayName = "TranslationResult";
-    return Result;
-  }
-
-  updateResult() {
-    if (this.props.formula === "") {
-      this.setState({ result: "" });
-      return;
-    }
-    let url = new URL(
-      apiEndpoint() + "translate/" + encodeURIComponent(this.props.formula)
-    );
-
-    url.searchParams.append("a", this.props.acc);
-    url.searchParams.append("p", this.props.autpref);
-    url.searchParams.append("l", this.props.optlevel);
-    if (this.props.acc === "p") {
-      url.searchParams.append("m", this.props.minmax);
-      url.searchParams.append("e", this.props.oddeven);
-    }
-    Object.entries(this.props.transopts).forEach(([key, value]) => {
-      if (value) url.searchParams.append("o", key);
-    });
-
-    this.timer = setTimeout(() => {
-      this.setState({
-        result: () => <CircularProgress className={this.props.classes.progress} />,
-      });
-    }, 800);
-    fetch(url)
-      .then(handleErrorsAndClearTimer(this.timer))
-      .then((res) => {
-        this.props.handleAnyParseError(res);
-        this.setState({ result: this.buildResult(res) });
-      })
-      .catch((error) => {
-        clearTimeout(this.timer);
-        this.setState({ result: () => renderError(error) });
-      });
-  }
-
-  componentDidMount() {
-    this.updateResult();
-  }
-
-  componentDidUpdate(prevProps) {
-    if (
-      prevProps.formula !== this.props.formula ||
-      prevProps.acc !== this.props.acc ||
-      prevProps.autpref !== this.props.autpref ||
-      prevProps.transopts !== this.props.transopts ||
-      prevProps.minmax !== this.props.minmax ||
-      prevProps.oddeven !== this.props.oddeven ||
-      prevProps.optlevel !== this.props.optlevel
-    ) {
-      this.updateResult();
-    }
-  }
-
-  render() {
-    return (
-      <React.Fragment>
-        {this.props.hideoptions || (
-          <React.Fragment>
-            <AccChoice
-              acc={this.props.acc}
-              classes={this.props.classes}
-              changeAcc={this.props.changeAcc}
-            />
-            <div className={this.props.classes.optionstrans}>
-              <FormControl
-                component="fieldset"
-                className={this.props.classes.borderedgroupprimary}
-              >
-                <FormLabel component="legend">Translation pref.</FormLabel>
-                <RadioGroup
-                  aria-label="Translation preferences"
-                  name="autpref"
-                  value={this.props.autpref}
-                  onChange={this.props.changeAutpref}
-                >
-                  <FormControlLabel
-                    classes={{ root: this.props.classes.fclvertical }}
-                    value="s"
-                    control={<Radio color="primary" />}
-                    label="small"
-                  />
-                  <FormControlLabel
-                    classes={{ root: this.props.classes.fclvertical }}
-                    value="d"
-                    control={<Radio color="primary" />}
-                    label="deterministic"
-                  />
-                  {(this.props.expert || this.props.autpref === "a") && (
-                    <FormControlLabel
-                      classes={{ root: this.props.classes.fclvertical }}
-                      value="a"
-                      control={<Radio />}
-                      label="any"
-                    />
-                  )}
-                </RadioGroup>
-              </FormControl>
-              <FormControl
-                component="fieldset"
-                className={this.props.classes.borderedgroupprimary}
-              >
-                <FormLabel component="legend">Translation constraints</FormLabel>
-                <FormControlLabel
-                  classes={{ root: this.props.classes.fclvertical }}
-                  control={
-                    <Checkbox
-                      checked={this.props.transopts["complete"]}
-                      color="primary"
-                      onChange={this.props.handleChangeTransOpts("complete")}
-                    />
-                  }
-                  label={righthelp(
-                    "complete",
-                    "Make sure we can always move forward in the automaton, regardless of where we are and what letter we read."
-                  )}
-                />
-                <FormControlLabel
-                  classes={{ root: this.props.classes.fclvertical }}
-                  control={
-                    <Checkbox
-                      checked={this.props.transopts["unambiguous"]}
-                      color="primary"
-                      onChange={this.props.handleChangeTransOpts("unambiguous")}
-                    />
-                  }
-                  label={righthelp(
-                    "unambiguous",
-                    "Accepted words should have only one accepting run.  Rejecting words may be rejected by many runs."
-                  )}
-                />
-                <FormControlLabel
-                  classes={{ root: this.props.classes.fclvertical }}
-                  control={
-                    <Checkbox
-                      checked={this.props.transopts["statebased"]}
-                      color="primary"
-                      disabled={this.props.acc === "m"}
-                      onChange={this.props.handleChangeTransOpts("statebased")}
-                    />
-                  }
-                  label={righthelp(
-                    "force state-based acc.",
-                    "Automata with state-based acceptance are sometimes larger than those with transition-based acceptance, and never smaller.  By defaut we use state-based acceptance only when it is clear that transition-based acceptance has no benefit."
-                  )}
-                />
-              </FormControl>
-              <FormControl
-                component="fieldset"
-                className={this.props.classes.borderedgroupprimary}
-              >
-                <FormLabel component="legend">Display options</FormLabel>
-                <FormControlLabel
-                  classes={{ root: this.props.classes.fclvertical }}
-                  control={
-                    <Checkbox
-                      checked={this.props.transopts["showscc"]}
-                      color="primary"
-                      onChange={this.props.handleChangeTransOpts("showscc")}
-                    />
-                  }
-                  label={righthelp(
-                    "show SCCs",
-                    "Strongly Connected Components will be highlighted in green (accepting), red (rejecting), black (transient), and gray (rejecting and useless)."
-                  )}
-                />
-                <FormControlLabel
-                  classes={{ root: this.props.classes.fclvertical }}
-                  control={
-                    <Checkbox
-                      checked={this.props.transopts["showndet"]}
-                      color="primary"
-                      onChange={this.props.handleChangeTransOpts("showndet")}
-                    />
-                  }
-                  label={"show non-determinism"}
-                />
-                <FormControlLabel
-                  classes={{ root: this.props.classes.fclvertical }}
-                  control={
-                    <Checkbox
-                      checked={this.props.transopts["forcetacc"]}
-                      color="primary"
-                      onChange={this.props.handleChangeTransOpts("forcetacc")}
-                      disabled={this.props.acc === "m"}
-                    />
-                  }
-                  label={righthelp(
-                    "force transition-based acc.",
-                    "If an automaton with state-based acceptance has been built, move the acceptance marks of each state to its outgoing transitions.  (This is actually how automata are stored in Spot.)"
-                  )}
-                />
-              </FormControl>
-              {this.props.acc === "p" && (
-                <FormControl
-                  component="fieldset"
-                  className={this.props.classes.borderedgroupprimary}
-                >
-                  <FormLabel component="legend">Parity style</FormLabel>
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        checked={this.props.transopts["colored"]}
-                        color="primary"
-                        onChange={this.props.handleChangeTransOpts("colored")}
-                      />
-                    }
-                    label={righthelp(
-                      "colored",
-                      "Force each transition (or state if state-based acceptance is used) to belong to exactly one acceptance set.  Without this option some transitions may not belong to any set."
-                    )}
-                  />
-                  <RadioGroup
-                    aria-label="min or max"
-                    name="minmax"
-                    value={this.props.minmax}
-                    onChange={this.props.changeMinMax}
-                    className={this.props.classes.flexhoriz}
-                  >
-                    <FormControlLabel
-                      value="any"
-                      control={<Radio color="primary" />}
-                      label="any"
-                    />
-                    <FormControlLabel
-                      value="min"
-                      control={<Radio color="primary" />}
-                      label="min"
-                    />
-                    <FormControlLabel
-                      value="max"
-                      control={<Radio color="primary" />}
-                      label="max"
-                    />
-                  </RadioGroup>
-                  <RadioGroup
-                    aria-label="odd or even"
-                    name="oddeven"
-                    value={this.props.oddeven}
-                    onChange={this.props.changeOddEven}
-                    className={this.props.classes.flexhoriz}
-                  >
-                    <FormControlLabel
-                      value="any"
-                      control={<Radio color="primary" />}
-                      label="any"
-                    />
-                    <FormControlLabel
-                      value="odd"
-                      control={<Radio color="primary" />}
-                      label="odd"
-                    />
-                    <FormControlLabel
-                      value="even"
-                      control={<Radio color="primary" />}
-                      label="even"
-                    />
-                  </RadioGroup>
-                </FormControl>
-              )}
-              {this.props.expert && (
-                <FormControl
-                  component="fieldset"
-                  className={this.props.classes.borderedgroupsecondary}
-                >
-                  <FormLabel
-                    component="legend"
-                    classes={{ focused: this.props.classes.focused }}
-                  >
-                    Optimization level
-                  </FormLabel>
-                  <RadioGroup
-                    aria-label="Optimization level"
-                    name="optlevel"
-                    value={this.props.optlevel}
-                    className={this.props.classes.flexhoriz}
-                    onChange={this.props.changeOptLevel}
-                  >
-                    <FormControlLabel
-                      value="h"
-                      control={<Radio color="secondary" />}
-                      label="high"
-                    />
-                    <FormControlLabel
-                      value="m"
-                      control={<Radio color="secondary" />}
-                      label="medium"
-                    />
-                    <FormControlLabel
-                      value="l"
-                      control={<Radio color="secondary" />}
-                      label="low"
-                    />
-                  </RadioGroup>
-                </FormControl>
-              )}
-            </div>
-          </React.Fragment>
-        )}
-        {this.state.result && (
-          <LtlResult classes={this.props.classes} result={this.state.result()} />
-        )}
-      </React.Fragment>
-    );
-  }
-}
-
-class LtlCompare extends React.Component {
-  timer = null;
-
-  state = {
-    formula2err: null,
-    formula2lbt: false,
-    result: null,
-  };
-
-  componentWillUnmount() {
-    clearTimeout(this.timer);
-  }
-
-  setFormulaError2 = (val) => {
-    this.setState({ formula2err: val });
-  };
-  setPrefixSyntax2 = (val) => {
-    this.setState({ formula2lbt: val });
-  };
-
-  handleAnyParseError = (res) => {
-    this.props.handleAnyParseError(res); // first formula
-    if ("parse_error2" in res) this.setFormulaError2(res["parse_error2"]);
-    else this.setFormulaError2(null);
-    this.setPrefixSyntax2(res["prefix_syntax2"] === true);
-  };
-
-  buildResult(res) {
-    if (!("txt" in res && "svg" in res)) return null;
-    return (
-      <React.Fragment>
-        {"txt" in res && <Typography>{res["txt"]}</Typography>}
-        {"svg" in res && (
-          <SVGInline svg={res["svg"]} className={this.props.classes.vendiag} />
-        )}
-        <Table className={this.props.classes.wordtable}>
-          <TableBody>
-            {"w1" in res && (
-              <TableRow className={this.props.classes.wordtablerow}>
-                <TableCell
-                  component="th"
-                  scope="row"
-                  className={this.props.classes.wordtablecell}
-                >
-                  w₁:
-                </TableCell>
-                <TableCell className={this.props.classes.wordtablecellw}>
-                  {res["w1"]}
-                </TableCell>
-              </TableRow>
-            )}
-            {"w2" in res && (
-              <TableRow className={this.props.classes.wordtablerow}>
-                <TableCell
-                  component="th"
-                  scope="row"
-                  className={this.props.classes.wordtablecell}
-                >
-                  w₂:
-                </TableCell>
-                <TableCell className={this.props.classes.wordtablecellw}>
-                  {res["w2"]}
-                </TableCell>
-              </TableRow>
-            )}
-            {"w3" in res && (
-              <TableRow className={this.props.classes.wordtablerow}>
-                <TableCell
-                  component="th"
-                  scope="row"
-                  className={this.props.classes.wordtablecell}
-                >
-                  w₃:
-                </TableCell>
-                <TableCell className={this.props.classes.wordtablecellw}>
-                  {res["w3"]}
-                </TableCell>
-              </TableRow>
-            )}
-            {"w4" in res && (
-              <TableRow className={this.props.classes.wordtablerow}>
-                <TableCell
-                  component="th"
-                  scope="row"
-                  className={this.props.classes.wordtablecell}
-                >
-                  w₄:
-                </TableCell>
-                <TableCell className={this.props.classes.wordtablecellw}>
-                  {res["w4"]}
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-        {"sfh1" in res && (
+      <div className={classes.livenessdiv}>
+        <Typography variant="body2" color="primary">
+          Safety-Liveness classification
+        </Typography>
+        {res["safety_liveness"] === "safety" && (
           <Typography>
-            Although they are equivalent,
-            <ul className={this.props.classes.nottopmargin}>
-              <li>
-                First formula belongs to {classhelp(res["sfh1"], res["sfh1_text"])},
-              </li>
-              <li>
-                Second formula belongs to {classhelp(res["sfh2"], res["sfh2_text"])}.
-              </li>
-            </ul>
+            This formula represents <b>a safety property</b>.
           </Typography>
         )}
-      </React.Fragment>
-    );
-  }
-
-  updateResult() {
-    if (this.props.formula === "" || this.props.formula2 === "") {
-      this.setState({ result: "" });
-      return;
-    }
-    let url = new URL(
-      apiEndpoint() + "compare/" + encodeURIComponent(this.props.formula)
-    );
-    url.searchParams.append("g", this.props.formula2);
-
-    this.timer = setTimeout(() => {
-      this.setState({
-        result: <CircularProgress className={this.props.classes.progress} />,
-      });
-    }, 800);
-    fetch(url)
-      .then(handleErrorsAndClearTimer(this.timer))
-      .then((res) => {
-        this.handleAnyParseError(res);
-        this.setState({ result: this.buildResult(res) });
-      })
-      .catch((error) => {
-        clearTimeout(this.timer);
-        this.setState({ result: renderError(error) });
-      });
-  }
-
-  componentDidMount() {
-    this.updateResult();
-  }
-
-  componentDidUpdate(prevProps) {
-    if (
-      prevProps.formula !== this.props.formula ||
-      prevProps.formula2 !== this.props.formula2
-    ) {
-      this.updateResult();
-    }
-  }
-
-  render() {
-    return (
-      <React.Fragment>
-        <LtlInput
-          classes={this.props.classes}
-          className={this.props.classes.textField2}
-          label="Second formula"
-          expert={this.props.expert}
-          defaultValue={this.props.formula2}
-          setFormula={this.props.handleChangeFormula2}
-          formulalbt={this.state.formula2lbt}
-          formulaerr={this.state.formula2err}
-        />
-        {this.state.result && (
-          <LtlResult classes={this.props.classes} result={this.state.result} />
+        {res["safety_liveness"] === "liveness" && (
+          <Typography>
+            This formula represents <b>a liveness property</b>.
+          </Typography>
         )}
-      </React.Fragment>
-    );
-  }
+        {res["safety_liveness"] === "both" && (
+          <Typography>
+            This formula represents both <b>a safety and a liveness property</b>.
+          </Typography>
+        )}
+        {res["safety_liveness"] === "none" && (
+          <Typography>
+            This formula is neither a safety nor a liveness property. However it
+            necessarily is the <b>intersection</b> of a liveness and a safety property.
+          </Typography>
+        )}
+      </div>
+      <div className={classes.indexdiv}>
+        <Typography variant="body2" color="primary">
+          Indices
+        </Typography>
+        {(res["Rabin_index"] !== null || res["Streett_index"] !== null) && (
+          <Table className={classes.wordtable}>
+            <TableBody>
+              <TableRow className={classes.wordtablerow}>
+                <TableCell component="th" scope="row" className={classes.wordtablecell}>
+                  Rabin index:
+                </TableCell>
+                <TableCell className={classes.wordtablecellw}>
+                  {res["Rabin_index"]}
+                </TableCell>
+              </TableRow>
+              <TableRow className={classes.wordtablerow}>
+                <TableCell component="th" scope="row" className={classes.wordtablecell}>
+                  Streett index:
+                </TableCell>
+                <TableCell className={classes.wordtablecellw}>
+                  {res["Streett_index"]}
+                </TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        )}
+      </div>
+      <div className={classes.satisfiabilitydiv}>
+        <Typography variant="body2" color="primary">
+          Satisfiability
+        </Typography>
+        {res["rej_word"] === null && (
+          <Typography>
+            This formula is a <b>tautology</b>: it accepts all words.
+          </Typography>
+        )}
+        {res["acc_word"] === null && (
+          <Typography>
+            This formula is <b>unsatisfiable</b>.
+          </Typography>
+        )}
+        {res["acc_word"] !== null && res["rej_word"] !== null && (
+          <Table className={classes.wordtable}>
+            <TableBody>
+              <TableRow className={classes.wordtablerow}>
+                <TableCell component="th" scope="row" className={classes.wordtablecell}>
+                  Accepted word:
+                </TableCell>
+                <TableCell className={classes.wordtablecellw}>
+                  {res["acc_word"]}
+                </TableCell>
+              </TableRow>
+              <TableRow className={classes.wordtablerow}>
+                <TableCell component="th" scope="row" className={classes.wordtablecell}>
+                  Rejected word:
+                </TableCell>
+                <TableCell className={classes.wordtablecellw}>
+                  {res["rej_word"]}
+                </TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        )}
+      </div>
+      <div className={classes.stutterdiv}>
+        <Typography variant="body2" color="primary">
+          Stutter invariance
+        </Typography>
+        {res["stutter_invariant"] === "no X" && (
+          <Typography>
+            This formula is (syntactically) <b>stutter-invariant</b>.
+          </Typography>
+        )}
+        {res["stutter_invariant"] === true && (
+          <Typography>
+            This formula is <b>stutter-invariant</b> even if it might not look so
+            syntactically.
+            {"stutter_invariant_eq" in res && (
+              <>
+                <br />
+                Furthermore, it can be simplified to the following{" "}
+                <i>syntactically stutter-invariant</i> formula:
+                <br />
+                <Ltl f={res["stutter_invariant_eq"]} />
+              </>
+            )}
+          </Typography>
+        )}
+        {res["stutter_invariant"] === false && (
+          <Typography>
+            This formula is <b>stutter-sensitive</b>.<br />
+            The accepted and rejected words given above are a proof of that, as they
+            differ only by some stuttering.
+          </Typography>
+        )}
+      </div>
+    </React.Fragment>
+  );
+}
+
+function LtlStudy(props) {
+  const { classes, formula } = props;
+
+  // The request URL identifies the query: it only changes when the formula
+  // does, which is exactly when a new request is needed.
+  const requestUrl = React.useMemo(
+    () => (formula === "" ? null : studyUrl(formula)),
+    [formula]
+  );
+  const { data, error, loading } = useApiQuery(requestUrl, getStudy);
+  const showSpinner = useDelayedFlag(loading, 800);
+
+  // Report the parse information to the formula input, and clear a previous
+  // error when the formula is emptied.
+  const { handleAnyParseError } = props;
+  React.useEffect(() => {
+    if (data !== null) handleAnyParseError(data);
+    else if (requestUrl === null) handleAnyParseError({});
+  }, [data, requestUrl, handleAnyParseError]);
+
+  let result = null;
+  if (error !== null) result = renderError(error);
+  else if (showSpinner) result = <CircularProgress className={classes.progress} />;
+  else if (data !== null) result = studyResult(data, classes);
+
+  return <div>{result && <LtlResult classes={classes} result={result} />}</div>;
+}
+
+/** Body of the translate tab; `showfile` picks the source shown, if any. */
+function translateResult(res, classes, showfile, showfilehoa, showfilespin) {
+  return (
+    <React.Fragment>
+      {"states" in res && (
+        <Typography>
+          {res["det"] ? "D" : "Non-d"}
+          eterministic automaton with {res["states"]} state
+          {res["states"] > 1 ? "s" : ""} and {res["edges"]} edge
+          {res["edges"] > 1 ? "s" : ""}.
+        </Typography>
+      )}
+      {"note" in res && res["note"].map((note) => <NoteText key={note} text={note} />)}
+      {"automaton_svg" in res && (
+        <SVGInline
+          className={classes.automaton_svg}
+          component="div"
+          svg={res["automaton_svg"]}
+        />
+      )}
+      {"automaton_hoa" in res && (
+        <Button color="primary" onClick={showfilehoa}>
+          HOA
+        </Button>
+      )}
+      {"automaton_spin" in res && (
+        <Button color="primary" onClick={showfilespin}>
+          NeverClaim
+        </Button>
+      )}
+      {showfile === 1 && <pre className={classes.pre}>{res["automaton_hoa"]}</pre>}
+      {showfile === 2 && <pre className={classes.pre}>{res["automaton_spin"]}</pre>}
+    </React.Fragment>
+  );
+}
+
+/** Option widgets of the translate tab. */
+function translateOptions(props) {
+  return (
+    <React.Fragment>
+      {props.hideoptions || (
+        <React.Fragment>
+          <AccChoice
+            acc={props.acc}
+            classes={props.classes}
+            changeAcc={props.changeAcc}
+          />
+          <div className={props.classes.optionstrans}>
+            <FormControl
+              component="fieldset"
+              className={props.classes.borderedgroupprimary}
+            >
+              <FormLabel component="legend">Translation pref.</FormLabel>
+              <RadioGroup
+                aria-label="Translation preferences"
+                name="autpref"
+                value={props.autpref}
+                onChange={props.changeAutpref}
+              >
+                <FormControlLabel
+                  classes={{ root: props.classes.fclvertical }}
+                  value="s"
+                  control={<Radio color="primary" />}
+                  label="small"
+                />
+                <FormControlLabel
+                  classes={{ root: props.classes.fclvertical }}
+                  value="d"
+                  control={<Radio color="primary" />}
+                  label="deterministic"
+                />
+                {(props.expert || props.autpref === "a") && (
+                  <FormControlLabel
+                    classes={{ root: props.classes.fclvertical }}
+                    value="a"
+                    control={<Radio />}
+                    label="any"
+                  />
+                )}
+              </RadioGroup>
+            </FormControl>
+            <FormControl
+              component="fieldset"
+              className={props.classes.borderedgroupprimary}
+            >
+              <FormLabel component="legend">Translation constraints</FormLabel>
+              <FormControlLabel
+                classes={{ root: props.classes.fclvertical }}
+                control={
+                  <Checkbox
+                    checked={props.transopts["complete"]}
+                    color="primary"
+                    onChange={props.handleChangeTransOpts("complete")}
+                  />
+                }
+                label={righthelp(
+                  "complete",
+                  "Make sure we can always move forward in the automaton, regardless of where we are and what letter we read."
+                )}
+              />
+              <FormControlLabel
+                classes={{ root: props.classes.fclvertical }}
+                control={
+                  <Checkbox
+                    checked={props.transopts["unambiguous"]}
+                    color="primary"
+                    onChange={props.handleChangeTransOpts("unambiguous")}
+                  />
+                }
+                label={righthelp(
+                  "unambiguous",
+                  "Accepted words should have only one accepting run.  Rejecting words may be rejected by many runs."
+                )}
+              />
+              <FormControlLabel
+                classes={{ root: props.classes.fclvertical }}
+                control={
+                  <Checkbox
+                    checked={props.transopts["statebased"]}
+                    color="primary"
+                    disabled={props.acc === "m"}
+                    onChange={props.handleChangeTransOpts("statebased")}
+                  />
+                }
+                label={righthelp(
+                  "force state-based acc.",
+                  "Automata with state-based acceptance are sometimes larger than those with transition-based acceptance, and never smaller.  By defaut we use state-based acceptance only when it is clear that transition-based acceptance has no benefit."
+                )}
+              />
+            </FormControl>
+            <FormControl
+              component="fieldset"
+              className={props.classes.borderedgroupprimary}
+            >
+              <FormLabel component="legend">Display options</FormLabel>
+              <FormControlLabel
+                classes={{ root: props.classes.fclvertical }}
+                control={
+                  <Checkbox
+                    checked={props.transopts["showscc"]}
+                    color="primary"
+                    onChange={props.handleChangeTransOpts("showscc")}
+                  />
+                }
+                label={righthelp(
+                  "show SCCs",
+                  "Strongly Connected Components will be highlighted in green (accepting), red (rejecting), black (transient), and gray (rejecting and useless)."
+                )}
+              />
+              <FormControlLabel
+                classes={{ root: props.classes.fclvertical }}
+                control={
+                  <Checkbox
+                    checked={props.transopts["showndet"]}
+                    color="primary"
+                    onChange={props.handleChangeTransOpts("showndet")}
+                  />
+                }
+                label={"show non-determinism"}
+              />
+              <FormControlLabel
+                classes={{ root: props.classes.fclvertical }}
+                control={
+                  <Checkbox
+                    checked={props.transopts["forcetacc"]}
+                    color="primary"
+                    onChange={props.handleChangeTransOpts("forcetacc")}
+                    disabled={props.acc === "m"}
+                  />
+                }
+                label={righthelp(
+                  "force transition-based acc.",
+                  "If an automaton with state-based acceptance has been built, move the acceptance marks of each state to its outgoing transitions.  (This is actually how automata are stored in Spot.)"
+                )}
+              />
+            </FormControl>
+            {props.acc === "p" && (
+              <FormControl
+                component="fieldset"
+                className={props.classes.borderedgroupprimary}
+              >
+                <FormLabel component="legend">Parity style</FormLabel>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={props.transopts["colored"]}
+                      color="primary"
+                      onChange={props.handleChangeTransOpts("colored")}
+                    />
+                  }
+                  label={righthelp(
+                    "colored",
+                    "Force each transition (or state if state-based acceptance is used) to belong to exactly one acceptance set.  Without this option some transitions may not belong to any set."
+                  )}
+                />
+                <RadioGroup
+                  aria-label="min or max"
+                  name="minmax"
+                  value={props.minmax}
+                  onChange={props.changeMinMax}
+                  className={props.classes.flexhoriz}
+                >
+                  <FormControlLabel
+                    value="any"
+                    control={<Radio color="primary" />}
+                    label="any"
+                  />
+                  <FormControlLabel
+                    value="min"
+                    control={<Radio color="primary" />}
+                    label="min"
+                  />
+                  <FormControlLabel
+                    value="max"
+                    control={<Radio color="primary" />}
+                    label="max"
+                  />
+                </RadioGroup>
+                <RadioGroup
+                  aria-label="odd or even"
+                  name="oddeven"
+                  value={props.oddeven}
+                  onChange={props.changeOddEven}
+                  className={props.classes.flexhoriz}
+                >
+                  <FormControlLabel
+                    value="any"
+                    control={<Radio color="primary" />}
+                    label="any"
+                  />
+                  <FormControlLabel
+                    value="odd"
+                    control={<Radio color="primary" />}
+                    label="odd"
+                  />
+                  <FormControlLabel
+                    value="even"
+                    control={<Radio color="primary" />}
+                    label="even"
+                  />
+                </RadioGroup>
+              </FormControl>
+            )}
+            {props.expert && (
+              <FormControl
+                component="fieldset"
+                className={props.classes.borderedgroupsecondary}
+              >
+                <FormLabel
+                  component="legend"
+                  classes={{ focused: props.classes.focused }}
+                >
+                  Optimization level
+                </FormLabel>
+                <RadioGroup
+                  aria-label="Optimization level"
+                  name="optlevel"
+                  value={props.optlevel}
+                  className={props.classes.flexhoriz}
+                  onChange={props.changeOptLevel}
+                >
+                  <FormControlLabel
+                    value="h"
+                    control={<Radio color="secondary" />}
+                    label="high"
+                  />
+                  <FormControlLabel
+                    value="m"
+                    control={<Radio color="secondary" />}
+                    label="medium"
+                  />
+                  <FormControlLabel
+                    value="l"
+                    control={<Radio color="secondary" />}
+                    label="low"
+                  />
+                </RadioGroup>
+              </FormControl>
+            )}
+          </div>
+        </React.Fragment>
+      )}
+    </React.Fragment>
+  );
+}
+
+function LtlTranslate(props) {
+  const { classes, formula, acc, autpref, optlevel, minmax, oddeven, transopts } = props;
+
+  const requestUrl = React.useMemo(
+    () =>
+      formula === ""
+        ? null
+        : translateUrl(formula, { acc, autpref, optlevel, minmax, oddeven, transopts }),
+    [formula, acc, autpref, optlevel, minmax, oddeven, transopts]
+  );
+  const { data, error, loading } = useApiQuery(requestUrl, getTranslate);
+  const showSpinner = useDelayedFlag(loading, 800);
+
+  // Which source, if any, is expanded under the automaton.
+  const [showfile, setShowfile] = React.useState(0);
+  const showfilehoa = () => setShowfile(showfile === 1 ? 0 : 1);
+  const showfilespin = () => setShowfile(showfile === 2 ? 0 : 2);
+
+  // Report the parse information to the formula input.
+  const { handleAnyParseError } = props;
+  React.useEffect(() => {
+    if (data !== null) handleAnyParseError(data);
+  }, [data, handleAnyParseError]);
+
+  let result = null;
+  if (error !== null) result = renderError(error);
+  else if (showSpinner) result = <CircularProgress className={classes.progress} />;
+  else if (data !== null)
+    result = translateResult(data, classes, showfile, showfilehoa, showfilespin);
+
+  return (
+    <React.Fragment>
+      {translateOptions(props)}
+      {result && <LtlResult classes={classes} result={result} />}
+    </React.Fragment>
+  );
+}
+
+/** Body of the compare tab, as a function of the answer so it stays pure. */
+function compareResult(res, classes) {
+  if (!("txt" in res && "svg" in res)) return null;
+  return (
+    <React.Fragment>
+      {"txt" in res && <Typography>{res["txt"]}</Typography>}
+      {"svg" in res && <SVGInline svg={res["svg"]} className={classes.vendiag} />}
+      <Table className={classes.wordtable}>
+        <TableBody>
+          {"w1" in res && (
+            <TableRow className={classes.wordtablerow}>
+              <TableCell component="th" scope="row" className={classes.wordtablecell}>
+                w₁:
+              </TableCell>
+              <TableCell className={classes.wordtablecellw}>{res["w1"]}</TableCell>
+            </TableRow>
+          )}
+          {"w2" in res && (
+            <TableRow className={classes.wordtablerow}>
+              <TableCell component="th" scope="row" className={classes.wordtablecell}>
+                w₂:
+              </TableCell>
+              <TableCell className={classes.wordtablecellw}>{res["w2"]}</TableCell>
+            </TableRow>
+          )}
+          {"w3" in res && (
+            <TableRow className={classes.wordtablerow}>
+              <TableCell component="th" scope="row" className={classes.wordtablecell}>
+                w₃:
+              </TableCell>
+              <TableCell className={classes.wordtablecellw}>{res["w3"]}</TableCell>
+            </TableRow>
+          )}
+          {"w4" in res && (
+            <TableRow className={classes.wordtablerow}>
+              <TableCell component="th" scope="row" className={classes.wordtablecell}>
+                w₄:
+              </TableCell>
+              <TableCell className={classes.wordtablecellw}>{res["w4"]}</TableCell>
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
+      {"sfh1" in res && (
+        <Typography>
+          Although they are equivalent,
+          <ul className={classes.nottopmargin}>
+            <li>First formula belongs to {classhelp(res["sfh1"], res["sfh1_text"])},</li>
+            <li>Second formula belongs to {classhelp(res["sfh2"], res["sfh2_text"])}.</li>
+          </ul>
+        </Typography>
+      )}
+    </React.Fragment>
+  );
+}
+
+function LtlCompare(props) {
+  const { classes, formula, formula2 } = props;
+
+  const requestUrl = React.useMemo(
+    () => (formula === "" || formula2 === "" ? null : compareUrl(formula, formula2)),
+    [formula, formula2]
+  );
+  const { data, error, loading } = useApiQuery(requestUrl, getCompare);
+  const showSpinner = useDelayedFlag(loading, 800);
+
+  // The answer describes both formulas: the first one is reported to the
+  // parent, which owns that input, the second one belongs to the input here.
+  const [formula2err, setFormula2err] = React.useState(null);
+  const [formula2lbt, setFormula2lbt] = React.useState(false);
+  const { handleAnyParseError } = props;
+  React.useEffect(() => {
+    if (data === null) return;
+    handleAnyParseError(data);
+    setFormula2err("parse_error2" in data ? data.parse_error2 : null);
+    setFormula2lbt(data.prefix_syntax2 === true);
+  }, [data, handleAnyParseError]);
+
+  let result = null;
+  if (error !== null) result = renderError(error);
+  else if (showSpinner) result = <CircularProgress className={classes.progress} />;
+  else if (data !== null) result = compareResult(data, classes);
+
+  return (
+    <React.Fragment>
+      <LtlInput
+        classes={classes}
+        className={classes.textField2}
+        label="Second formula"
+        expert={props.expert}
+        defaultValue={formula2}
+        setFormula={props.handleChangeFormula2}
+        formulalbt={formula2lbt}
+        formulaerr={formula2err}
+      />
+      {result && <LtlResult classes={classes} result={result} />}
+    </React.Fragment>
+  );
 }
 
 class LtlApp extends React.Component {
@@ -2517,6 +2325,6 @@ class LtlApps extends React.Component {
   }
 }
 
-// Exported for the component tests, which render the rewrite tab on its own.
-export { LtlInput, LtlRewrite };
+// Exported for the component tests, which render the tabs on their own.
+export { LtlApp, LtlCompare, LtlInput, LtlRewrite, LtlStudy, LtlTranslate, Versions };
 export default withStyles(LtlApps, styles);

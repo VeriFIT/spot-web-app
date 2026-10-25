@@ -58,14 +58,16 @@ Tests live next to the code as `*.test.ts(x)`. `vitest.config.ts` sets the jsdom
 environment, a `/app/` page URL (the API helpers read `window.location`) and the
 production API environment values. `src/api/client.test.ts` pins the query-string
 contract with `spotapi.py`; `src/hooks/useApiQuery.test.ts` covers aborting, stale
-responses and error handling; `src/LtlApp.test.tsx` renders the rewrite tab against a
-mocked `fetch` to cover the delayed spinner, the error states and the option controls,
-and the formula input to cover committing an edit and showing parse errors.
+responses and error handling; `src/LtlApp.test.tsx` renders the tabs against a mocked
+`fetch`: the rewrite tab covers the delayed spinner, the error states and the option
+controls, the formula input covers committing an edit and showing parse errors, and the
+study, compare and translate tabs each check their request and what they render.
 
 TypeScript is adopted incrementally: `tsconfig.json` has `allowJs` with `checkJs`
 disabled, so existing `.jsx` sources are parsed but not type-checked, while new modules
 (`src/api/`, `src/hooks/`) are checked in strict mode and converted one component at a
-time.
+time. All four tabs go through `src/api/client.ts` for their requests and through
+`useApiQuery`/`useDelayedFlag` for their results.
 
 ## Notes
 
