@@ -328,14 +328,16 @@ function CloseIcon(props) {
 
 function NoteText(props) {
   return (
-    <Typography>
+    <Typography component="div">
       <table>
-        <tr>
-          <td>
-            <NoteIcon {...props} />
-          </td>
-          <td>{props.text}</td>
-        </tr>
+        <tbody>
+          <tr>
+            <td>
+              <NoteIcon {...props} />
+            </td>
+            <td>{props.text}</td>
+          </tr>
+        </tbody>
       </table>
     </Typography>
   );
@@ -440,7 +442,7 @@ class LtlInput extends React.Component {
           label={this.props.label}
           autoFocus={this.props.autoFocus}
           onChange={this.handleChange}
-          onKeyPress={this.handleKey}
+          onKeyDown={this.handleKey}
           onBlur={this.updateFormula}
           InputProps={{
             endAdornment: (
@@ -628,6 +630,7 @@ class LtlSimplificationOptions extends React.Component {
   form = ([key, value]) => {
     return (
       <FormControlLabel
+        key={key}
         disabled={!this.props.simplify}
         control={
           <Checkbox
@@ -2514,4 +2517,6 @@ class LtlApps extends React.Component {
   }
 }
 
+// Exported for the component tests, which render the rewrite tab on its own.
+export { LtlInput, LtlRewrite };
 export default withStyles(LtlApps, styles);
