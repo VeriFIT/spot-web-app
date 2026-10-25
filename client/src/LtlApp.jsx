@@ -323,7 +323,7 @@ function NoteText(props) {
 }
 
 function api_endpoint() {
-  /* REACT_APP_API_ENDPOINT and REACT_APP_API_PORT are defined in
+  /* VITE_API_ENDPOINT and VITE_API_PORT are defined in
    * files client/.env.{production,development}
    *
    * When developing, the API and web pages are running on different
@@ -333,10 +333,10 @@ function api_endpoint() {
   return (
     window.location.protocol +
     "//" +
-    (process.env.REACT_APP_API_PORT
-      ? window.location.hostname + process.env.REACT_APP_API_PORT
+    (import.meta.env.VITE_API_PORT
+      ? window.location.hostname + import.meta.env.VITE_API_PORT
       : window.location.host) +
-    process.env.REACT_APP_API_ENDPOINT
+    import.meta.env.VITE_API_ENDPOINT
   );
 }
 

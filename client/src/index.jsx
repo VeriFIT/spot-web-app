@@ -1,6 +1,6 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
-import LtlApps from "./LtlApp";
+import LtlApps from "./LtlApp.jsx";
 import CssBaseline from "@mui/material/CssBaseline";
 import { ThemeProvider, createTheme, StyledEngineProvider } from "@mui/material/styles";
 

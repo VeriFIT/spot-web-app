@@ -21,8 +21,9 @@ finally launch a web client with
   % cd client
   % npm run start
 
-Now any save to spotapi.py or client/src/LtlApp.js will cause these
-components to reload automatically.
+The client runs with Vite on http://localhost:3000/app/ and proxies /api
+requests to the Flask server on localhost:5000.  Now any save to spotapi.py
+or files under client/src/ will cause the components to reload automatically.
 
 
 Using remotely or locally
