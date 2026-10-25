@@ -50,7 +50,6 @@ import Tabs from "@mui/material/Tabs";
 import TextField from "@mui/material/TextField";
 import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
-import { styled } from "@mui/material/styles";
 import { withStyles } from "tss-react/mui";
 
 // Helper component to render SVG strings
@@ -67,7 +66,7 @@ const styles = (theme) => ({
       justifyContent: "center",
     },
   },
-  nottopmargin: { marginTop: 0, },
+  nottopmargin: { marginTop: 0 },
   help: {
     margin: theme.spacing(1),
     paddingTop: theme.spacing(1),
@@ -357,23 +356,34 @@ function api_endpoint() {
   );
 }
 
-function renderError(msg) {
-  if (!msg.startsWith("500 ")) return <pre>{msg}</pre>;
+// Thrown by the fetch helpers below. Carrying the HTTP status lets the UI
+// branch on it instead of parsing the message text.
+class ApiError extends Error {
+  constructor(response) {
+    super(response.status + " " + response.statusText);
+    this.name = "ApiError";
+    this.status = response.status;
+  }
+}
+
+function renderError(error) {
+  const msg = error.message;
+  if (error.status !== 500) return <pre>{msg}</pre>;
   return (
     <React.Fragment>
       <pre>{msg}</pre>
       <Typography color="error">
-        Our server automatically kills requests that take longer than 40
-        seconds, or that require too much memory.
-        <br /> If you do <i>not</i> think that is the case here, please send a
-        screenshot and any helpful detail to{" "}
+        Our server automatically kills requests that take longer than 40 seconds, or that
+        require too much memory.
+        <br /> If you do <i>not</i> think that is the case here, please send a screenshot
+        and any helpful detail to{" "}
         <a href="mailto:spot@lrde.epita.fr">
           <code>spot@lrde.epita.fr</code>
         </a>
         .<br />
         If you <i>do</i> think that is the case, please consider{" "}
-        <a href="https://spot.lre.epita.fr/install.html">installing Spot</a> to
-        run your experiments locally; this is a shared service.
+        <a href="https://spot.lre.epita.fr/install.html">installing Spot</a> to run your
+        experiments locally; this is a shared service.
       </Typography>
     </React.Fragment>
   );
@@ -381,39 +391,34 @@ function renderError(msg) {
 
 function handleErrors(response) {
   if (!response.ok) {
-    throw Error(response.status + " " + response.statusText);
+    throw new ApiError(response);
   }
   return response.json();
 }
 function handleErrorsAndClearTimer(timer) {
   return (response) => {
     clearTimeout(timer);
-    if (!response.ok) {
-      throw Error(response.status + " " + response.statusText);
-    }
-    return response.json();
+    return handleErrors(response);
   };
 }
 
 function righthelp(contents, help) {
-    return (
-        <Tooltip title={help} placement="right" enterDelay={750}>
-            <div>{contents}</div>
-        </Tooltip>
-    );
+  return (
+    <Tooltip title={help} placement="right" enterDelay={750}>
+      <div>{contents}</div>
+    </Tooltip>
+  );
 }
 function classhelp(contents, help) {
-    if (contents === "")
-        contents = "a class above Δ₂";
-    else
-        contents = "class " + contents;
-    return (
-        <React.Fragment>
-            <Tooltip title={help} placement="right" enterDelay={750}>
-                <b>{contents}</b>
-            </Tooltip>
-        </React.Fragment>
-    );
+  if (contents === "") contents = "a class above Δ₂";
+  else contents = "class " + contents;
+  return (
+    <React.Fragment>
+      <Tooltip title={help} placement="right" enterDelay={750}>
+        <b>{contents}</b>
+      </Tooltip>
+    </React.Fragment>
+  );
 }
 
 class LtlInput extends React.Component {
@@ -496,9 +501,7 @@ class LtlInput extends React.Component {
           />
         )}
         {this.props.formulaerr && (
-          <pre className={this.props.classes.parseerror}>
-            {this.props.formulaerr}
-          </pre>
+          <pre className={this.props.classes.parseerror}>{this.props.formulaerr}</pre>
         )}
       </div>
     );
@@ -526,9 +529,7 @@ class Versions extends React.Component {
         vers.push(["React", React.version, "https://reactjs.org/"]);
         this.setState({ versions: vers });
       })
-      .catch((error) =>
-        this.setState({ versions: [[error.message, null, null]] })
-      );
+      .catch((error) => this.setState({ versions: [[error.message, null, null]] }));
   }
 
   render() {
@@ -553,7 +554,7 @@ class Versions extends React.Component {
             <TableBody>
               {this.state.versions.map(([tool, version, url]) => {
                 return (
-                  <TableRow>
+                  <TableRow key={tool}>
                     <TableCell component="th" scope="row">
                       <a href={url}>{tool}</a>
                     </TableCell>
@@ -669,10 +670,7 @@ class LtlSimplificationOptions extends React.Component {
         component="fieldset"
         className={this.props.classes.borderedgroupsecondary}
       >
-        <FormLabel
-          component="legend"
-          classes={{ focused: this.props.classes.focused }}
-        >
+        <FormLabel component="legend" classes={{ focused: this.props.classes.focused }}>
           Simplification options
         </FormLabel>
         {Object.entries(this.options).map(this.form)}
@@ -695,8 +693,7 @@ class LtlUnabbrevOptions extends React.Component {
     "^": ["xor", "xor", "^"],
   };
   form = (values) => {
-    let syntaxId =
-      this.props.syntax === "i" ? 1 : this.props.syntax === "l" ? 2 : 0;
+    let syntaxId = this.props.syntax === "i" ? 1 : this.props.syntax === "l" ? 2 : 0;
     let key = values[0];
     return (
       <FormControlLabel
@@ -809,9 +806,7 @@ class AccChoice extends React.Component {
 
 class LtlResult extends React.Component {
   render() {
-    return (
-      <Paper className={this.props.classes.results}>{this.props.result}</Paper>
-    );
+    return <Paper className={this.props.classes.results}>{this.props.result}</Paper>;
   }
 }
 
@@ -858,15 +853,14 @@ class LtlRewrite extends React.Component {
         this.props.handleAnyParseError(res);
         if ("formula" in res)
           this.setState({ result: <Typography>{res["formula"]}</Typography> });
-        else if ("svg" in res)
-          this.setState({ result: <SVGInline svg={res["svg"]} /> });
+        else if ("svg" in res) this.setState({ result: <SVGInline svg={res["svg"]} /> });
         else if ("error" in res)
           this.setState({ result: <Typography>{res["error"]}</Typography> });
         else this.setState({ result: null });
       })
       .catch((error) => {
         clearTimeout(this.timer);
-        this.setState({ result: renderError(error.message) });
+        this.setState({ result: renderError(error) });
       });
   }
 
@@ -874,7 +868,7 @@ class LtlRewrite extends React.Component {
     this.updateResult();
   }
 
-  componentDidUpdate(prevProps, prevState) {
+  componentDidUpdate(prevProps) {
     if (
       prevProps.syntax !== this.props.syntax ||
       prevProps.ltlsimp !== this.props.ltlsimp ||
@@ -969,21 +963,24 @@ class LtlStudy extends React.Component {
           <Typography>
             This formula describes <b>{res["mp_class_text"]}</b>.
           </Typography>
-            {("pathological" in res) && (res["pathological"] === true) && (
+          {"pathological" in res && res["pathological"] === true && (
             <Typography>
-              Note that this is a <b>pathological formula</b> that would not be
-              classified as precisely using only syntactic means. This usually
-              means that a simpler equivalent formula exists.
+              Note that this is a <b>pathological formula</b> that would not be classified
+              as precisely using only syntactic means. This usually means that a simpler
+              equivalent formula exists.
             </Typography>
           )}
           <Typography variant="body2" color="primary">
             Syntactic-Future Hierarchy
           </Typography>
-            <Typography>This formula belongs to {classhelp(res["sfh_class"], res["sfh_class_text"])}.</Typography>
-            {("pathological" in res) && (res["pathological"] === "sfh") && (
+          <Typography>
+            This formula belongs to {classhelp(res["sfh_class"], res["sfh_class_text"])}.
+          </Typography>
+          {"pathological" in res && res["pathological"] === "sfh" && (
             <Typography>
-                Note this syntactic class is above the corresponding class from the Manna and Pnueli hierarchy, this means
-              that an equivalent formula exists in a lower syntactic class.
+              Note this syntactic class is above the corresponding class from the Manna
+              and Pnueli hierarchy, this means that an equivalent formula exists in a
+              lower syntactic class.
             </Typography>
           )}
         </div>
@@ -1003,15 +1000,13 @@ class LtlStudy extends React.Component {
           )}
           {res["safety_liveness"] === "both" && (
             <Typography>
-              This formula represents both{" "}
-              <b>a safety and a liveness property</b>.
+              This formula represents both <b>a safety and a liveness property</b>.
             </Typography>
           )}
           {res["safety_liveness"] === "none" && (
             <Typography>
-              This formula is neither a safety nor a liveness property. However
-              it necessarily is the <b>intersection</b> of a liveness and a
-              safety property.
+              This formula is neither a safety nor a liveness property. However it
+              necessarily is the <b>intersection</b> of a liveness and a safety property.
             </Typography>
           )}
         </div>
@@ -1106,8 +1101,8 @@ class LtlStudy extends React.Component {
           )}
           {res["stutter_invariant"] === true && (
             <Typography>
-              This formula is <b>stutter-invariant</b> even if it might not look
-              so syntactically.
+              This formula is <b>stutter-invariant</b> even if it might not look so
+              syntactically.
               {"stutter_invariant_eq" in res && (
                 <>
                   <br />
@@ -1122,8 +1117,8 @@ class LtlStudy extends React.Component {
           {res["stutter_invariant"] === false && (
             <Typography>
               This formula is <b>stutter-sensitive</b>.<br />
-              The accepted and rejected words given above are a proof of that,
-              as they differ only by some stuttering.
+              The accepted and rejected words given above are a proof of that, as they
+              differ only by some stuttering.
             </Typography>
           )}
         </div>
@@ -1137,9 +1132,7 @@ class LtlStudy extends React.Component {
       this.setState({ result: "" });
       return;
     }
-    let url = new URL(
-      api_endpoint() + "study/" + encodeURIComponent(this.props.formula)
-    );
+    let url = new URL(api_endpoint() + "study/" + encodeURIComponent(this.props.formula));
 
     this.timer = setTimeout(() => {
       this.setState({
@@ -1154,7 +1147,7 @@ class LtlStudy extends React.Component {
       })
       .catch((error) => {
         clearTimeout(this.timer);
-        this.setState({ result: renderError(error.message) });
+        this.setState({ result: renderError(error) });
       });
   }
 
@@ -1162,7 +1155,7 @@ class LtlStudy extends React.Component {
     this.updateResult();
   }
 
-  componentDidUpdate(prevProps, prevState) {
+  componentDidUpdate(prevProps) {
     if (prevProps.formula !== this.props.formula) {
       this.updateResult();
     }
@@ -1203,7 +1196,7 @@ class LtlTranslate extends React.Component {
     // Return a lambda so we capture res, and can easily re-render
     // the results on events (such as clicking on HOA or
     // NeverClaim).
-    return () => {
+    const Result = () => {
       return (
         <React.Fragment>
           {"states" in res && (
@@ -1214,7 +1207,8 @@ class LtlTranslate extends React.Component {
               {res["edges"] > 1 ? "s" : ""}.
             </Typography>
           )}
-          {"note" in res && res["note"].map((note) => <NoteText text={note} />)}
+          {"note" in res &&
+            res["note"].map((note) => <NoteText key={note} text={note} />)}
           {"automaton_svg" in res && (
             <SVGInline
               className={this.props.classes.automaton_svg}
@@ -1236,13 +1230,15 @@ class LtlTranslate extends React.Component {
             <pre className={this.props.classes.pre}>{res["automaton_hoa"]}</pre>
           )}
           {this.state.showfile === 2 && (
-            <pre className={this.props.classes.pre}>
-              {res["automaton_spin"]}
-            </pre>
+            <pre className={this.props.classes.pre}>{res["automaton_spin"]}</pre>
           )}
         </React.Fragment>
       );
     };
+    // Not a component in the usual sense (render calls this.state.result()),
+    // but naming it keeps ESLint and React DevTools happy.
+    Result.displayName = "TranslationResult";
+    return Result;
   }
 
   updateResult() {
@@ -1267,9 +1263,7 @@ class LtlTranslate extends React.Component {
 
     this.timer = setTimeout(() => {
       this.setState({
-        result: () => (
-          <CircularProgress className={this.props.classes.progress} />
-        ),
+        result: () => <CircularProgress className={this.props.classes.progress} />,
       });
     }, 800);
     fetch(url)
@@ -1280,7 +1274,7 @@ class LtlTranslate extends React.Component {
       })
       .catch((error) => {
         clearTimeout(this.timer);
-        this.setState({ result: () => renderError(error.message) });
+        this.setState({ result: () => renderError(error) });
       });
   }
 
@@ -1288,7 +1282,7 @@ class LtlTranslate extends React.Component {
     this.updateResult();
   }
 
-  componentDidUpdate(prevProps, prevState) {
+  componentDidUpdate(prevProps) {
     if (
       prevProps.formula !== this.props.formula ||
       prevProps.acc !== this.props.acc ||
@@ -1350,9 +1344,7 @@ class LtlTranslate extends React.Component {
                 component="fieldset"
                 className={this.props.classes.borderedgroupprimary}
               >
-                <FormLabel component="legend">
-                  Translation constraints
-                </FormLabel>
+                <FormLabel component="legend">Translation constraints</FormLabel>
                 <FormControlLabel
                   classes={{ root: this.props.classes.fclvertical }}
                   control={
@@ -1387,7 +1379,7 @@ class LtlTranslate extends React.Component {
                     <Checkbox
                       checked={this.props.transopts["statebased"]}
                       color="primary"
-                      disabled={ this.props.acc === "m" }
+                      disabled={this.props.acc === "m"}
                       onChange={this.props.handleChangeTransOpts("statebased")}
                     />
                   }
@@ -1550,10 +1542,7 @@ class LtlTranslate extends React.Component {
           </React.Fragment>
         )}
         {this.state.result && (
-          <LtlResult
-            classes={this.props.classes}
-            result={this.state.result()}
-          />
+          <LtlResult classes={this.props.classes} result={this.state.result()} />
         )}
       </React.Fragment>
     );
@@ -1655,13 +1644,19 @@ class LtlCompare extends React.Component {
             )}
           </TableBody>
         </Table>
-          {"sfh1" in res &&
-           <Typography>Although they are equivalent,
-               <ul className={this.props.classes.nottopmargin}>
-                   <li>First formula belongs to {classhelp(res["sfh1"], res["sfh1_text"])},</li>
-                   <li>Second formula belongs to {classhelp(res["sfh2"], res["sfh2_text"])}.</li>
-               </ul>
-           </Typography>}
+        {"sfh1" in res && (
+          <Typography>
+            Although they are equivalent,
+            <ul className={this.props.classes.nottopmargin}>
+              <li>
+                First formula belongs to {classhelp(res["sfh1"], res["sfh1_text"])},
+              </li>
+              <li>
+                Second formula belongs to {classhelp(res["sfh2"], res["sfh2_text"])}.
+              </li>
+            </ul>
+          </Typography>
+        )}
       </React.Fragment>
     );
   }
@@ -1689,7 +1684,7 @@ class LtlCompare extends React.Component {
       })
       .catch((error) => {
         clearTimeout(this.timer);
-        this.setState({ result: renderError(error.message) });
+        this.setState({ result: renderError(error) });
       });
   }
 
@@ -1697,7 +1692,7 @@ class LtlCompare extends React.Component {
     this.updateResult();
   }
 
-  componentDidUpdate(prevProps, prevState) {
+  componentDidUpdate(prevProps) {
     if (
       prevProps.formula !== this.props.formula ||
       prevProps.formula2 !== this.props.formula2
@@ -1746,7 +1741,7 @@ class LtlApp extends React.Component {
     oddeven: "any",
     transopts: {
       // translation constraints
-      unambig: false,
+      unambiguous: false,
       complete: false,
       statebased: false,
       // display options
@@ -1958,7 +1953,7 @@ class LtlApp extends React.Component {
             formula2={this.state.formula2}
             handleChangeFormula2={this.handleChangeFormula2}
             handleAnyParseError={this.handleAnyParseError}
-            expert={this.props.expert}
+            expert={this.state.expert}
           />
         )}
         {this.state.action === 3 && (
@@ -1995,7 +1990,7 @@ function OpTable(array, width, classes) {
     <div className={classes.optable}>
       {array.map((value) => {
         return (
-          <div className={classes.oppair} style={{ width: width }}>
+          <div key={value[0]} className={classes.oppair} style={{ width: width }}>
             <div className={classes.opdesc}>{value[0]}:</div>
             <div className={classes.opsyn}>{value[1]}</div>
           </div>
@@ -2045,13 +2040,10 @@ class Help extends React.Component {
             <Typography>
               <Typography variant="body1" gutterBottom>
                 This web application is built using the services of{" "}
-                <a href="https://spot.lre.epita.fr/">Spot</a> running on a
-                shared computer. For serious uses, you can answer similar
-                questions using the{" "}
-                <a href="https://spot.lre.epita.fr/tools.html">
-                  command-line tools
-                </a>
-                , or by{" "}
+                <a href="https://spot.lre.epita.fr/">Spot</a> running on a shared
+                computer. For serious uses, you can answer similar questions using the{" "}
+                <a href="https://spot.lre.epita.fr/tools.html">command-line tools</a>, or
+                by{" "}
                 <a href="https://spot.lre.epita.fr/tut.html">
                   writing some C++ or Python code
                 </a>
@@ -2059,18 +2051,14 @@ class Help extends React.Component {
               </Typography>
               <Typography variant="body1" gutterBottom>
                 The source code for this application can be found{" "}
-                <a href="https://gitlab.lre.epita.fr/spot/spot-web-app/">
-                  on our gitlab
-                </a>
+                <a href="https://gitlab.lre.epita.fr/spot/spot-web-app/">on our gitlab</a>
                 , and is distributed under the{" "}
-                <a href="https://www.gnu.org/licenses/gpl-3.0.en.html">
-                  GNU GPL v3
-                </a>{" "}
+                <a href="https://www.gnu.org/licenses/gpl-3.0.en.html">GNU GPL v3</a>{" "}
                 license.
               </Typography>
               <Typography variant="body1" gutterBottom>
-                For any question not answered in this small help text, or for
-                reporting any bug, please send an email to{" "}
+                For any question not answered in this small help text, or for reporting
+                any bug, please send an email to{" "}
                 <a href="mailto:spot@lrde.epita.fr">the Spot mailing list</a>.
               </Typography>
             </Typography>
@@ -2083,15 +2071,14 @@ class Help extends React.Component {
           </AccordionSummary>
           <AccordionDetails>
             <Typography variant="body1">
-              The application has four modes of operation that you can select at
-              its top:
+              The application has four modes of operation that you can select at its top:
               <dl>
                 <dt>
                   <Typography variant="body2">Rewrite</Typography>
                 </dt>
                 <dd>
-                  for rewriting a formula (changing syntaxes, simplifying,
-                  removing some operators)
+                  for rewriting a formula (changing syntaxes, simplifying, removing some
+                  operators)
                 </dd>
                 <dt>
                   <Typography variant="body2">Study</Typography>
@@ -2104,9 +2091,7 @@ class Help extends React.Component {
                 <dt>
                   <Typography variant="body2">Translate</Typography>
                 </dt>
-                <dd>
-                  for constructing an automaton equivalent to a given formula
-                </dd>
+                <dd>for constructing an automaton equivalent to a given formula</dd>
               </dl>
             </Typography>
           </AccordionDetails>
@@ -2119,9 +2104,8 @@ class Help extends React.Component {
           <AccordionDetails>
             <Typography>
               <Typography variant="body1" gutterBottom>
-                To accommodate the syntaxes of different tools, Spot supports
-                alternative representations for many operators. For the
-                semantics of all operators see{" "}
+                To accommodate the syntaxes of different tools, Spot supports alternative
+                representations for many operators. For the semantics of all operators see{" "}
                 <a href="https://spot.lre.epita.fr/tl.pdf">this document</a>.
               </Typography>
               <Typography variant="body2" color="primary">
@@ -2129,15 +2113,15 @@ class Help extends React.Component {
               </Typography>
               <Typography variant="body1" gutterBottom>
                 Use alphanumeric identifiers or double-quoted strings for atomic
-                propositions, and parentheses for grouping. Identifiers cannot
-                start with the letter of a prefix operator (<Ltl f="F" />,{" "}
-                <Ltl f="G" />, or <Ltl f="X" />
+                propositions, and parentheses for grouping. Identifiers cannot start with
+                the letter of a prefix operator (<Ltl f="F" />, <Ltl f="G" />, or{" "}
+                <Ltl f="X" />
                 ): for instance <Ltl f="GFa" /> means <Ltl f="G(F(a))" />. Use{" "}
-                <Ltl f='"GFa"' />, with double quotes, if you really want to
-                refer to <Ltl f="GFa" /> as a proposition. Conversely, infix
-                letter operators are not assumed to be operators if they are
-                part of an identifier: <Ltl f="aUb" /> is an atomic proposition,
-                unlike <Ltl f="a&nbsp;U&nbsp;b" /> and <Ltl f="(a)U(b)" />.
+                <Ltl f='"GFa"' />, with double quotes, if you really want to refer to{" "}
+                <Ltl f="GFa" /> as a proposition. Conversely, infix letter operators are
+                not assumed to be operators if they are part of an identifier:{" "}
+                <Ltl f="aUb" /> is an atomic proposition, unlike{" "}
+                <Ltl f="a&nbsp;U&nbsp;b" /> and <Ltl f="(a)U(b)" />.
               </Typography>
               <Typography variant="body2" color="primary">
                 Boolean constants
@@ -2156,15 +2140,13 @@ class Help extends React.Component {
                     [
                       "and",
                       <>
-                        <Ltl f="&amp;" />, <Ltl f="&amp;&amp;" />,{" "}
-                        <Ltl f="/\" /*"*/ />
+                        <Ltl f="&amp;" />, <Ltl f="&amp;&amp;" />, <Ltl f="/\" /*"*/ />
                       </>,
                     ],
                     [
                       "or",
                       <>
-                        <Ltl f="|" />, <Ltl f="||" />, <Ltl f="\/" />,{" "}
-                        <Ltl f="+" />
+                        <Ltl f="|" />, <Ltl f="||" />, <Ltl f="\/" />, <Ltl f="+" />
                       </>,
                     ],
                     [
@@ -2196,12 +2178,10 @@ class Help extends React.Component {
                   this.props.classes
                 )}
                 For compatibility with{" "}
-                <a href="http://www.ist.tugraz.at/staff/bloem/wring.html">
-                  Wring
-                </a>
-                , atomic propositions can be followed by <Ltl f="=1" /> or{" "}
-                <Ltl f="=0" /> to specify their polarity. For instance{" "}
-                <Ltl f="a=0 U b=1" /> is equivalent to <Ltl f="!a U b" />.
+                <a href="http://www.ist.tugraz.at/staff/bloem/wring.html">Wring</a>
+                , atomic propositions can be followed by <Ltl f="=1" /> or <Ltl f="=0" />{" "}
+                to specify their polarity. For instance <Ltl f="a=0 U b=1" /> is
+                equivalent to <Ltl f="!a U b" />.
               </Typography>
               <Typography variant="body2" color="primary">
                 Temporal Operators
@@ -2210,9 +2190,9 @@ class Help extends React.Component {
                 The following binary operators are supported:
                 {OpTable(
                   [
-                    ["strong until", <Ltl f="U" />],
-                    ["weak until", <Ltl f="W" />],
-                    ["strong release", <Ltl f="M" />],
+                    ["strong until", <Ltl key="U" f="U" />],
+                    ["weak until", <Ltl key="W" f="W" />],
+                    ["strong release", <Ltl key="M" f="M" />],
                     [
                       "weak release",
                       <>
@@ -2249,9 +2229,9 @@ class Help extends React.Component {
                   this.props.classes
                 )}
                 Additionally, <Ltl f="X[n]" />, <Ltl f="F[n..m]" />, and{" "}
-                <Ltl f="G[n..m]" /> are syntactic sugar for differents types of
-                repetition of the <Ltl f="X" /> operator. For instance{" "}
-                <Ltl f="F[3..5]p" /> is short for <Ltl f="XXX(p|X(p|Xp))" />.
+                <Ltl f="G[n..m]" /> are syntactic sugar for differents types of repetition
+                of the <Ltl f="X" /> operator. For instance <Ltl f="F[3..5]p" /> is short
+                for <Ltl f="XXX(p|X(p|Xp))" />.
               </Typography>
             </Typography>
           </AccordionDetails>
@@ -2264,44 +2244,39 @@ class Help extends React.Component {
           <AccordionDetails>
             <Typography>
               <Typography variant="body1" gutterBottom>
-                If (and only if!) parsing the input formula using the infix
-                syntax failed, the application will attempt to parse the formula
-                using a prefix syntax (Polish notation) that should be a
-                superset of what tools like{" "}
-                <a href="http://www.tcs.hut.fi/Software/maria/tools/lbt/">
-                  LBT
-                </a>
-                , <a href="http://www.tcs.hut.fi/Software/lbtt/">LBTT</a>,{" "}
-                <a href="http://tcs.legacy.ics.tkk.fi/users/tlatvala/scheck/">
-                  scheck
-                </a>{" "}
+                If (and only if!) parsing the input formula using the infix syntax failed,
+                the application will attempt to parse the formula using a prefix syntax
+                (Polish notation) that should be a superset of what tools like{" "}
+                <a href="http://www.tcs.hut.fi/Software/maria/tools/lbt/">LBT</a>,{" "}
+                <a href="http://www.tcs.hut.fi/Software/lbtt/">LBTT</a>,{" "}
+                <a href="http://tcs.legacy.ics.tkk.fi/users/tlatvala/scheck/">scheck</a>{" "}
                 or <a href="http://www.ltl2dstar.de/">ltl2dstar</a> can read.
               </Typography>
               <Typography variant="body1">
                 The following prefix operators are supported:
                 {OpTable(
                   [
-                    ["true", <Ltl f="t" />],
-                    ["false", <Ltl f="f" />],
-                    ["not", <Ltl f="!" />],
-                    ["and", <Ltl f="&" />],
-                    ["or", <Ltl f="|" />],
-                    ["implication", <Ltl f="i" />],
-                    ["equivalence", <Ltl f="e" />],
-                    ["xor", <Ltl f="^" />],
-                    ["next", <Ltl f="X" />],
-                    ["eventually", <Ltl f="F" />],
-                    ["globally", <Ltl f="G" />],
-                    ["strong until", <Ltl f="U" />],
-                    ["weak release", <Ltl f="V" />],
-                    ["strong release", <Ltl f="M" />],
-                    ["weak until", <Ltl f="W" />],
+                    ["true", <Ltl key="t" f="t" />],
+                    ["false", <Ltl key="f" f="f" />],
+                    ["not", <Ltl key="!" f="!" />],
+                    ["and", <Ltl key="&" f="&" />],
+                    ["or", <Ltl key="|" f="|" />],
+                    ["implication", <Ltl key="i" f="i" />],
+                    ["equivalence", <Ltl key="e" f="e" />],
+                    ["xor", <Ltl key="^" f="^" />],
+                    ["next", <Ltl key="X" f="X" />],
+                    ["eventually", <Ltl key="F" f="F" />],
+                    ["globally", <Ltl key="G" f="G" />],
+                    ["strong until", <Ltl key="U" f="U" />],
+                    ["weak release", <Ltl key="V" f="V" />],
+                    ["strong release", <Ltl key="M" f="M" />],
+                    ["weak until", <Ltl key="W" f="W" />],
                   ],
                   "120px",
                   this.props.classes
                 )}
-                Double-quoted strings, as well as identifiers that do not look
-                like operators, are assumed to be atomic propositions.
+                Double-quoted strings, as well as identifiers that do not look like
+                operators, are assumed to be atomic propositions.
               </Typography>
             </Typography>
           </AccordionDetails>
@@ -2314,24 +2289,21 @@ class Help extends React.Component {
           <AccordionDetails>
             <Typography>
               <Typography variant="body1" gutterBottom>
-                A subset of PSL can be used to express linear properties that
-                are more expressive than LTL. For the semantics of all operators
-                see{" "}
+                A subset of PSL can be used to express linear properties that are more
+                expressive than LTL. For the semantics of all operators see{" "}
                 <a href="https://spot.lre.epita.fr/tl.pdf">this document</a>.
               </Typography>
               <Typography variant="body1" gutterBottom>
-                If you put the application in "expert mode", clicking on the
-                dice will generate a random PSL formula instead of generating a
-                random LTL formula.
+                If you put the application in "expert mode", clicking on the dice will
+                generate a random PSL formula instead of generating a random LTL formula.
               </Typography>
               <Typography variant="body2" color="primary">
                 Semi-Extended Regular Expression (SERE)
               </Typography>
               <Typography variant="body1" gutterBottom>
-                Those semi-extended regular expressions match finite prefixes,
-                and are constructed above Boolean expressions built using the
-                standard Boolean operators. A new constant, <Ltl f="[*0]" />{" "}
-                represents the empty word.
+                Those semi-extended regular expressions match finite prefixes, and are
+                constructed above Boolean expressions built using the standard Boolean
+                operators. A new constant, <Ltl f="[*0]" /> represents the empty word.
               </Typography>
               <Typography variant="body2">
                 The following binary operators are supported:
@@ -2354,18 +2326,17 @@ class Help extends React.Component {
                     [
                       "union",
                       <>
-                        <Ltl f="|" />, <Ltl f="||" />, <Ltl f="\/" />,{" "}
-                        <Ltl f="+" />
+                        <Ltl f="|" />, <Ltl f="||" />, <Ltl f="\/" />, <Ltl f="+" />
                       </>,
                     ],
-                    ["intersection", <Ltl f="&amp;&amp;" />],
-                    ["NLM-intersection", <Ltl f="&amp;" />],
+                    ["intersection", <Ltl key="&amp;&amp;" f="&amp;&amp;" />],
+                    ["NLM-intersection", <Ltl key="&amp;" f="&amp;" />],
                   ],
                   "140px",
                   this.props.classes
                 )}
-                The "Non-length-matching intersection" accepts words that match
-                one operand and that have a prefix matching the other operand.
+                The "Non-length-matching intersection" accepts words that match one
+                operand and that have a prefix matching the other operand.
               </Typography>
               <Typography variant="body2">
                 The following postfix unary operators are supported:
@@ -2377,16 +2348,16 @@ class Help extends React.Component {
                         <Ltl f="*" />, <Ltl f="[*]" />, <Ltl f="[*i..j]" />
                       </>,
                     ],
-                    ["Kleene plus", <Ltl f="[+]" />],
+                    ["Kleene plus", <Ltl key="[+]" f="[+]" />],
                     [
                       "fusion star",
                       <>
                         <Ltl f="[:*]" />, <Ltl f="[:*i..j]" />
                       </>,
                     ],
-                    ["fusion plus", <Ltl f="[:+]" />],
-                    ["goto", <Ltl f="[->i..j]" />],
-                    ["nonconseq. rep.", <Ltl f="[=i..j]" />],
+                    ["fusion plus", <Ltl key="[:+]" f="[:+]" />],
+                    ["goto", <Ltl key="[->i..j]" f="[->i..j]" />],
+                    ["nonconseq. rep.", <Ltl key="[=i..j]" f="[=i..j]" />],
                   ],
                   "200px",
                   this.props.classes
@@ -2411,20 +2382,19 @@ class Help extends React.Component {
                 SERE-LTL Bindings Operators
               </Typography>
               <Typography variant="body1" gutterBottom>
-                In the following, <Ltl f="r" /> denotes a SERE, and{" "}
-                <Ltl f="f" /> denotes any PSL or LTL formula.
+                In the following, <Ltl f="r" /> denotes a SERE, and <Ltl f="f" /> denotes
+                any PSL or LTL formula.
                 {OpTable(
                   [
                     [
                       "universal suffix implication (a.k.a. trigger)",
                       <>
-                        <Ltl f="{r}[]->f" />, <Ltl f="{r}|->f" />,{" "}
-                        <Ltl f="{r}(f)" />
+                        <Ltl f="{r}[]->f" />, <Ltl f="{r}|->f" />, <Ltl f="{r}(f)" />
                       </>,
                     ],
                     [
                       "existential suffix implication (a.k.a. seq)",
-                      <Ltl f="{r}<>->f" />,
+                      <Ltl key="{r}<>->f" f="{r}<>->f" />,
                     ],
                     [
                       "non-overlapping universal suffix implication",
@@ -2434,10 +2404,10 @@ class Help extends React.Component {
                     ],
                     [
                       "non-overlapping existential suffix implication",
-                      <Ltl f="{r}<>=>f" />,
+                      <Ltl key="{r}<>=>f" f="{r}<>=>f" />,
                     ],
-                    ["weak closure", <Ltl f="{r}" />],
-                    ["strong closure", <Ltl f="{r}!" />],
+                    ["weak closure", <Ltl key="{r}" f="{r}" />],
+                    ["strong closure", <Ltl key="{r}!" f="{r}!" />],
                   ],
                   "300px",
                   this.props.classes
@@ -2455,91 +2425,82 @@ class Help extends React.Component {
             <Typography>
               <Typography variant="body1" gutterBottom>
                 Formulas can be translated into ω-automata with various types of
-                acceptance conditions (Generalized Büchi acceptance is selected
-                by default).
+                acceptance conditions (Generalized Büchi acceptance is selected by
+                default).
                 <dl>
                   <dt>
                     <Typography variant="body2">monitor</Typography>
                   </dt>
                   <dd>
-                    In a monitor, the only words that are rejected are those
-                    that cannot be read by the automaton. Such automata will
-                    accept any finite prefix that can be extended into an
-                    infinite word accepted by the formula. Only safety
-                    properties can be recognized precisely. If a non-safety
-                    formula is translated into a monitor, the resulting
-                    automaton will accept a superset of the specified language.
+                    In a monitor, the only words that are rejected are those that cannot
+                    be read by the automaton. Such automata will accept any finite prefix
+                    that can be extended into an infinite word accepted by the formula.
+                    Only safety properties can be recognized precisely. If a non-safety
+                    formula is translated into a monitor, the resulting automaton will
+                    accept a superset of the specified language.
                   </dd>
                   <dt>
                     <Typography variant="body2">Büchi acceptance</Typography>
                   </dt>
                   <dd>
-                    Büchi automata have a set of accepting states represented
-                    with double circles. An infinite word is accepted if it
-                    visits some accepting state infinitely often. (For
-                    historical reason, only state-based Büchi acceptance is
-                    supported.)
+                    Büchi automata have a set of accepting states represented with double
+                    circles. An infinite word is accepted if it visits some accepting
+                    state infinitely often. (For historical reason, only state-based Büchi
+                    acceptance is supported.)
                   </dd>
                   <dt>
                     <Typography variant="body2">co-Büchi acceptance</Typography>
                   </dt>
                   <dd>
-                    Co-Büchi automata have a set of <i>rejecting states</i>{" "}
-                    represented with double circles (when state-based acceptance
-                    is used) or <i>rejecting transitions</i> annotated with a
-                    "⓿". An infinite word is accepted if it visits elements of
-                    the rejecting set a finite number of times.
+                    Co-Büchi automata have a set of <i>rejecting states</i> represented
+                    with double circles (when state-based acceptance is used) or{" "}
+                    <i>rejecting transitions</i> annotated with a "⓿". An infinite word is
+                    accepted if it visits elements of the rejecting set a finite number of
+                    times.
                   </dd>
                   <dt>
-                    <Typography variant="body2">
-                      generalized Büchi acceptance
-                    </Typography>
+                    <Typography variant="body2">generalized Büchi acceptance</Typography>
                   </dt>
                   <dd>
-                    In generalized Büchi automata, multiple sets of states or
-                    transitions are used. States or transitions are annotated by
-                    circled numbers (like ⓿) denoting the sets they belong to. A
-                    run is accepted if it visits a state or transitions of each
-                    set infinitely often.
+                    In generalized Büchi automata, multiple sets of states or transitions
+                    are used. States or transitions are annotated by circled numbers (like
+                    ⓿) denoting the sets they belong to. A run is accepted if it visits a
+                    state or transitions of each set infinitely often.
                   </dd>
                   <dt>
                     <Typography variant="body2">parity acceptance</Typography>
                   </dt>
                   <dd>
-                    In automata with parity acceptance, multiple sets of states
-                    or transitions are used. States or transitions are annotated
-                    by circled numbers (like ⓿) denoting the sets they belong
-                    to. A run is accepted if the maximum or minimum set number
-                    visited infinitely often is odd or even. The choice between
-                    min or max, and odd or even, is indicated at the top of the
-                    automaton and can be forced with some options. The{" "}
-                    <b>colored</b> option forces each transitions (or state) to
-                    belong to exactly one acceptance set; this is usually what
-                    people working with parity automata are expecting.
+                    In automata with parity acceptance, multiple sets of states or
+                    transitions are used. States or transitions are annotated by circled
+                    numbers (like ⓿) denoting the sets they belong to. A run is accepted
+                    if the maximum or minimum set number visited infinitely often is odd
+                    or even. The choice between min or max, and odd or even, is indicated
+                    at the top of the automaton and can be forced with some options. The{" "}
+                    <b>colored</b> option forces each transitions (or state) to belong to
+                    exactly one acceptance set; this is usually what people working with
+                    parity automata are expecting.
                   </dd>
                   <dt>
-                    <Typography variant="body2">
-                      Emerson-Lei acceptance
-                    </Typography>
+                    <Typography variant="body2">Emerson-Lei acceptance</Typography>
                   </dt>
                   <dd>
-                    When using Emerson-Lei acceptance, the acceptance condition
-                    produced can be any positive boolean formula over terms like{" "}
-                    <b>Fin(⓿)</b> (meaning that elements of set ⓿ should be seen{" "}
-                    <i>finitely</i> often) or <b>Inf(⓿)</b> (<i>infinitely</i>{" "}
-                    often). Multiple acceptance sets are used.
+                    When using Emerson-Lei acceptance, the acceptance condition produced
+                    can be any positive boolean formula over terms like <b>Fin(⓿)</b>{" "}
+                    (meaning that elements of set ⓿ should be seen <i>finitely</i> often)
+                    or <b>Inf(⓿)</b> (<i>infinitely</i> often). Multiple acceptance sets
+                    are used.
                   </dd>
                 </dl>
-                By default, automata with transition-based acceptance are
-                produced, except for monitors (where it makes no sense) and
-                Büchi automata (for historical reasons). The translation
-                constraint "force state-based acc." can be used to force the
-                produced automata to use state-based acceptance, possibly
-                increasing the number of states. However, even when automata are
-                displayed as state-based, they are stored using transition-based
-                acceptance internally: this can be seen using the "force
-                transition-based acc." <i>display</i> option. This explains why
-                these two options are not mutually exclusive.
+                By default, automata with transition-based acceptance are produced, except
+                for monitors (where it makes no sense) and Büchi automata (for historical
+                reasons). The translation constraint "force state-based acc." can be used
+                to force the produced automata to use state-based acceptance, possibly
+                increasing the number of states. However, even when automata are displayed
+                as state-based, they are stored using transition-based acceptance
+                internally: this can be seen using the "force transition-based acc."{" "}
+                <i>display</i> option. This explains why these two options are not
+                mutually exclusive.
               </Typography>
             </Typography>
           </AccordionDetails>

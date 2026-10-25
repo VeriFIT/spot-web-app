@@ -38,8 +38,16 @@ Environment variables are defined in `.env.development` and `.env.production` an
 - `VITE_API_PORT` - Port suffix for the API (e.g. `:5000` in dev, empty in prod)
 - `VITE_API_ENDPOINT` - API path (e.g. `/api/`)
 
+## Lint and format
+
+```bash
+npm run lint          # ESLint (React, hooks, jsx-a11y)
+npm run format        # Prettier, writes in place
+npm run format:check  # Prettier, check only (used by CI)
+```
+
 ## Notes
 
 - The app is always served under the `/app/` base path.
-- Node.js 20+ is recommended.
+- Node.js 22+ is required; `.nvmrc` pins the 24.x LTS line.
 - Absolute paths to `/spot.css` and `/spot2.svg` are used and expected to be served from the site root.

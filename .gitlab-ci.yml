@@ -1,14 +1,33 @@
 stages:
+  - check
   - build
+
+default:
+  image: gitlab-registry.lre.epita.fr/spot/buildenv/debian-node
+  cache:
+    key:
+      files:
+        - client/package-lock.json
+    paths:
+      - client/node_modules/
+
+lint:
+  stage: check
+  except:
+    - /wip/
+  script:
+    - cd client
+    - npm ci
+    - npm run lint
+    - npm run format:check
 
 compile:
   stage: build
   except:
     - /wip/
-  image: gitlab-registry.lre.epita.fr/spot/buildenv/debian-node
   script:
     - cd client
-    - npm install
+    - npm ci
     - npm run build
   artifacts:
     when: always
@@ -16,4 +35,3 @@ compile:
     paths:
       - ./client/build/
       - ./server/*.py
-
