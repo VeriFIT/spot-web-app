@@ -51,6 +51,9 @@ import TextField from "@mui/material/TextField";
 import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 import { withStyles } from "tss-react/mui";
+import { apiEndpoint, ApiError, getRewrite, rewriteUrl } from "./api/client";
+import { useApiQuery } from "./hooks/useApiQuery";
+import { useDelayedFlag } from "./hooks/useDelayedFlag";
 
 // Helper component to render SVG strings
 function SVGInline({ svg, className }) {
@@ -338,34 +341,6 @@ function NoteText(props) {
   );
 }
 
-function api_endpoint() {
-  /* VITE_API_ENDPOINT and VITE_API_PORT are defined in
-   * files client/.env.{production,development}
-   *
-   * When developing, the API and web pages are running on different
-   * ports, but in production we assume they are served from the
-   * same server.
-   */
-  return (
-    window.location.protocol +
-    "//" +
-    (import.meta.env.VITE_API_PORT
-      ? window.location.hostname + import.meta.env.VITE_API_PORT
-      : window.location.host) +
-    import.meta.env.VITE_API_ENDPOINT
-  );
-}
-
-// Thrown by the fetch helpers below. Carrying the HTTP status lets the UI
-// branch on it instead of parsing the message text.
-class ApiError extends Error {
-  constructor(response) {
-    super(response.status + " " + response.statusText);
-    this.name = "ApiError";
-    this.status = response.status;
-  }
-}
-
 function renderError(error) {
   const msg = error.message;
   if (error.status !== 500) return <pre>{msg}</pre>;
@@ -442,7 +417,7 @@ class LtlInput extends React.Component {
   };
 
   randomizeFormula = () => {
-    let url = new URL(api_endpoint() + "random");
+    let url = new URL(apiEndpoint() + "random");
     if (this.props.expert)
       // turn on PSL generation
       url.searchParams.append("p", 1);
@@ -523,7 +498,7 @@ class Versions extends React.Component {
   };
 
   componentDidMount() {
-    fetch(api_endpoint() + "versions")
+    fetch(apiEndpoint() + "versions")
       .then(handleErrors)
       .then((vers) => {
         vers.push(["React", React.version, "https://reactjs.org/"]);
@@ -810,131 +785,87 @@ class LtlResult extends React.Component {
   }
 }
 
-class LtlRewrite extends React.Component {
-  timer = null;
+function LtlRewrite(props) {
+  const { classes, formula, syntax, simplify, ltlsimp, unabbrev, delta2 } = props;
 
-  state = {
-    result: null,
-  };
+  // The request URL identifies the query: it only changes when the formula or
+  // one of the options does, which is exactly when a new request is needed.
+  const requestUrl = React.useMemo(
+    () =>
+      formula === ""
+        ? null
+        : rewriteUrl(formula, { syntax, simplify, ltlsimp, unabbrev, delta2 }),
+    [formula, syntax, simplify, ltlsimp, unabbrev, delta2]
+  );
+  const { data, error, loading } = useApiQuery(requestUrl, getRewrite);
+  const showSpinner = useDelayedFlag(loading, 800);
 
-  componentWillUnmount() {
-    clearTimeout(this.timer);
+  // Report a parse failure (and any prefix-syntax fallback) to the formula
+  // input, which is owned by the parent.
+  const { handleAnyParseError } = props;
+  React.useEffect(() => {
+    if (data !== null) handleAnyParseError(data);
+  }, [data, handleAnyParseError]);
+
+  let result = null;
+  if (error !== null) result = renderError(error);
+  else if (showSpinner) result = <CircularProgress className={classes.progress} />;
+  else if (data !== null) {
+    if ("formula" in data) result = <Typography>{data.formula}</Typography>;
+    else if ("svg" in data) result = <SVGInline svg={data.svg} />;
+    else if ("error" in data) result = <Typography>{data.error}</Typography>;
   }
 
-  updateResult() {
-    if (this.props.formula === "") {
-      this.setState({ result: "" });
-      return;
-    }
-    let url = new URL(
-      api_endpoint() + "rewrite/" + encodeURIComponent(this.props.formula)
-    );
-    if (this.props.simplify)
-      Object.entries(this.props.ltlsimp).forEach(([key, value]) => {
-        if (value) url.searchParams.append("r", key);
-      });
-    if (this.props.delta2) url.searchParams.append("d", 2);
-    url.searchParams.append("ff", this.props.syntax);
-
-    let unabbrev = "";
-    Object.entries(this.props.unabbrev).forEach(([key, value]) => {
-      if (value) unabbrev = unabbrev.concat(key);
-    });
-    if (unabbrev !== "") url.searchParams.append("u", unabbrev);
-
-    this.timer = setTimeout(() => {
-      this.setState({
-        result: <CircularProgress className={this.props.classes.progress} />,
-      });
-    }, 800);
-    fetch(url)
-      .then(handleErrorsAndClearTimer(this.timer))
-      .then((res) => {
-        this.props.handleAnyParseError(res);
-        if ("formula" in res)
-          this.setState({ result: <Typography>{res["formula"]}</Typography> });
-        else if ("svg" in res) this.setState({ result: <SVGInline svg={res["svg"]} /> });
-        else if ("error" in res)
-          this.setState({ result: <Typography>{res["error"]}</Typography> });
-        else this.setState({ result: null });
-      })
-      .catch((error) => {
-        clearTimeout(this.timer);
-        this.setState({ result: renderError(error) });
-      });
-  }
-
-  componentDidMount() {
-    this.updateResult();
-  }
-
-  componentDidUpdate(prevProps) {
-    if (
-      prevProps.syntax !== this.props.syntax ||
-      prevProps.ltlsimp !== this.props.ltlsimp ||
-      prevProps.simplify !== this.props.simplify ||
-      prevProps.unabbrev !== this.props.unabbrev ||
-      prevProps.delta2 !== this.props.delta2 ||
-      prevProps.formula !== this.props.formula
-    ) {
-      this.updateResult();
-    }
-  }
-
-  render() {
-    return (
-      <React.Fragment>
-        {this.props.hideoptions || (
-          <React.Fragment>
-            <LtlSyntaxChoice
-              syntax={this.props.syntax}
-              classes={this.props.classes}
-              changeSyntax={this.props.changeSyntax}
-            />
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={this.props.simplify}
-                  onChange={this.props.handleChecked("simplify")}
-                  value="simplify"
-                  color="primary"
-                />
-              }
-              label="Simplify"
-            />
-            <LtlUnabbrevOptions
-              handleChangeLtlUnabbrev={this.props.handleChangeLtlUnabbrev}
-              unabbrev={this.props.unabbrev}
-              classes={this.props.classes}
-              syntax={this.props.syntax}
-            />
-            {this.props.expert && (
-              <LtlSimplificationOptions
-                classes={this.props.classes}
-                ltlsimp={this.props.ltlsimp}
-                simplify={this.props.simplify}
-                handleChangeLtlSimp={this.props.handleChangeLtlSimp}
+  return (
+    <React.Fragment>
+      {props.hideoptions || (
+        <React.Fragment>
+          <LtlSyntaxChoice
+            syntax={syntax}
+            classes={classes}
+            changeSyntax={props.changeSyntax}
+          />
+          <FormControlLabel
+            control={
+              <Switch
+                checked={simplify}
+                onChange={props.handleChecked("simplify")}
+                value="simplify"
+                color="primary"
               />
-            )}
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={this.props.delta2}
-                  onChange={this.props.handleChecked("delta2")}
-                  value="delta2"
-                  color="primary"
-                />
-              }
-              label="Rewrite as Δ₂"
+            }
+            label="Simplify"
+          />
+          <LtlUnabbrevOptions
+            handleChangeLtlUnabbrev={props.handleChangeLtlUnabbrev}
+            unabbrev={unabbrev}
+            classes={classes}
+            syntax={syntax}
+          />
+          {props.expert && (
+            <LtlSimplificationOptions
+              classes={classes}
+              ltlsimp={ltlsimp}
+              simplify={simplify}
+              handleChangeLtlSimp={props.handleChangeLtlSimp}
             />
-          </React.Fragment>
-        )}
-        {this.state.result && (
-          <LtlResult classes={this.props.classes} result={this.state.result} />
-        )}
-      </React.Fragment>
-    );
-  }
+          )}
+          <FormControlLabel
+            control={
+              <Switch
+                checked={delta2}
+                onChange={props.handleChecked("delta2")}
+                value="delta2"
+                color="primary"
+              />
+            }
+            label="Rewrite as Δ₂"
+          />
+        </React.Fragment>
+      )}
+      {result && <LtlResult classes={classes} result={result} />}
+    </React.Fragment>
+  );
 }
 
 class LtlStudy extends React.Component {
@@ -1132,7 +1063,7 @@ class LtlStudy extends React.Component {
       this.setState({ result: "" });
       return;
     }
-    let url = new URL(api_endpoint() + "study/" + encodeURIComponent(this.props.formula));
+    let url = new URL(apiEndpoint() + "study/" + encodeURIComponent(this.props.formula));
 
     this.timer = setTimeout(() => {
       this.setState({
@@ -1247,7 +1178,7 @@ class LtlTranslate extends React.Component {
       return;
     }
     let url = new URL(
-      api_endpoint() + "translate/" + encodeURIComponent(this.props.formula)
+      apiEndpoint() + "translate/" + encodeURIComponent(this.props.formula)
     );
 
     url.searchParams.append("a", this.props.acc);
@@ -1667,7 +1598,7 @@ class LtlCompare extends React.Component {
       return;
     }
     let url = new URL(
-      api_endpoint() + "compare/" + encodeURIComponent(this.props.formula)
+      apiEndpoint() + "compare/" + encodeURIComponent(this.props.formula)
     );
     url.searchParams.append("g", this.props.formula2);
 

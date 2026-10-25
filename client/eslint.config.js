@@ -3,6 +3,7 @@ import globals from "globals";
 import react from "eslint-plugin-react";
 import reactHooks from "eslint-plugin-react-hooks";
 import jsxA11y from "eslint-plugin-jsx-a11y";
+import tseslint from "typescript-eslint";
 import prettier from "eslint-config-prettier";
 
 // jsx-a11y's recommended rules are surfacing real problems (see section 6 of
@@ -12,19 +13,26 @@ const a11yAsWarnings = Object.fromEntries(
   Object.keys(jsxA11y.flatConfigs.recommended.rules).map((rule) => [rule, "warn"])
 );
 
+const jsFiles = ["**/*.{js,jsx}"];
+const tsFiles = ["**/*.{ts,tsx}"];
+
+const browserSource = {
+  ecmaVersion: 2023,
+  sourceType: "module",
+  globals: { ...globals.browser },
+};
+
 export default [
   { ignores: ["build/**", "dist/**", "public/**"] },
-  js.configs.recommended,
-  react.configs.flat.recommended,
-  react.configs.flat["jsx-runtime"],
-  jsxA11y.flatConfigs.recommended,
+
+  // Existing JavaScript sources (JSX included).
+  { ...js.configs.recommended, files: jsFiles, languageOptions: browserSource },
+  { ...react.configs.flat.recommended, files: jsFiles },
+  { ...react.configs.flat["jsx-runtime"], files: jsFiles },
+  { ...jsxA11y.flatConfigs.recommended, files: jsFiles },
   {
-    files: ["**/*.{js,jsx}"],
-    languageOptions: {
-      ecmaVersion: 2023,
-      sourceType: "module",
-      globals: { ...globals.browser },
-    },
+    files: jsFiles,
+    languageOptions: browserSource,
     plugins: { "react-hooks": reactHooks },
     settings: { react: { version: "detect" } },
     rules: {
@@ -43,6 +51,24 @@ export default [
       ],
     },
   },
+
+  // TypeScript sources: the modules written during the migration.
+  ...tseslint.configs.recommended.map((config) => ({ ...config, files: tsFiles })),
+  {
+    files: tsFiles,
+    languageOptions: browserSource,
+    plugins: { "react-hooks": reactHooks },
+    settings: { react: { version: "detect" } },
+    rules: {
+      "react-hooks/rules-of-hooks": "error",
+      "react-hooks/exhaustive-deps": "warn",
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        { argsIgnorePattern: "^_", varsIgnorePattern: "^_", caughtErrors: "none" },
+      ],
+    },
+  },
+
   {
     files: ["*.config.js"],
     languageOptions: { globals: { ...globals.node } },

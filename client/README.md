@@ -38,13 +38,19 @@ Environment variables are defined in `.env.development` and `.env.production` an
 - `VITE_API_PORT` - Port suffix for the API (e.g. `:5000` in dev, empty in prod)
 - `VITE_API_ENDPOINT` - API path (e.g. `/api/`)
 
-## Lint and format
+## Lint, types and format
 
 ```bash
-npm run lint          # ESLint (React, hooks, jsx-a11y)
+npm run lint          # ESLint (React, hooks, jsx-a11y; TypeScript files too)
+npm run typecheck     # tsc --noEmit
 npm run format        # Prettier, writes in place
 npm run format:check  # Prettier, check only (used by CI)
 ```
+
+TypeScript is adopted incrementally: `tsconfig.json` has `allowJs` with `checkJs`
+disabled, so existing `.jsx` sources are parsed but not type-checked, while new modules
+(`src/api/`, `src/hooks/`) are checked in strict mode and converted one component at a
+time.
 
 ## Notes
 
