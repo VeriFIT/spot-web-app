@@ -3,7 +3,6 @@ import { createRoot } from "react-dom/client";
 import LtlApps from "./LtlApp";
 import CssBaseline from "@mui/material/CssBaseline";
 import { ThemeProvider, createTheme, StyledEngineProvider } from "@mui/material/styles";
-import { ThemeProvider as StylesThemeProvider } from "@mui/styles";
 
 const theme = createTheme({
   typography: {
@@ -31,10 +30,8 @@ const root = createRoot(container);
 root.render(
   <StyledEngineProvider injectFirst>
     <ThemeProvider theme={theme}>
-      <StylesThemeProvider theme={theme}>
-        <CssBaseline />
-        <LtlApps />
-      </StylesThemeProvider>
+      <CssBaseline />
+      <LtlApps />
     </ThemeProvider>
   </StyledEngineProvider>
 );

@@ -51,7 +51,7 @@ import TextField from "@mui/material/TextField";
 import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 import { styled } from "@mui/material/styles";
-import { withStyles } from "@mui/styles";
+import { withStyles } from "tss-react/mui";
 
 // Helper component to render SVG strings
 function SVGInline({ svg, className }) {
@@ -2599,4 +2599,4 @@ class LtlApps extends React.Component {
   }
 }
 
-export default withStyles(styles)(LtlApps);
+export default withStyles(LtlApps, styles);
