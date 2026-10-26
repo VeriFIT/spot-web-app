@@ -353,6 +353,16 @@ describe("LtlRewrite", () => {
     expect(screen.queryByText(MEMORY_NOTE)).toBeNull();
   });
 
+  it("explains a gateway timeout like a server failure", async () => {
+    const { requests } = stubFetch();
+    render(<RewriteResult />);
+
+    await act(async () => requests[0].fail(504, "Gateway Timeout"));
+
+    expect(screen.getByText("504 Gateway Timeout")).toBeTruthy();
+    expect(screen.getByText(MEMORY_NOTE)).toBeTruthy();
+  });
+
   it("shows a syntax error reported by the server instead of a formula", async () => {
     const { requests } = stubFetch();
     render(<RewriteResult />);

@@ -6,7 +6,10 @@ type CodedError = Error & { status?: number };
 
 export function renderError(error: CodedError): ReactElement {
   const msg = error.message;
-  if (error.status !== 500) return <pre>{msg}</pre>;
+  // A proxy reports a timeout as 504, and an overloaded server as 503; the
+  // advice below applies to all of them, but not to a request the server
+  // answered as a client error, nor to a network failure with no status.
+  if (error.status === undefined || error.status < 500) return <pre>{msg}</pre>;
   return (
     <>
       <pre>{msg}</pre>
