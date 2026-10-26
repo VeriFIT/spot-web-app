@@ -31,6 +31,14 @@ lint:
     - npm run typecheck
     - npm run test
 
+server:
+  stage: check
+  except:
+    - /wip/
+  script:
+    - cd server
+    - python3 -m unittest -v
+
 compile:
   stage: build
   except:
