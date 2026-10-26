@@ -99,7 +99,7 @@ def versions():
 
 @app.route('/api/random')
 # no cache control for this one!
-def random(method='GET'):
+def random():
     p = request.args.get('p', None)
     gen = spot.randltl(3, tree_size=(5,25),
                        output=('psl' if p else 'ltl'),
@@ -138,7 +138,7 @@ def random(method='GET'):
 #   on syntax error: { parse_error: "text" }
 @app.route('/api/rewrite/<path:ltlformula>')
 @cachecontrol()
-def rewrite(ltlformula, method='GET'):
+def rewrite(ltlformula):
 
     res = {}
 
@@ -281,7 +281,7 @@ def get_sfh_class(f2):
 # formula.
 @app.route('/api/study/<path:ltlformula>')
 @cachecontrol()
-def study(ltlformula, method='GET'):
+def study(ltlformula):
     result = {}
 
     f = parse_ltl(ltlformula, result)
@@ -458,7 +458,7 @@ def study(ltlformula, method='GET'):
 # }
 @app.route('/api/translate/<path:ltlformula>')
 @cachecontrol()
-def translate(ltlformula, method='GET'):
+def translate(ltlformula):
 
     res = {}
 
@@ -715,7 +715,7 @@ def svg_compare(w1, w2, w3, w4):
 
 @app.route('/api/compare/<path:ltlformula>')
 @cachecontrol()
-def compare(ltlformula, method='GET'):
+def compare(ltlformula):
     result = {}
 
     f = parse_ltl(ltlformula, result)
@@ -768,7 +768,7 @@ def compare(ltlformula, method='GET'):
 
 @app.route('/api/drawword/<path:word>')
 @cachecontrol()
-def drawword(word, method='GET'):
+def drawword(word):
     result = {}
     try:
         w = spot.parse_word(word)
