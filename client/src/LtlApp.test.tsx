@@ -602,6 +602,28 @@ describe("LtlInput", () => {
     expect(readInput().getAttribute("aria-invalid")).not.toBe("true");
     expect(screen.getByText("b | a")).toBeTruthy();
   });
+
+  it("clears the parse error when the formula is emptied", async () => {
+    const { requests } = stubFetch();
+    render(<FormulaAndRewrite />);
+
+    await act(async () =>
+      requests[0].respond({ parse_error: "syntax error", prefix_syntax: true })
+    );
+
+    expect(screen.getByText("syntax error")).toBeTruthy();
+    expect(screen.getByText(PREFIX_NOTE)).toBeTruthy();
+
+    fireEvent.change(readInput(), { target: { value: "" } });
+    fireEvent.keyDown(readInput(), { key: "Enter" });
+
+    // No request is made for an empty formula, and the error described the
+    // formula that is now gone.
+    expect(requests).toHaveLength(1);
+    expect(screen.queryByText("syntax error")).toBeNull();
+    expect(screen.queryByText(PREFIX_NOTE)).toBeNull();
+    expect(readInput().getAttribute("aria-invalid")).not.toBe("true");
+  });
 });
 
 describe("LtlStudy", () => {
@@ -703,6 +725,32 @@ describe("LtlCompare", () => {
 
     expect(fetchMock).not.toHaveBeenCalled();
   });
+
+  it("clears both parse errors when the second formula is emptied", async () => {
+    const { requests } = stubFetch();
+    const handleAnyParseError = vi.fn();
+    const { rerender } = render(<CompareTab handleAnyParseError={handleAnyParseError} />);
+
+    await act(async () =>
+      requests[0].respond({
+        txt: "The two formulas are equivalent.",
+        svg: "<svg></svg>",
+        parse_error: "syntax error in the first formula",
+        parse_error2: "syntax error in the second formula",
+        prefix_syntax2: true,
+      })
+    );
+
+    expect(screen.getByText("syntax error in the second formula")).toBeTruthy();
+    handleAnyParseError.mockClear();
+
+    rerender(<CompareTab formula2="" handleAnyParseError={handleAnyParseError} />);
+    await act(async () => {});
+
+    expect(handleAnyParseError).toHaveBeenCalledWith({});
+    expect(screen.queryByText("syntax error in the second formula")).toBeNull();
+    expect(screen.queryByText(PREFIX_NOTE)).toBeNull();
+  });
 });
 
 describe("LtlTranslate", () => {
@@ -783,6 +831,24 @@ describe("LtlTranslate", () => {
     await act(async () => {});
 
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("clears a previous parse error when the formula is emptied", async () => {
+    const { requests } = stubFetch();
+    const handleAnyParseError = vi.fn();
+    const { rerender } = render(
+      <TranslateTab handleAnyParseError={handleAnyParseError} />
+    );
+
+    await act(async () =>
+      requests[0].respond({ parse_error: "syntax error", prefix_syntax: true })
+    );
+    handleAnyParseError.mockClear();
+
+    rerender(<TranslateTab formula="" handleAnyParseError={handleAnyParseError} />);
+    await act(async () => {});
+
+    expect(handleAnyParseError).toHaveBeenCalledWith({});
   });
 
   it("renders its options when they are not hidden", () => {

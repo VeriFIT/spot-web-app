@@ -196,10 +196,12 @@ export function LtlRewrite(props: LtlRewriteProps) {
   const showSpinner = useDelayedFlag(loading, 800);
 
   // Report a parse failure (and any prefix-syntax fallback) to the formula
-  // input, which is owned by the parent.
+  // input, which is owned by the parent, and clear a previous error when the
+  // formula is emptied.
   React.useEffect(() => {
     if (data !== null) handleAnyParseError(data);
-  }, [data, handleAnyParseError]);
+    else if (requestUrl === null) handleAnyParseError({});
+  }, [data, requestUrl, handleAnyParseError]);
 
   let result: React.ReactNode = null;
   if (error !== null) result = renderError(error);

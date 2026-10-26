@@ -104,15 +104,22 @@ export function LtlCompare(props: LtlCompareProps) {
 
   // The answer describes both formulas: the first one is reported to the
   // parent, which owns that input, the second one belongs to the input here.
+  // Emptying either formula clears both, since the answer they described is
+  // gone.
   const [formula2err, setFormula2err] = React.useState<string | null>(null);
   const [formula2lbt, setFormula2lbt] = React.useState(false);
   const { handleAnyParseError } = props;
   React.useEffect(() => {
-    if (data === null) return;
-    handleAnyParseError(data);
-    setFormula2err("parse_error2" in data ? (data.parse_error2 ?? null) : null);
-    setFormula2lbt(data.prefix_syntax2 === true);
-  }, [data, handleAnyParseError]);
+    if (data !== null) {
+      handleAnyParseError(data);
+      setFormula2err("parse_error2" in data ? (data.parse_error2 ?? null) : null);
+      setFormula2lbt(data.prefix_syntax2 === true);
+    } else if (requestUrl === null) {
+      handleAnyParseError({});
+      setFormula2err(null);
+      setFormula2lbt(false);
+    }
+  }, [data, requestUrl, handleAnyParseError]);
 
   let result: React.ReactNode = null;
   if (error !== null) result = renderError(error);

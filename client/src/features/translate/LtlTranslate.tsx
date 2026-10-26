@@ -388,10 +388,12 @@ export function LtlTranslate(props: LtlTranslateProps) {
   const showfilehoa = () => setShowfile(showfile === 1 ? 0 : 1);
   const showfilespin = () => setShowfile(showfile === 2 ? 0 : 2);
 
-  // Report the parse information to the formula input.
+  // Report the parse information to the formula input, and clear a previous
+  // error when the formula is emptied.
   React.useEffect(() => {
     if (data !== null) handleAnyParseError(data);
-  }, [data, handleAnyParseError]);
+    else if (requestUrl === null) handleAnyParseError({});
+  }, [data, requestUrl, handleAnyParseError]);
 
   let result: React.ReactNode = null;
   if (error !== null) result = renderError(error);
