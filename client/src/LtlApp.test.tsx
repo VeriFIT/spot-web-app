@@ -856,6 +856,7 @@ describe("app shell", () => {
   afterEach(() => {
     cleanup();
     vi.unstubAllGlobals();
+    vi.restoreAllMocks();
   });
 
   it("opens the help panel and duplicates the app", () => {
@@ -881,6 +882,24 @@ describe("app shell", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "close" }));
     expect(screen.getAllByLabelText("Input formula")).toHaveLength(1);
+  });
+
+  it("keeps a malformed response from blanking the page", async () => {
+    const { requests } = stubFetch();
+    // React reports the caught error; the assertion below is what matters.
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    render(<App />);
+
+    const input = screen.getByLabelText("Input formula");
+    fireEvent.change(input, { target: { value: "G a" } });
+    fireEvent.keyDown(input, { key: "Enter" });
+
+    // Translate reads `note` as an array, so a string makes the result render
+    // throw — exactly the failure the boundary exists for.
+    await act(async () => requests[0].respond({ note: "not an array" }));
+
+    expect(screen.getByText("This panel could not be displayed")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Reload the page" })).toBeTruthy();
   });
 });
 

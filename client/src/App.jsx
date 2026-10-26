@@ -8,6 +8,7 @@ import Tabs from "@mui/material/Tabs";
 import HelpIcon from "@mui/icons-material/Help";
 import { styled } from "@mui/material/styles";
 
+import { ErrorBoundary } from "./components/ErrorBoundary";
 import { CloseIcon, DupeIcon } from "./components/icons";
 import { LtlInput } from "./components/LtlInput";
 import { Versions } from "./components/Versions";
@@ -76,69 +77,75 @@ function LtlApp(props) {
 
   return (
     <OptionsProvider options={options} dispatch={dispatch}>
-      <Panel>
-        {topright}
-        {expert && <Versions />}
-        <FormControlLabel
-          style={{ marginLeft: 0 }}
-          control={
-            <Switch checked={expert} onChange={handleChecked("expert")} value="expert" />
-          }
-          label="Expert mode"
-        />
-        {(expert || hideoptions) && (
+      <ErrorBoundary>
+        <Panel>
+          {topright}
+          {expert && <Versions />}
           <FormControlLabel
+            style={{ marginLeft: 0 }}
             control={
               <Switch
-                checked={hideoptions}
-                disabled={action === 1 || action === 2}
-                onChange={handleChecked("hideoptions")}
-                color="secondary"
-                value="hideoptions"
+                checked={expert}
+                onChange={handleChecked("expert")}
+                value="expert"
               />
             }
-            label="Hide all options"
+            label="Expert mode"
           />
-        )}
-        <Tabs
-          value={action}
-          onChange={changeAction}
-          centered
-          indicatorColor="primary"
-          textColor="primary"
-        >
-          <AppTab value={0} label="Rewrite" />
-          <AppTab value={1} label="Study" />
-          <AppTab value={2} label="Compare" />
-          <AppTab value={3} label="Translate" />
-        </Tabs>
-        <LtlInput
-          highlight={action === 2 ? "first" : undefined}
-          label={action === 2 ? "First formula" : "Input formula"}
-          expert={expert}
-          autoFocus
-          setFormula={setFormula}
-          formulalbt={formulalbt}
-          formulaerr={formulaerr}
-        />
-        {action === 0 && (
-          <LtlRewrite formula={formula} handleAnyParseError={handleAnyParseError} />
-        )}
-        {action === 1 && (
-          <LtlStudy formula={formula} handleAnyParseError={handleAnyParseError} />
-        )}
-        {action === 2 && (
-          <LtlCompare
-            formula={formula}
-            formula2={formula2}
-            handleChangeFormula2={setFormula2}
-            handleAnyParseError={handleAnyParseError}
+          {(expert || hideoptions) && (
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={hideoptions}
+                  disabled={action === 1 || action === 2}
+                  onChange={handleChecked("hideoptions")}
+                  color="secondary"
+                  value="hideoptions"
+                />
+              }
+              label="Hide all options"
+            />
+          )}
+          <Tabs
+            value={action}
+            onChange={changeAction}
+            centered
+            indicatorColor="primary"
+            textColor="primary"
+          >
+            <AppTab value={0} label="Rewrite" />
+            <AppTab value={1} label="Study" />
+            <AppTab value={2} label="Compare" />
+            <AppTab value={3} label="Translate" />
+          </Tabs>
+          <LtlInput
+            highlight={action === 2 ? "first" : undefined}
+            label={action === 2 ? "First formula" : "Input formula"}
+            expert={expert}
+            autoFocus
+            setFormula={setFormula}
+            formulalbt={formulalbt}
+            formulaerr={formulaerr}
           />
-        )}
-        {action === 3 && (
-          <LtlTranslate formula={formula} handleAnyParseError={handleAnyParseError} />
-        )}
-      </Panel>
+          {action === 0 && (
+            <LtlRewrite formula={formula} handleAnyParseError={handleAnyParseError} />
+          )}
+          {action === 1 && (
+            <LtlStudy formula={formula} handleAnyParseError={handleAnyParseError} />
+          )}
+          {action === 2 && (
+            <LtlCompare
+              formula={formula}
+              formula2={formula2}
+              handleChangeFormula2={setFormula2}
+              handleAnyParseError={handleAnyParseError}
+            />
+          )}
+          {action === 3 && (
+            <LtlTranslate formula={formula} handleAnyParseError={handleAnyParseError} />
+          )}
+        </Panel>
+      </ErrorBoundary>
     </OptionsProvider>
   );
 }
