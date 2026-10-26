@@ -24,7 +24,7 @@ from platform import python_version
 import subprocess
 import re
 import os
-from time import time
+from time import time_ns
 
 app = Flask(__name__)
 CORS(app)
@@ -99,7 +99,7 @@ def random(method='GET'):
     p = request.args.get('p', None)
     gen = spot.randltl(3, tree_size=(5,25),
                        output=('psl' if p else 'ltl'),
-                       seed=int(time()))
+                       seed=time_ns() % 2**31)
     # Try 10 times to avoid true or false
     for i in range(1, 10):
         f = next(gen)
