@@ -120,6 +120,14 @@ class SpotApiTest(unittest.TestCase):
 
         self.assertIn('parse_error2', result)
 
+    def test_compare_explains_equivalent_formulas_of_different_classes(self):
+        result = self.get('/api/compare/G F a?g=F G F a')
+
+        self.assertIn('equivalent', result['txt'])
+        self.assertNotEqual(result['sfh1'], result['sfh2'])
+        self.assertIn('sfh1_text', result)
+        self.assertIn('sfh2_text', result)
+
     def test_translate_counts_the_automaton(self):
         result = self.get('/api/translate/G a')
 

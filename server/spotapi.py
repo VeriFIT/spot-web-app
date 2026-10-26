@@ -751,7 +751,9 @@ def compare(ltlformula, method='GET'):
         if w4:
             result['w4'] = str(w4)
 
-    if (sfh1 != sfh2) and ("equivalent" in txt):
+    # The two formulas are equivalent exactly when neither has a word the
+    # other lacks; deciding this from the prose would break on a copy edit.
+    if (sfh1 != sfh2) and (w2 is None) and (w4 is None):
         result['sfh1'] = sfh1
         result['sfh1_text'] = sfh_class_to_english[sfh1]
         result['sfh2'] = sfh2
