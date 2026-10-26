@@ -232,17 +232,22 @@ function LtlApps({ action }: { action: number }) {
         />
       )}
       {showingHelp && (
-        <React.Suspense
-          fallback={
-            // The panel is as wide as a formula panel, so the placeholder holds
-            // its place instead of letting the layout jump when it arrives.
-            <Panel>
-              <CircularProgress aria-label="loading help" />
-            </Panel>
-          }
-        >
-          <Help onClose={() => setShowingHelp(false)} />
-        </React.Suspense>
+        // The help panel arrives in its own chunk. A stale chunk after a
+        // redeploy, or a network failure, must cost the panel and not the two
+        // formula panels beside it, so it gets a boundary of its own.
+        <ErrorBoundary>
+          <React.Suspense
+            fallback={
+              // The panel is as wide as a formula panel, so the placeholder holds
+              // its place instead of letting the layout jump when it arrives.
+              <Panel>
+                <CircularProgress aria-label="loading help" />
+              </Panel>
+            }
+          >
+            <Help onClose={() => setShowingHelp(false)} />
+          </React.Suspense>
+        </ErrorBoundary>
       )}
     </Toplevel>
   );
