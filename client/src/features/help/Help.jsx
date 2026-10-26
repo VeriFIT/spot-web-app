@@ -95,7 +95,7 @@ export function Help(props) {
           <Typography variant="h6">About</Typography>
         </AccordionSummary>
         <AccordionDetails>
-          <Typography>
+          <Typography component="div">
             <Typography variant="body1" gutterBottom>
               This web application is built using the services of{" "}
               <a href="https://spot.lre.epita.fr/">Spot</a> running on a shared computer.
@@ -127,7 +127,7 @@ export function Help(props) {
           <Typography variant="h6">Operation modes</Typography>
         </AccordionSummary>
         <AccordionDetails>
-          <Typography variant="body1">
+          <Typography component="div" variant="body1">
             The application has four modes of operation that you can select at its top:
             <dl>
               <dt>
@@ -159,7 +159,7 @@ export function Help(props) {
           <Typography variant="h6">LTL Infix Syntax</Typography>
         </AccordionSummary>
         <AccordionDetails>
-          <Typography>
+          <Typography component="div">
             <Typography variant="body1" gutterBottom>
               To accommodate the syntaxes of different tools, Spot supports alternative
               representations for many operators. For the semantics of all operators see{" "}
@@ -190,7 +190,7 @@ export function Help(props) {
             <Typography variant="body2" color="primary">
               Boolean operators
             </Typography>
-            <Typography variant="body1" gutterBottom>
+            <Typography component="div" variant="body1" gutterBottom>
               The following Boolean operators are supported:
               {OpTable(
                 [
@@ -242,7 +242,7 @@ export function Help(props) {
             <Typography variant="body2" color="primary">
               Temporal Operators
             </Typography>
-            <Typography variant="body1" gutterBottom>
+            <Typography component="div" variant="body1" gutterBottom>
               The following binary operators are supported:
               {OpTable(
                 [
@@ -296,7 +296,7 @@ export function Help(props) {
           <Typography variant="h6">LTL Prefix Syntax</Typography>
         </AccordionSummary>
         <AccordionDetails>
-          <Typography>
+          <Typography component="div">
             <Typography variant="body1" gutterBottom>
               If (and only if!) parsing the input formula using the infix syntax failed,
               the application will attempt to parse the formula using a prefix syntax
@@ -306,7 +306,7 @@ export function Help(props) {
               <a href="http://tcs.legacy.ics.tkk.fi/users/tlatvala/scheck/">scheck</a> or{" "}
               <a href="http://www.ltl2dstar.de/">ltl2dstar</a> can read.
             </Typography>
-            <Typography variant="body1">
+            <Typography component="div" variant="body1">
               The following prefix operators are supported:
               {OpTable(
                 [
@@ -340,7 +340,7 @@ export function Help(props) {
           <Typography variant="h6">PSL Infix Syntax</Typography>
         </AccordionSummary>
         <AccordionDetails>
-          <Typography>
+          <Typography component="div">
             <Typography variant="body1" gutterBottom>
               A subset of PSL can be used to express linear properties that are more
               expressive than LTL. For the semantics of all operators see{" "}
@@ -361,7 +361,7 @@ export function Help(props) {
             <Typography variant="body2">
               The following binary operators are supported:
             </Typography>
-            <Typography variant="body1" gutterBottom>
+            <Typography component="div" variant="body1" gutterBottom>
               {OpTable(
                 [
                   [
@@ -390,7 +390,7 @@ export function Help(props) {
               The "Non-length-matching intersection" accepts words that match one operand
               and that have a prefix matching the other operand.
             </Typography>
-            <Typography variant="body2">
+            <Typography component="div" variant="body2">
               The following postfix unary operators are supported:
               {OpTable(
                 [
@@ -414,7 +414,7 @@ export function Help(props) {
                 "200px"
               )}
             </Typography>
-            <Typography variant="body2">
+            <Typography component="div" variant="body2">
               The following prefix unary operator is used as a function:
               {OpTable(
                 [
@@ -431,7 +431,7 @@ export function Help(props) {
             <Typography variant="body2" color="primary">
               SERE-LTL Bindings Operators
             </Typography>
-            <Typography variant="body1" gutterBottom>
+            <Typography component="div" variant="body1" gutterBottom>
               In the following, <Ltl f="r" /> denotes a SERE, and <Ltl f="f" /> denotes
               any PSL or LTL formula.
               {OpTable(
@@ -471,8 +471,8 @@ export function Help(props) {
           <Typography variant="h6">Acceptance conditions</Typography>
         </AccordionSummary>
         <AccordionDetails>
-          <Typography>
-            <Typography variant="body1" gutterBottom>
+          <Typography component="div">
+            <Typography component="div" variant="body1" gutterBottom>
               Formulas can be translated into ω-automata with various types of acceptance
               conditions (Generalized Büchi acceptance is selected by default).
               <dl>
