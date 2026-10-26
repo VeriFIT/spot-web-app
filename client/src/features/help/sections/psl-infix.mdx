@@ -1,0 +1,56 @@
+A subset of PSL can be used to express linear properties that are more expressive than
+LTL. For the semantics of all operators see
+[this document](https://spot.lre.epita.fr/tl.pdf).
+
+If you put the application in "expert mode", clicking on the dice will generate a random
+PSL formula instead of generating a random LTL formula.
+
+### Semi-Extended Regular Expression (SERE)
+
+Those semi-extended regular expressions match finite prefixes, and are constructed above
+Boolean expressions built using the standard Boolean operators. A new constant,
+<Ltl f="[*0]" /> represents the empty word.
+
+The following binary operators are supported:
+
+<OpTable width="140px">
+  <Op name="concatenation"><Ltl f=";" />, <Ltl f="##1" /></Op>
+  <Op name="fusion"><Ltl f=":" />, <Ltl f="##0" /></Op>
+  <Op name="union"><Ltl f="|" />, <Ltl f="||" />, <Ltl f={"\\/"} />, <Ltl f="+" /></Op>
+  <Op name="intersection"><Ltl f="&&" /></Op>
+  <Op name="NLM-intersection"><Ltl f="&" /></Op>
+</OpTable>
+
+The "Non-length-matching intersection" accepts words that match one operand and that have
+a prefix matching the other operand.
+
+The following postfix unary operators are supported:
+
+<OpTable width="200px">
+  <Op name="Kleene star"><Ltl f="*" />, <Ltl f="[*]" />, <Ltl f="[*i..j]" /></Op>
+  <Op name="Kleene plus"><Ltl f="[+]" /></Op>
+  <Op name="fusion star"><Ltl f="[:*]" />, <Ltl f="[:*i..j]" /></Op>
+  <Op name="fusion plus"><Ltl f="[:+]" /></Op>
+  <Op name="goto"><Ltl f="[->i..j]" /></Op>
+  <Op name="nonconseq. rep."><Ltl f="[=i..j]" /></Op>
+</OpTable>
+
+The following prefix unary operator is used as a function:
+
+<OpTable width="200px">
+  <Op name="first match"><Ltl f="first_match(…)" /></Op>
+</OpTable>
+
+### SERE-LTL Bindings Operators
+
+In the following, <Ltl f="r" /> denotes a SERE, and <Ltl f="f" /> denotes any PSL or LTL
+formula.
+
+<OpTable width="300px">
+  <Op name="universal suffix implication (a.k.a. trigger)"><Ltl f="{r}[]->f" />, <Ltl f="{r}|->f" />, <Ltl f="{r}(f)" /></Op>
+  <Op name="existential suffix implication (a.k.a. seq)"><Ltl f="{r}<>->f" /></Op>
+  <Op name="non-overlapping universal suffix implication"><Ltl f="{r}[]=>f" />, <Ltl f="{r}|=>f" /></Op>
+  <Op name="non-overlapping existential suffix implication"><Ltl f="{r}<>=>f" /></Op>
+  <Op name="weak closure"><Ltl f="{r}" /></Op>
+  <Op name="strong closure"><Ltl f="{r}!" /></Op>
+</OpTable>

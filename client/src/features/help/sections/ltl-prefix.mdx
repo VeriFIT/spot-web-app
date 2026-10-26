@@ -1,0 +1,30 @@
+If (and only if!) parsing the input formula using the infix syntax failed, the
+application will attempt to parse the formula using a prefix syntax (Polish notation)
+that should be a superset of what tools like
+[LBT](http://www.tcs.hut.fi/Software/maria/tools/lbt/),
+[LBTT](http://www.tcs.hut.fi/Software/lbtt/),
+[scheck](http://tcs.legacy.ics.tkk.fi/users/tlatvala/scheck/) or
+[ltl2dstar](http://www.ltl2dstar.de/) can read.
+
+The following prefix operators are supported:
+
+<OpTable width="120px">
+  <Op name="true"><Ltl f="t" /></Op>
+  <Op name="false"><Ltl f="f" /></Op>
+  <Op name="not"><Ltl f="!" /></Op>
+  <Op name="and"><Ltl f="&" /></Op>
+  <Op name="or"><Ltl f="|" /></Op>
+  <Op name="implication"><Ltl f="i" /></Op>
+  <Op name="equivalence"><Ltl f="e" /></Op>
+  <Op name="xor"><Ltl f="^" /></Op>
+  <Op name="next"><Ltl f="X" /></Op>
+  <Op name="eventually"><Ltl f="F" /></Op>
+  <Op name="globally"><Ltl f="G" /></Op>
+  <Op name="strong until"><Ltl f="U" /></Op>
+  <Op name="weak release"><Ltl f="V" /></Op>
+  <Op name="strong release"><Ltl f="M" /></Op>
+  <Op name="weak until"><Ltl f="W" /></Op>
+</OpTable>
+
+Double-quoted strings, as well as identifiers that do not look like operators, are
+assumed to be atomic propositions.

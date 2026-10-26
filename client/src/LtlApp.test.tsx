@@ -976,6 +976,14 @@ describe("app shell", () => {
     expect(screen.getByText("About")).toBeTruthy();
     expect(screen.getByText("Operation modes")).toBeTruthy();
 
+    // The section bodies are Markdown documents under `features/help/sections/`:
+    // a plain paragraph, an emphasised word and a link all come from there.
+    expect(
+      screen.getByText("The following prefix operators are supported:")
+    ).toBeTruthy();
+    expect(screen.getByText("colored").tagName).toBe("STRONG");
+    expect(screen.getByText("GNU GPL v3").tagName).toBe("A");
+
     fireEvent.click(screen.getByRole("button", { name: "close" }));
     expect(screen.queryByText("Operation modes")).toBeNull();
 

@@ -4,3 +4,6 @@ node_modules/
 public/
 package-lock.json
 README.md
+# Prettier's MDX printer moves inline JSX out of its paragraph, which splits the
+# sentences of the help prose into separate blocks. Those files are laid out by hand.
+src/**/*.mdx

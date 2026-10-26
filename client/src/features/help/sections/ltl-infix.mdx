@@ -1,0 +1,58 @@
+To accommodate the syntaxes of different tools, Spot supports alternative
+representations for many operators. For the semantics of all operators see
+[this document](https://spot.lre.epita.fr/tl.pdf).
+
+### Atomic propositions
+
+Use alphanumeric identifiers or double-quoted strings for atomic propositions, and
+parentheses for grouping. Identifiers cannot start with the letter of a prefix operator
+(<Ltl f="F" />, <Ltl f="G" />, or <Ltl f="X" />): for instance <Ltl f="GFa" /> means
+<Ltl f="G(F(a))" />. Use <Ltl f={'"GFa"'} />, with double quotes, if you really want to
+refer to <Ltl f="GFa" /> as a proposition. Conversely, infix letter operators are not
+assumed to be operators if they are part of an identifier: <Ltl f="aUb" /> is an atomic
+proposition, unlike <Ltl f="a&nbsp;U&nbsp;b" /> and <Ltl f="(a)U(b)" />.
+
+### Boolean constants
+
+Use <Ltl f="1" /> or <Ltl f="0" />, or also <Ltl f="true" /> or <Ltl f="false" /> (case
+insensitive).
+
+### Boolean operators
+
+The following Boolean operators are supported:
+
+<OpTable width="180px">
+  <Op name="and"><Ltl f="&" />, <Ltl f="&&" />, <Ltl f={"/\\"} /></Op>
+  <Op name="or"><Ltl f="|" />, <Ltl f="||" />, <Ltl f={"\\/"} />, <Ltl f="+" /></Op>
+  <Op name="implies"><Ltl f="->" />, <Ltl f="-->" />, <Ltl f="=>" /></Op>
+  <Op name="equivalent"><Ltl f="<->" />, <Ltl f="<-->" />, <Ltl f="<=>" /></Op>
+  <Op name="not"><Ltl f="!" /> (prefix), <Ltl f="~" /> (prefix)</Op>
+  <Op name="exclusive or"><Ltl f="^" />, <Ltl f="xor" /></Op>
+</OpTable>
+
+For compatibility with [Wring](http://www.ist.tugraz.at/staff/bloem/wring.html), atomic
+propositions can be followed by <Ltl f="=1" /> or <Ltl f="=0" /> to specify their
+polarity. For instance <Ltl f="a=0 U b=1" /> is equivalent to <Ltl f="!a U b" />.
+
+### Temporal Operators
+
+The following binary operators are supported:
+
+<OpTable width="120px">
+  <Op name="strong until"><Ltl f="U" /></Op>
+  <Op name="weak until"><Ltl f="W" /></Op>
+  <Op name="strong release"><Ltl f="M" /></Op>
+  <Op name="weak release"><Ltl f="R" />, <Ltl f="V" /></Op>
+</OpTable>
+
+The following unary (prefix) operators are supported:
+
+<OpTable width="120px">
+  <Op name="next"><Ltl f="X" />, <Ltl f="()" /></Op>
+  <Op name="eventually"><Ltl f="F" />, <Ltl f="<>" /></Op>
+  <Op name="globally"><Ltl f="G" />, <Ltl f="[]" /></Op>
+</OpTable>
+
+Additionally, <Ltl f="X[n]" />, <Ltl f="F[n..m]" />, and <Ltl f="G[n..m]" /> are
+syntactic sugar for differents types of repetition of the <Ltl f="X" /> operator. For
+instance <Ltl f="F[3..5]p" /> is short for <Ltl f="XXX(p|X(p|Xp))" />.

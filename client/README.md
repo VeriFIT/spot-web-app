@@ -71,6 +71,20 @@ endpoint and the field, which the panel shows in place of a result. Add a field 
 `spotapi.py`, and its declaration in `types.ts` and its check in `validate.ts` have to
 follow.
 
+## Help prose
+
+The text of the help panel is not written in JSX: each section is a Markdown document
+under `src/features/help/sections/`, compiled by `@mdx-js/rollup` (see the plugin in
+`vite.config.ts`; `src/mdx.d.ts` types the `*.mdx` imports). `Help.tsx` gives the
+documents the components they can use — `Ltl` for a formula chip, `OpTable`/`Op` for a
+table of notations, `Terms`/`Term` for a definition list — and maps Markdown paragraphs
+and `###` sub-headings onto `Typography`. Adding a section is a new `.mdx` file plus an
+entry in `SECTIONS`.
+
+Prettier skips those files (`.prettierignore`): its MDX printer pulls inline JSX out of
+the surrounding paragraph, which would split the sentences of the prose into separate
+blocks. They are laid out by hand.
+
 ## Notes
 
 - The app is always served under the `/app/` base path, and all API requests go to the
