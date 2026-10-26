@@ -1,7 +1,7 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import {
-  apiEndpoint,
+  API_ENDPOINT,
   compareUrl,
   randomUrl,
   rewriteUrl,
@@ -31,29 +31,20 @@ function options(overrides: Partial<RewriteOptions>): RewriteOptions {
   return { ...defaults, ...overrides };
 }
 
-/** Split a request URL into the part the server routes on and its parameters. */
+/**
+ * Split a request URL into the part the server routes on and its parameters.
+ * The URLs are relative, so they are resolved against an arbitrary origin.
+ */
 function inspect(url: string): { pathname: string; params: URLSearchParams } {
-  const parsed = new URL(url);
+  const parsed = new URL(url, "http://localhost");
   return { pathname: parsed.pathname, params: parsed.searchParams };
 }
 
-beforeEach(() => {
-  vi.stubEnv("VITE_API_ENDPOINT", "/api/");
-  vi.stubEnv("VITE_API_PORT", ":5000");
-});
-
-afterEach(() => {
-  vi.unstubAllEnvs();
-});
-
-describe("apiEndpoint", () => {
-  it("uses the API port when one is configured", () => {
-    expect(apiEndpoint()).toBe("http://localhost:5000/api/");
-  });
-
-  it("stays on the page origin in production, where no port is set", () => {
-    vi.stubEnv("VITE_API_PORT", "");
-    expect(apiEndpoint()).toBe("http://localhost:3000/api/");
+describe("api requests", () => {
+  it("stay on the page's own origin, so one rule serves dev and production", () => {
+    expect(API_ENDPOINT).toBe("/api/");
+    // A relative URL: the dev proxy and the production server both see /api/.
+    expect(rewriteUrl("a", defaults)).toBe("/api/rewrite/a?ff=o");
   });
 });
 

@@ -31,13 +31,6 @@ npm run build
 
 Build output goes to `client/build/`. For deployment, copy this directory to `/var/www/html/app/` (the app is served at https://spot.lre.epita.fr/app/).
 
-## Environment variables
-
-Environment variables are defined in `.env.development` and `.env.production` and must be prefixed with `VITE_` (Vite exposes them via `import.meta.env`):
-
-- `VITE_API_PORT` - Port suffix for the API (e.g. `:5000` in dev, empty in prod)
-- `VITE_API_ENDPOINT` - API path (e.g. `/api/`)
-
 ## Lint, types and format
 
 ```bash
@@ -55,8 +48,7 @@ npm run test:watch    # Vitest, watch mode
 ```
 
 Tests live next to the code as `*.test.ts(x)`. `vitest.config.ts` sets the jsdom
-environment, a `/app/` page URL (the API helpers read `window.location`) and the
-production API environment values. `src/api/client.test.ts` pins the query-string
+environment. `src/api/client.test.ts` pins the query-string
 contract with `spotapi.py`; `src/hooks/useApiQuery.test.ts` covers aborting, stale
 responses and error handling; `src/LtlApp.test.tsx` renders the tabs against a mocked
 `fetch`: the rewrite tab covers the delayed spinner, the error states and the option
@@ -71,6 +63,8 @@ time. All four tabs go through `src/api/client.ts` for their requests and throug
 
 ## Notes
 
-- The app is always served under the `/app/` base path.
+- The app is always served under the `/app/` base path, and all API requests go to the
+  relative `/api/` path: the dev server proxies it to port 5000, and in production the
+  same server that serves the pages serves the API, so no URL has to be configured.
 - Node.js 22+ is required; `.nvmrc` pins the 24.x LTS line.
 - Absolute paths to `/spot.css` and `/spot2.svg` are used and expected to be served from the site root.

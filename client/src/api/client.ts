@@ -22,22 +22,19 @@ export class ApiError extends Error {
 }
 
 /**
- * Base URL of the API.
+ * Base path of the API.
  *
- * VITE_API_ENDPOINT and VITE_API_PORT are defined in
- * client/.env.{production,development}. When developing, the API and the web
- * pages run on different ports; in production we assume they are served from
- * the same server.
+ * It is same-origin: in production the API is served by the same server as the
+ * pages, and in development the Vite dev server proxies this path to the Flask
+ * server (see `vite.config.js`). Being a path rather than an absolute URL means
+ * the client never has to be told where the API actually runs.
  */
-export function apiEndpoint(): string {
-  return (
-    window.location.protocol +
-    "//" +
-    (import.meta.env.VITE_API_PORT
-      ? window.location.hostname + import.meta.env.VITE_API_PORT
-      : window.location.host) +
-    import.meta.env.VITE_API_ENDPOINT
-  );
+export const API_ENDPOINT = "/api/";
+
+/** Query string for `params`, or `""` when there is nothing to append. */
+function queryString(params: URLSearchParams): string {
+  const query = params.toString();
+  return query === "" ? "" : "?" + query;
 }
 
 /** Fetch `url` and decode the JSON body, turning HTTP errors into `ApiError`. */
@@ -62,23 +59,23 @@ export interface RewriteOptions {
  * parameters (the actual contract with `spotapi.py`) can be tested directly.
  */
 export function rewriteUrl(formula: string, options: RewriteOptions): string {
-  const url = new URL(apiEndpoint() + "rewrite/" + encodeURIComponent(formula));
+  const params = new URLSearchParams();
 
   if (options.simplify) {
     for (const [key, enabled] of Object.entries(options.ltlsimp)) {
-      if (enabled) url.searchParams.append("r", key);
+      if (enabled) params.append("r", key);
     }
   }
-  if (options.delta2) url.searchParams.append("d", "2");
-  url.searchParams.append("ff", options.syntax);
+  if (options.delta2) params.append("d", "2");
+  params.append("ff", options.syntax);
 
   const unabbrev = Object.entries(options.unabbrev)
     .filter(([, enabled]) => enabled)
     .map(([key]) => key)
     .join("");
-  if (unabbrev !== "") url.searchParams.append("u", unabbrev);
+  if (unabbrev !== "") params.append("u", unabbrev);
 
-  return url.toString();
+  return API_ENDPOINT + "rewrite/" + encodeURIComponent(formula) + queryString(params);
 }
 
 /** Loader for `useApiQuery`: the request URL doubles as the query key. */
@@ -91,9 +88,9 @@ export function getRewrite(url: string, signal: AbortSignal): Promise<RewriteRes
  * other endpoints this one must not be cached, so it is fetched on demand.
  */
 export function randomUrl(expert: boolean): string {
-  const url = new URL(apiEndpoint() + "random");
-  if (expert) url.searchParams.append("p", "1");
-  return url.toString();
+  const params = new URLSearchParams();
+  if (expert) params.append("p", "1");
+  return API_ENDPOINT + "random" + queryString(params);
 }
 
 /** Loader for the random-formula button of the formula input. */
@@ -106,7 +103,7 @@ export function getRandomFormula(
 
 /** URL of the versions list; see `spotapi.py:versions`. */
 export function versionsUrl(): string {
-  return new URL(apiEndpoint() + "versions").toString();
+  return API_ENDPOINT + "versions";
 }
 
 /** Loader for the versions menu. */
@@ -119,7 +116,7 @@ export function getVersions(
 
 /** URL of the study request for `formula`; see `spotapi.py:study`. */
 export function studyUrl(formula: string): string {
-  return new URL(apiEndpoint() + "study/" + encodeURIComponent(formula)).toString();
+  return API_ENDPOINT + "study/" + encodeURIComponent(formula);
 }
 
 /** Loader for the study tab. */
@@ -129,9 +126,9 @@ export function getStudy(url: string, signal: AbortSignal): Promise<StudyRespons
 
 /** URL of the comparison of `formula` (first) with `formula2` (second). */
 export function compareUrl(formula: string, formula2: string): string {
-  const url = new URL(apiEndpoint() + "compare/" + encodeURIComponent(formula));
-  url.searchParams.append("g", formula2);
-  return url.toString();
+  const params = new URLSearchParams();
+  params.append("g", formula2);
+  return API_ENDPOINT + "compare/" + encodeURIComponent(formula) + queryString(params);
 }
 
 /** Loader for the compare tab. */
@@ -156,20 +153,20 @@ export interface TranslateOptions {
 
 /** Build the translation request URL; the counterpart of `spotapi.py:translate`. */
 export function translateUrl(formula: string, options: TranslateOptions): string {
-  const url = new URL(apiEndpoint() + "translate/" + encodeURIComponent(formula));
+  const params = new URLSearchParams();
 
-  url.searchParams.append("a", options.acc);
-  url.searchParams.append("p", options.autpref);
-  url.searchParams.append("l", options.optlevel);
+  params.append("a", options.acc);
+  params.append("p", options.autpref);
+  params.append("l", options.optlevel);
   if (options.acc === "p") {
-    url.searchParams.append("m", options.minmax);
-    url.searchParams.append("e", options.oddeven);
+    params.append("m", options.minmax);
+    params.append("e", options.oddeven);
   }
   for (const [key, enabled] of Object.entries(options.transopts)) {
-    if (enabled) url.searchParams.append("o", key);
+    if (enabled) params.append("o", key);
   }
 
-  return url.toString();
+  return API_ENDPOINT + "translate/" + encodeURIComponent(formula) + queryString(params);
 }
 
 /** Loader for the translate tab. */

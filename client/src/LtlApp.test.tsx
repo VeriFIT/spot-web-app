@@ -92,9 +92,17 @@ function OptionsHarness({
 
 function ignoreParseError() {}
 
+/**
+ * Parse a mocked request URL. The app asks for `/api/` paths, relative to the
+ * page's own origin, so resolve them against an arbitrary one.
+ */
+function requestUrl(url: string) {
+  return new URL(url, "http://localhost");
+}
+
 /** Query parameters of a mocked request URL. */
 function searchParams(url: string) {
-  return new URL(url).searchParams;
+  return requestUrl(url).searchParams;
 }
 
 /**
@@ -393,7 +401,7 @@ describe("LtlInput", () => {
     fireEvent.click(randomButton());
 
     expect(requests).toHaveLength(1);
-    const url = new URL(requests[0].url);
+    const url = requestUrl(requests[0].url);
     expect(url.pathname).toBe("/api/random");
     // LTL unless expert mode asks for PSL.
     expect(url.searchParams.has("p")).toBe(false);
@@ -413,7 +421,7 @@ describe("LtlInput", () => {
     fireEvent.click(randomButton());
 
     expect(requests).toHaveLength(1);
-    expect(new URL(requests[0].url).searchParams.get("p")).toBe("1");
+    expect(requestUrl(requests[0].url).searchParams.get("p")).toBe("1");
   });
 
   it("reports a random formula request that failed", async () => {
@@ -528,7 +536,7 @@ describe("LtlStudy", () => {
     render(<LtlStudy formula="G a" handleAnyParseError={handleAnyParseError} />);
 
     expect(requests).toHaveLength(1);
-    expect(new URL(requests[0].url).pathname).toBe("/api/study/G%20a");
+    expect(requestUrl(requests[0].url).pathname).toBe("/api/study/G%20a");
 
     const response = {
       mp_class_text: "a safety property",
@@ -587,7 +595,7 @@ describe("LtlCompare", () => {
     render(<CompareTab handleAnyParseError={handleAnyParseError} />);
 
     expect(requests).toHaveLength(1);
-    const url = new URL(requests[0].url);
+    const url = requestUrl(requests[0].url);
     expect(url.pathname).toBe("/api/compare/a%20U%20b");
     expect(url.searchParams.get("g")).toBe("b U a");
 
@@ -654,7 +662,7 @@ describe("LtlTranslate", () => {
     render(<TranslateTab />);
 
     expect(requests).toHaveLength(1);
-    const url = new URL(requests[0].url);
+    const url = requestUrl(requests[0].url);
     expect(url.pathname).toBe("/api/translate/a%20U%20b");
     expect([...url.searchParams.entries()]).toEqual([
       ["a", "p"],
@@ -894,7 +902,7 @@ describe("Versions", () => {
     render(<Versions />);
 
     expect(requests).toHaveLength(1);
-    expect(new URL(requests[0].url).pathname).toBe("/api/versions");
+    expect(requestUrl(requests[0].url).pathname).toBe("/api/versions");
 
     await act(async () =>
       requests[0].respond([
@@ -973,7 +981,7 @@ describe("LtlApp expert mode", () => {
   /** Random-formula requests, i.e. those the dice buttons sent. */
   function randomRequests(requests: PendingRequest[]) {
     return requests
-      .map((request) => new URL(request.url))
+      .map((request) => requestUrl(request.url))
       .filter((url) => url.pathname === "/api/random");
   }
 
@@ -1010,7 +1018,7 @@ describe("LtlApp options", () => {
   /** Query parameters of the rewrite requests, in the order they were sent. */
   function rewriteParams(requests: PendingRequest[]) {
     return requests
-      .map((request) => new URL(request.url))
+      .map((request) => requestUrl(request.url))
       .filter((url) => url.pathname.startsWith("/api/rewrite/"))
       .map((url) => url.searchParams);
   }
