@@ -11,40 +11,34 @@ import MenuItem from "@mui/material/MenuItem";
 // grouped semantically and the legend is announced. Material's `styled` drops
 // the polymorphic `component` prop, hence the assertions to `FormControl`.
 
+/** A bordered group of options, drawn in `color`. */
+function optionGroup(color: "primary" | "secondary") {
+  return styled(FormControl)(({ theme }) => ({
+    padding: 8,
+    margin: 5,
+    borderWidth: 1,
+    borderStyle: "solid",
+    borderRadius: 4,
+    borderColor: theme.palette[color].main,
+    "& legend": {
+      paddingLeft: 8,
+      paddingRight: 8,
+      backgroundColor: "white",
+      color: theme.palette[color].light,
+    },
+    // Only the expert legend is drawn in a stronger colour while focused; the
+    // primary one already uses its light shade.
+    ...(color === "secondary"
+      ? { "& legend.Mui-focused": { color: theme.palette.secondary.main } }
+      : {}),
+  })) as typeof FormControl;
+}
+
 /** Bordered group of options that belong to the main task of the panel. */
-export const OptionGroup = styled(FormControl)(({ theme }) => ({
-  padding: 8,
-  margin: 5,
-  borderWidth: 1,
-  borderStyle: "solid",
-  borderRadius: 4,
-  borderColor: theme.palette.primary.main,
-  "& legend": {
-    paddingLeft: 8,
-    paddingRight: 8,
-    backgroundColor: "white",
-    color: theme.palette.primary.light,
-  },
-})) as typeof FormControl;
+export const OptionGroup = optionGroup("primary");
 
 /** Bordered group of options that only expert mode reveals. */
-export const ExpertOptionGroup = styled(FormControl)(({ theme }) => ({
-  padding: 8,
-  margin: 5,
-  borderWidth: 1,
-  borderStyle: "solid",
-  borderRadius: 4,
-  borderColor: theme.palette.secondary.main,
-  "& legend": {
-    paddingLeft: 8,
-    paddingRight: 8,
-    backgroundColor: "white",
-    color: theme.palette.secondary.light,
-  },
-  "& legend.Mui-focused": {
-    color: theme.palette.secondary.main,
-  },
-})) as typeof FormControl;
+export const ExpertOptionGroup = optionGroup("secondary");
 
 /** The closed state of a syntax or acceptance menu. */
 export const ChoiceListItem = styled(ListItemButton)(({ theme }) => ({
