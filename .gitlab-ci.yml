@@ -2,14 +2,22 @@ stages:
   - check
   - build
 
+# npm caches the packages it downloads. Put that cache inside the project so
+# the cache below can carry it to the next pipeline.
+variables:
+  npm_config_cache: "$CI_PROJECT_DIR/client/.npm"
+
 default:
   image: gitlab-registry.lre.epita.fr/spot/buildenv/debian-node
   cache:
     key:
       files:
         - client/package-lock.json
+    # Cache the downloads, not node_modules: `npm ci` deletes node_modules and
+    # rebuilds it from scratch, so caching it only moved a large tree in and
+    # out of every job.
     paths:
-      - client/node_modules/
+      - client/.npm/
 
 lint:
   stage: check
