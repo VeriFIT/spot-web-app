@@ -142,22 +142,6 @@ function queryOf(params: URLSearchParams): string {
   return query === "" ? "" : "?" + query;
 }
 
-/** Encode the options as a query string; `""` when everything is at its default. */
-export function searchFromState(
-  options: Options,
-  formula: string,
-  formula2: string
-): string {
-  const params = new URLSearchParams();
-  addPanel(params, "", { options, formula, formula2 });
-  return queryOf(params);
-}
-
-/** The options and formulas a URL asks for, with the defaults for the rest. */
-export function stateFromSearch(search: string, action: number): PanelState {
-  return readPanel(new URLSearchParams(search), "", action);
-}
-
 /**
  * The query string of a whole page: the primary panel's parameters, then the
  * duplicate panel's when it is open.

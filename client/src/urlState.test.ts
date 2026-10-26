@@ -7,8 +7,6 @@ import {
   modeOfAction,
   panelsFromSearch,
   searchFromPanels,
-  searchFromState,
-  stateFromSearch,
 } from "./urlState";
 import type { PanelState } from "./urlState";
 
@@ -39,15 +37,24 @@ describe("mode paths", () => {
   });
 });
 
-describe("searchFromState", () => {
+/** One panel made of the options and formulas a test cares about. */
+function panel(
+  options: PanelState["options"] = INITIAL_OPTIONS,
+  formula = "",
+  formula2 = ""
+): PanelState {
+  return { options, formula, formula2 };
+}
+
+describe("searchFromPanels with one panel", () => {
   it("writes nothing when everything is at its default", () => {
-    expect(searchFromState(INITIAL_OPTIONS, "", "")).toBe("");
+    expect(searchFromPanels(panel(), null)).toBe("");
   });
 
   it("writes the formulas and the options that differ", () => {
     const options = { ...INITIAL_OPTIONS, syntax: "l", acc: "p", minmax: "max" };
 
-    expect(searchFromState(options, "a U b", "b U a")).toBe(
+    expect(searchFromPanels(panel(options, "a U b", "b U a"), null)).toBe(
       "?f=a+U+b&g=b+U+a&syntax=l&acc=p&minmax=max"
     );
   });
@@ -57,7 +64,7 @@ describe("searchFromState", () => {
 
     // They change what the panel shows, not what it asks the server, but they
     // are part of the view a link should restore.
-    expect(searchFromState(options, "", "")).toBe("?expert=1&hideoptions=1");
+    expect(searchFromPanels(panel(options), null)).toBe("?expert=1&hideoptions=1");
   });
 
   it("writes a flag map as its enabled keys", () => {
@@ -70,11 +77,13 @@ describe("searchFromState", () => {
 
     // The simplifications that are on by default are gone, so the URL lists
     // exactly what the response depends on.
-    expect(searchFromState(options, "", "")).toBe("?simp=br,eu,lc&unab=F&trans=complete");
+    expect(searchFromPanels(panel(options), null)).toBe(
+      "?simp=br,eu,lc&unab=F&trans=complete"
+    );
   });
 });
 
-describe("stateFromSearch", () => {
+describe("panelsFromSearch with one panel", () => {
   it("reads back what it wrote", () => {
     const options = {
       ...INITIAL_OPTIONS,
@@ -94,8 +103,8 @@ describe("stateFromSearch", () => {
       transopts: { ...INITIAL_OPTIONS.transopts, complete: true, colored: true },
     };
 
-    const search = searchFromState(options, "G a", "F b");
-    const state = stateFromSearch(search, 2);
+    const search = searchFromPanels(panel(options, "G a", "F b"), null);
+    const state = panelsFromSearch(search, 2).primary;
 
     expect(state.options).toEqual(options);
     expect(state.formula).toBe("G a");
@@ -103,7 +112,7 @@ describe("stateFromSearch", () => {
   });
 
   it("falls back to the defaults for an empty URL", () => {
-    const state = stateFromSearch("", 3);
+    const state = panelsFromSearch("", 3).primary;
 
     expect(state.options).toEqual(INITIAL_OPTIONS);
     expect(state.formula).toBe("");
@@ -111,10 +120,10 @@ describe("stateFromSearch", () => {
   });
 
   it("ignores values it does not recognise", () => {
-    const { options } = stateFromSearch(
+    const { options } = panelsFromSearch(
       "?syntax=zzz&acc=q&pref=x&opt=s&minmax=nope&oddeven=lots&simplify=2&delta2=yes",
       3
-    );
+    ).primary;
 
     expect(options.syntax).toBe("o");
     expect(options.acc).toBe("g");
@@ -127,7 +136,7 @@ describe("stateFromSearch", () => {
   });
 
   it("takes a flag list as the complete set of enabled flags", () => {
-    const { options } = stateFromSearch("?simp=lc&unab=Q", 0);
+    const { options } = panelsFromSearch("?simp=lc&unab=Q", 0).primary;
 
     expect(options.ltlsimp).toEqual({
       br: false,
@@ -153,9 +162,7 @@ describe("the duplicate panel", () => {
   const fresh: PanelState = { options: INITIAL_OPTIONS, formula: "", formula2: "" };
 
   it("adds nothing while it is closed", () => {
-    expect(searchFromPanels(primary, null)).toBe(
-      searchFromState(primary.options, "G a", "")
-    );
+    expect(searchFromPanels(primary, null)).toBe("?f=G+a");
   });
 
   it("writes its mode alone when everything else is at its default", () => {
