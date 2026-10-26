@@ -1,3 +1,11 @@
+// Roboto, self-hosted: the regular, medium and bold the panels ask for, plus
+// the italic of the help prose. The theme names Roboto first, so the app paints
+// with it, and the faces are served from the bundle, not from a font CDN.
+import "@fontsource/roboto/400.css";
+import "@fontsource/roboto/400-italic.css";
+import "@fontsource/roboto/500.css";
+import "@fontsource/roboto/700.css";
+
 import { createRoot } from "react-dom/client";
 import App from "./App";
 import CssBaseline from "@mui/material/CssBaseline";

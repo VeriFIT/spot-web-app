@@ -6,6 +6,9 @@ import { createTheme } from "@mui/material/styles";
  */
 export const theme = createTheme({
   typography: {
+    // Roboto, loaded from `@fontsource/roboto` in `index.tsx`; the rest are
+    // the fallbacks for the glyphs Roboto has no face for.
+    fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
     fontSize: 14,
     body1: {
       fontSize: "0.875rem",
