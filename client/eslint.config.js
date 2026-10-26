@@ -6,9 +6,9 @@ import jsxA11y from "eslint-plugin-jsx-a11y";
 import tseslint from "typescript-eslint";
 import prettier from "eslint-config-prettier";
 
-// jsx-a11y's recommended rules are surfacing real problems (see section 6 of
-// modernize.md) that cannot all be fixed at once. Keep them visible as warnings
-// for now, and promote them to errors once the accessibility pass is done.
+// jsx-a11y's recommended rules are surfacing real problems that cannot all be
+// fixed at once. Keep them visible as warnings for now, and promote them to
+// errors once the accessibility pass is done.
 const a11yAsWarnings = Object.fromEntries(
   Object.keys(jsxA11y.flatConfigs.recommended.rules).map((rule) => [rule, "warn"])
 );
@@ -40,8 +40,7 @@ export default [
       ...a11yAsWarnings,
       "react-hooks/rules-of-hooks": "error",
       "react-hooks/exhaustive-deps": "warn",
-      // PropTypes are not used in this project; types come from TypeScript
-      // during the migration described in section 2.1 of modernize.md.
+      // PropTypes are not used in this project; types come from TypeScript.
       "react/prop-types": "off",
       // Plain quotation marks in the help prose are intentional and render
       // correctly; escaping them would only obscure the text.
