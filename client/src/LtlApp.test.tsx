@@ -26,6 +26,8 @@ interface PendingRequest {
   respond: (body: unknown) => void;
   /** Answer the request with an HTTP error status. */
   fail: (status: number, statusText: string) => void;
+  /** Reject the request, as `fetch` does when the network is unreachable. */
+  reject: (error: unknown) => void;
 }
 
 /**
@@ -37,7 +39,7 @@ function stubFetch() {
   const requests: PendingRequest[] = [];
   const fetchMock = vi.fn(
     (input: RequestInfo | URL) =>
-      new Promise<Response>((resolve) => {
+      new Promise<Response>((resolve, reject) => {
         requests.push({
           url: String(input),
           respond: (body) =>
@@ -54,6 +56,7 @@ function stubFetch() {
               statusText,
               json: async () => ({}),
             } as unknown as Response),
+          reject,
         });
       })
   );
@@ -411,6 +414,64 @@ describe("LtlInput", () => {
 
     expect(requests).toHaveLength(1);
     expect(new URL(requests[0].url).searchParams.get("p")).toBe("1");
+  });
+
+  it("reports a random formula request that failed", async () => {
+    const { requests } = stubFetch();
+    const setFormula = vi.fn();
+    render(<LtlInput {...inputProps({ defaultValue: "a U b", setFormula })} />);
+
+    fireEvent.click(randomButton());
+    await act(async () => requests[0].fail(500, "Internal Server Error"));
+
+    // The failure is visible, and the formula in the field is left alone.
+    expect(screen.getByText(/Could not fetch a random formula/)).toBeTruthy();
+    expect(screen.getByText(/500 Internal Server Error/)).toBeTruthy();
+    expect(screen.getByText(MEMORY_NOTE)).toBeTruthy();
+    expect(readInput().value).toBe("a U b");
+    expect(setFormula).not.toHaveBeenCalled();
+
+    // The next attempt clears the message and fills the field as usual.
+    fireEvent.click(randomButton());
+    expect(screen.queryByText(/Could not fetch a random formula/)).toBeNull();
+
+    await act(async () => requests[1].respond("G a"));
+
+    expect(readInput().value).toBe("G a");
+    expect(setFormula).toHaveBeenCalledWith("G a");
+  });
+
+  it("reports a random formula request that could not reach the server", async () => {
+    const { requests } = stubFetch();
+    const setFormula = vi.fn();
+    render(<LtlInput {...inputProps({ setFormula })} />);
+
+    fireEvent.click(randomButton());
+    await act(async () => requests[0].reject(new TypeError("Failed to fetch")));
+
+    expect(screen.getByText("Failed to fetch")).toBeTruthy();
+    expect(readInput().value).toBe("");
+    expect(setFormula).not.toHaveBeenCalled();
+  });
+
+  it("keeps only the newest random formula when clicked twice", async () => {
+    const { requests } = stubFetch();
+    const setFormula = vi.fn();
+    render(<LtlInput {...inputProps({ setFormula })} />);
+
+    fireEvent.click(randomButton());
+    fireEvent.click(randomButton());
+
+    expect(requests).toHaveLength(2);
+
+    // The second answer wins, even though the first one arrives last.
+    await act(async () => requests[1].respond("G b"));
+    await act(async () => requests[0].respond("G a"));
+
+    expect(readInput().value).toBe("G b");
+    expect(setFormula).toHaveBeenCalledTimes(1);
+    expect(setFormula).toHaveBeenCalledWith("G b");
+    expect(screen.queryByText(/Could not fetch a random formula/)).toBeNull();
   });
 
   it("replaces a pending edit with the random formula", async () => {
