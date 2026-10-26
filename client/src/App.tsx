@@ -205,16 +205,16 @@ function LtlApp(props: LtlAppProps) {
   );
 }
 function LtlApps({ action }: { action: number }) {
-  // A second panel can be opened next to the first one, and the help panel can
-  // be opened over them. Both are all-or-nothing, so a flag says it all.
-  const [duplicated, setDuplicated] = React.useState(false);
+  // The help panel can be opened over the panels. It is transient, so a flag
+  // says it all; the duplicate panel, on the other hand, is part of the view,
+  // so its state is in the URL with the primary panel's.
   const [showingHelp, setShowingHelp] = React.useState(false);
-  const urlState = useUrlState(action);
+  const { primary, secondary, openSecondary, closeSecondary } = useUrlState(action);
 
   return (
     <Toplevel>
       <LtlApp
-        state={urlState}
+        state={primary}
         topright={
           <React.Fragment>
             <WindowButton
@@ -226,9 +226,9 @@ function LtlApps({ action }: { action: number }) {
               <HelpIcon />
             </WindowButton>
             <WindowButton
-              disabled={duplicated}
+              disabled={secondary !== null}
               color="primary"
-              onClick={() => setDuplicated(true)}
+              onClick={openSecondary}
               aria-label="dup"
             >
               <DupeIcon />
@@ -236,14 +236,11 @@ function LtlApps({ action }: { action: number }) {
           </React.Fragment>
         }
       />
-      {duplicated && (
+      {secondary !== null && (
         <LtlApp
+          state={secondary}
           topright={
-            <WindowButton
-              color="primary"
-              onClick={() => setDuplicated(false)}
-              aria-label="close"
-            >
+            <WindowButton color="primary" onClick={closeSecondary} aria-label="close">
               <CloseIcon />
             </WindowButton>
           }

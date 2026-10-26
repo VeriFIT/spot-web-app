@@ -23,6 +23,111 @@ export function modeOfAction(action: number): Mode {
 /** Where a bare `/app/` lands. */
 export const DEFAULT_MODE = modeOfAction(INITIAL_OPTIONS.action);
 
+/** One panel: the formulas it works on and the options that change its answer. */
+export interface PanelState {
+  options: Options;
+  formula: string;
+  formula2: string;
+}
+
+/**
+ * The duplicate panel's parameters are the primary panel's, prefixed: the
+ * primary panel's mode is the path segment, so it needs no prefix of its own,
+ * and `p2-mode` doubles as the flag saying the second panel is open.
+ */
+const SECONDARY_PREFIX = "p2-";
+const SECONDARY_MODE = SECONDARY_PREFIX + "mode";
+
+/** Add one panel's parameters to `params`; everything at its default is left out. */
+function addPanel(params: URLSearchParams, prefix: string, panel: PanelState): void {
+  const { options, formula, formula2 } = panel;
+
+  if (formula !== "") params.set(prefix + "f", formula);
+  if (formula2 !== "") params.set(prefix + "g", formula2);
+
+  if (options.syntax !== INITIAL_OPTIONS.syntax) {
+    params.set(prefix + "syntax", options.syntax);
+  }
+  if (options.simplify !== INITIAL_OPTIONS.simplify) {
+    params.set(prefix + "simplify", options.simplify ? "1" : "0");
+  }
+  const simplifications = enabledFlags(options.ltlsimp);
+  if (simplifications !== enabledFlags(INITIAL_OPTIONS.ltlsimp)) {
+    params.set(prefix + "simp", simplifications);
+  }
+  if (options.delta2 !== INITIAL_OPTIONS.delta2) {
+    params.set(prefix + "delta2", options.delta2 ? "1" : "0");
+  }
+  const unabbreviations = enabledFlags(options.unabbrev);
+  if (unabbreviations !== "") params.set(prefix + "unab", unabbreviations);
+
+  if (options.acc !== INITIAL_OPTIONS.acc) params.set(prefix + "acc", options.acc);
+  if (options.autpref !== INITIAL_OPTIONS.autpref) {
+    params.set(prefix + "pref", options.autpref);
+  }
+  if (options.optlevel !== INITIAL_OPTIONS.optlevel) {
+    params.set(prefix + "opt", options.optlevel);
+  }
+  if (options.minmax !== INITIAL_OPTIONS.minmax) {
+    params.set(prefix + "minmax", options.minmax);
+  }
+  if (options.oddeven !== INITIAL_OPTIONS.oddeven) {
+    params.set(prefix + "oddeven", options.oddeven);
+  }
+  const translationOptions = enabledFlags(options.transopts);
+  if (translationOptions !== "") params.set(prefix + "trans", translationOptions);
+}
+
+/** One panel's state as `params` describes it, with the defaults for the rest. */
+function readPanel(params: URLSearchParams, prefix: string, action: number): PanelState {
+  return {
+    options: {
+      ...INITIAL_OPTIONS,
+      action,
+      syntax: choice(
+        params,
+        prefix + "syntax",
+        ["o", "l", "i", "g"],
+        INITIAL_OPTIONS.syntax
+      ),
+      simplify: flag(params, prefix + "simplify", INITIAL_OPTIONS.simplify),
+      ltlsimp: flags(INITIAL_OPTIONS.ltlsimp, params.get(prefix + "simp")),
+      delta2: flag(params, prefix + "delta2", INITIAL_OPTIONS.delta2),
+      unabbrev: flags(INITIAL_OPTIONS.unabbrev, params.get(prefix + "unab")),
+      acc: choice(
+        params,
+        prefix + "acc",
+        ["m", "c", "b", "g", "p", "e"],
+        INITIAL_OPTIONS.acc
+      ),
+      autpref: choice(params, prefix + "pref", ["s", "d", "a"], INITIAL_OPTIONS.autpref),
+      optlevel: choice(params, prefix + "opt", ["h", "m", "l"], INITIAL_OPTIONS.optlevel),
+      minmax: choice(
+        params,
+        prefix + "minmax",
+        ["any", "min", "max"],
+        INITIAL_OPTIONS.minmax
+      ),
+      oddeven: choice(
+        params,
+        prefix + "oddeven",
+        ["any", "odd", "even"],
+        INITIAL_OPTIONS.oddeven
+      ),
+      transopts: flags(INITIAL_OPTIONS.transopts, params.get(prefix + "trans")),
+    },
+    formula: params.get(prefix + "f") ?? "",
+    formula2: params.get(prefix + "g") ?? "",
+  };
+}
+
+/** `?a=b`, or `""` when there is no parameter to write. */
+function queryOf(params: URLSearchParams): string {
+  // Keep the flag lists readable: a comma is legal in a query string.
+  const query = params.toString().replace(/%2C/g, ",");
+  return query === "" ? "" : "?" + query;
+}
+
 /** Encode the options as a query string; `""` when everything is at its default. */
 export function searchFromState(
   options: Options,
@@ -30,65 +135,45 @@ export function searchFromState(
   formula2: string
 ): string {
   const params = new URLSearchParams();
-
-  if (formula !== "") params.set("f", formula);
-  if (formula2 !== "") params.set("g", formula2);
-
-  if (options.syntax !== INITIAL_OPTIONS.syntax) params.set("syntax", options.syntax);
-  if (options.simplify !== INITIAL_OPTIONS.simplify) {
-    params.set("simplify", options.simplify ? "1" : "0");
-  }
-  const simplifications = enabledFlags(options.ltlsimp);
-  if (simplifications !== enabledFlags(INITIAL_OPTIONS.ltlsimp)) {
-    params.set("simp", simplifications);
-  }
-  if (options.delta2 !== INITIAL_OPTIONS.delta2) {
-    params.set("delta2", options.delta2 ? "1" : "0");
-  }
-  const unabbreviations = enabledFlags(options.unabbrev);
-  if (unabbreviations !== "") params.set("unab", unabbreviations);
-
-  if (options.acc !== INITIAL_OPTIONS.acc) params.set("acc", options.acc);
-  if (options.autpref !== INITIAL_OPTIONS.autpref) params.set("pref", options.autpref);
-  if (options.optlevel !== INITIAL_OPTIONS.optlevel) params.set("opt", options.optlevel);
-  if (options.minmax !== INITIAL_OPTIONS.minmax) params.set("minmax", options.minmax);
-  if (options.oddeven !== INITIAL_OPTIONS.oddeven) {
-    params.set("oddeven", options.oddeven);
-  }
-  const translationOptions = enabledFlags(options.transopts);
-  if (translationOptions !== "") params.set("trans", translationOptions);
-
-  // Keep the flag lists readable: a comma is legal in a query string.
-  const query = params.toString().replace(/%2C/g, ",");
-  return query === "" ? "" : "?" + query;
+  addPanel(params, "", { options, formula, formula2 });
+  return queryOf(params);
 }
 
 /** The options and formulas a URL asks for, with the defaults for the rest. */
-export function stateFromSearch(
+export function stateFromSearch(search: string, action: number): PanelState {
+  return readPanel(new URLSearchParams(search), "", action);
+}
+
+/**
+ * The query string of a whole page: the primary panel's parameters, then the
+ * duplicate panel's when it is open.
+ */
+export function searchFromPanels(
+  primary: PanelState,
+  secondary: PanelState | null
+): string {
+  const params = new URLSearchParams();
+  addPanel(params, "", primary);
+  if (secondary !== null) {
+    // The answer to "is the second panel open?" is the presence of its mode,
+    // so that one parameter is always written.
+    params.set(SECONDARY_MODE, modeOfAction(secondary.options.action));
+    addPanel(params, SECONDARY_PREFIX, secondary);
+  }
+  return queryOf(params);
+}
+
+/** Both panels a URL describes; `secondary` is null when the duplicate is closed. */
+export function panelsFromSearch(
   search: string,
   action: number
-): { options: Options; formula: string; formula2: string } {
+): { primary: PanelState; secondary: PanelState | null } {
   const params = new URLSearchParams(search);
-
-  return {
-    options: {
-      ...INITIAL_OPTIONS,
-      action,
-      syntax: choice(params, "syntax", ["o", "l", "i", "g"], INITIAL_OPTIONS.syntax),
-      simplify: flag(params, "simplify", INITIAL_OPTIONS.simplify),
-      ltlsimp: flags(INITIAL_OPTIONS.ltlsimp, params.get("simp")),
-      delta2: flag(params, "delta2", INITIAL_OPTIONS.delta2),
-      unabbrev: flags(INITIAL_OPTIONS.unabbrev, params.get("unab")),
-      acc: choice(params, "acc", ["m", "c", "b", "g", "p", "e"], INITIAL_OPTIONS.acc),
-      autpref: choice(params, "pref", ["s", "d", "a"], INITIAL_OPTIONS.autpref),
-      optlevel: choice(params, "opt", ["h", "m", "l"], INITIAL_OPTIONS.optlevel),
-      minmax: choice(params, "minmax", ["any", "min", "max"], INITIAL_OPTIONS.minmax),
-      oddeven: choice(params, "oddeven", ["any", "odd", "even"], INITIAL_OPTIONS.oddeven),
-      transopts: flags(INITIAL_OPTIONS.transopts, params.get("trans")),
-    },
-    formula: params.get("f") ?? "",
-    formula2: params.get("g") ?? "",
-  };
+  const primary = readPanel(params, "", action);
+  const mode = params.get(SECONDARY_MODE);
+  if (mode === null) return { primary, secondary: null };
+  const secondaryAction = actionOfMode(mode) ?? INITIAL_OPTIONS.action;
+  return { primary, secondary: readPanel(params, SECONDARY_PREFIX, secondaryAction) };
 }
 
 /** `a,b` for the flags that are on, in the declaration order of `checkedFlags`. */

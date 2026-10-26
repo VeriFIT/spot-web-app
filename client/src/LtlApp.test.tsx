@@ -1094,6 +1094,71 @@ describe("app URL", () => {
     expect(location()).toBe("/rewrite?f=G+a");
   });
 
+  it("opens the second panel in the URL, and closes it again", () => {
+    stubFetch();
+    renderApp(["/translate?f=a"]);
+
+    fireEvent.click(screen.getByRole("button", { name: "dup" }));
+
+    // A fresh panel is at its defaults, so only its mode is written: that
+    // parameter is also the flag saying the panel is open.
+    expect(location()).toBe("/translate?f=a&p2-mode=translate");
+    expect(screen.getAllByLabelText("Input formula")).toHaveLength(2);
+
+    fireEvent.click(screen.getByRole("button", { name: "close" }));
+
+    expect(location()).toBe("/translate?f=a");
+    expect(screen.getAllByLabelText("Input formula")).toHaveLength(1);
+  });
+
+  it("keeps the second panel's tab and formula in the URL", () => {
+    const { requests } = stubFetch();
+    renderApp(["/translate"]);
+    fireEvent.click(screen.getByRole("button", { name: "dup" }));
+
+    // Each panel has its own tabs; the second panel's come after the first's.
+    fireEvent.click(screen.getAllByRole("tab", { name: "Study" })[1]);
+    expect(location()).toBe("/translate?p2-mode=study");
+
+    const secondInput = screen.getAllByLabelText("Input formula")[1];
+    fireEvent.change(secondInput, { target: { value: "G a" } });
+    fireEvent.keyDown(secondInput, { key: "Enter" });
+
+    expect(location()).toBe("/translate?p2-mode=study&p2-f=G+a");
+
+    // The formula went to the tab the second panel is on, and the first panel
+    // asked for nothing: it has no formula.
+    expect(requests).toHaveLength(1);
+    expect(requestUrl(requests[0].url).pathname).toBe("/api/study/G%20a");
+  });
+
+  it("restores two panels, each in its own mode, from a link", () => {
+    const { requests } = stubFetch();
+    renderApp(["/rewrite?f=G+a&p2-mode=compare&p2-f=F+b&p2-g=a"]);
+
+    expect(screen.getAllByLabelText("Input formula")).toHaveLength(1);
+    expect(screen.getByLabelText("Input formula")).toHaveProperty("value", "G a");
+    expect(screen.getByLabelText("Second formula")).toHaveProperty("value", "a");
+    // One tab per panel: the first panel is on Rewrite, the second on Compare.
+    expect(
+      screen
+        .getAllByRole("tab", { name: "Rewrite" })
+        .map((tab) => tab.getAttribute("aria-selected"))
+    ).toEqual(["true", "false"]);
+    expect(
+      screen
+        .getAllByRole("tab", { name: "Compare" })
+        .map((tab) => tab.getAttribute("aria-selected"))
+    ).toEqual(["false", "true"]);
+
+    const urls = requests.map((request) => requestUrl(request.url));
+    expect(urls.map((url) => url.pathname)).toEqual([
+      "/api/rewrite/G%20a",
+      "/api/compare/F%20b",
+    ]);
+    expect(urls[1].searchParams.get("g")).toBe("a");
+  });
+
   it("keeps presentation flags out of the URL", () => {
     stubFetch();
     renderApp(["/translate"]);
