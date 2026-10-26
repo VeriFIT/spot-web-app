@@ -142,66 +142,52 @@ function LtlApp(props) {
     </OptionsProvider>
   );
 }
-class LtlApps extends React.Component {
-  state = {
-    instances: 1,
-    show_help: 0,
-  };
+function LtlApps() {
+  // A second panel can be opened next to the first one, and the help panel can
+  // be opened over them. Both are all-or-nothing, so a flag says it all.
+  const [duplicated, setDuplicated] = React.useState(false);
+  const [showingHelp, setShowingHelp] = React.useState(false);
 
-  handleDup = () => {
-    this.setState({ instances: 2 });
-  };
-
-  showHelp = () => {
-    this.setState({ show_help: 1 });
-  };
-
-  unshowHelp = () => {
-    this.setState({ show_help: 0 });
-  };
-
-  handleClose = () => {
-    this.setState({ instances: 1 });
-  };
-
-  render() {
-    return (
-      <Toplevel>
+  return (
+    <Toplevel>
+      <LtlApp
+        topright={
+          <React.Fragment>
+            <WindowButton
+              disabled={showingHelp}
+              color="primary"
+              onClick={() => setShowingHelp(true)}
+              aria-label="help"
+            >
+              <HelpIcon />
+            </WindowButton>
+            <WindowButton
+              disabled={duplicated}
+              color="primary"
+              onClick={() => setDuplicated(true)}
+              aria-label="dup"
+            >
+              <DupeIcon />
+            </WindowButton>
+          </React.Fragment>
+        }
+      />
+      {duplicated && (
         <LtlApp
           topright={
-            <React.Fragment>
-              <WindowButton
-                disabled={this.state.show_help === 1}
-                color="primary"
-                onClick={this.showHelp}
-                aria-label="help"
-              >
-                <HelpIcon />
-              </WindowButton>
-              <WindowButton
-                disabled={this.state.instances === 2}
-                color="primary"
-                onClick={this.handleDup}
-                aria-label="dup"
-              >
-                <DupeIcon />
-              </WindowButton>
-            </React.Fragment>
+            <WindowButton
+              color="primary"
+              onClick={() => setDuplicated(false)}
+              aria-label="close"
+            >
+              <CloseIcon />
+            </WindowButton>
           }
         />
-        {this.state.instances === 2 && (
-          <LtlApp
-            topright={
-              <WindowButton color="primary" onClick={this.handleClose} aria-label="close">
-                <CloseIcon />
-              </WindowButton>
-            }
-          />
-        )}
-        {this.state.show_help === 1 && <Help onClose={this.unshowHelp} />}
-      </Toplevel>
-    );
-  }
+      )}
+      {showingHelp && <Help onClose={() => setShowingHelp(false)} />}
+    </Toplevel>
+  );
 }
 
 // Exported for the component tests, which render the app state directly.

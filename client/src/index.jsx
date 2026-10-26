@@ -1,28 +1,9 @@
 import { createRoot } from "react-dom/client";
 import App from "./App.jsx";
 import CssBaseline from "@mui/material/CssBaseline";
-import { ThemeProvider, createTheme, StyledEngineProvider } from "@mui/material/styles";
+import { ThemeProvider, StyledEngineProvider } from "@mui/material/styles";
 
-const theme = createTheme({
-  typography: {
-    fontSize: 14,
-    body1: {
-      fontSize: "0.875rem",
-    },
-    body2: {
-      fontSize: "0.875rem",
-    },
-  },
-  components: {
-    MuiTableCell: {
-      styleOverrides: {
-        root: {
-          padding: "4px 8px",
-        },
-      },
-    },
-  },
-});
+import { theme } from "./theme";
 
 const container = document.getElementById("root");
 const root = createRoot(container);
