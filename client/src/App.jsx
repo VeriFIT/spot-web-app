@@ -7,6 +7,7 @@ import Tab from "@mui/material/Tab";
 import Tabs from "@mui/material/Tabs";
 import HelpIcon from "@mui/icons-material/Help";
 import { styled } from "@mui/material/styles";
+import { Navigate, Route, Routes, useParams } from "react-router";
 
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { CloseIcon, DupeIcon } from "./components/icons";
@@ -17,7 +18,9 @@ import { Help } from "./features/help/Help";
 import { LtlRewrite } from "./features/rewrite/LtlRewrite";
 import { LtlStudy } from "./features/study/LtlStudy";
 import { LtlTranslate } from "./features/translate/LtlTranslate";
+import { useUrlState } from "./hooks/useUrlState";
 import { INITIAL_OPTIONS, OptionsProvider, optionsReducer } from "./options";
+import { actionOfMode, DEFAULT_MODE } from "./urlState";
 
 /** The page lays the panels out side by side, centered when there is room. */
 const Toplevel = styled("div")(({ theme }) => ({
@@ -51,13 +54,50 @@ const AppTab = styled(Tab)(({ theme }) => ({
 const WindowButton = styled(IconButton)({ float: "right" });
 
 function LtlApp(props) {
-  const [options, dispatch] = React.useReducer(optionsReducer, INITIAL_OPTIONS);
+  // The primary panel keeps its options and formulas in the URL; the duplicate
+  // one, opened next to it, is just local state.
+  const urlState = props.state;
+
+  const [localOptions, localDispatch] = React.useReducer(optionsReducer, INITIAL_OPTIONS);
   // The formula being analysed, and the parse information the server reported
   // for it. Neither is an option: they come from the input, not from a menu.
-  const [formula, setFormula] = React.useState("");
-  const [formula2, setFormula2] = React.useState("");
+  const [localFormula, setLocalFormula] = React.useState("");
+  const [localFormula2, setLocalFormula2] = React.useState("");
   const [formulaerr, setFormulaerr] = React.useState(null);
   const [formulalbt, setFormulalbt] = React.useState(false);
+
+  // Expert mode and "hide all options" change what is shown rather than what is
+  // asked of the server, so they stay out of the URL even for the primary panel.
+  const [uiOptions, setUiOptions] = React.useState({
+    expert: INITIAL_OPTIONS.expert,
+    hideoptions: INITIAL_OPTIONS.hideoptions,
+  });
+
+  const baseOptions = urlState === undefined ? localOptions : urlState.options;
+  const options = React.useMemo(
+    () => ({ ...baseOptions, ...uiOptions }),
+    [baseOptions, uiOptions]
+  );
+
+  const dispatch = React.useCallback(
+    (change) => {
+      if (
+        change.type === "set" &&
+        (change.name === "expert" || change.name === "hideoptions")
+      ) {
+        setUiOptions((previous) => ({ ...previous, [change.name]: change.value }));
+        return;
+      }
+      if (urlState === undefined) localDispatch(change);
+      else urlState.dispatch(change);
+    },
+    [urlState, localDispatch]
+  );
+
+  const formula = urlState === undefined ? localFormula : urlState.formula;
+  const formula2 = urlState === undefined ? localFormula2 : urlState.formula2;
+  const setFormula = urlState === undefined ? setLocalFormula : urlState.setFormula;
+  const setFormula2 = urlState === undefined ? setLocalFormula2 : urlState.setFormula2;
 
   // The tabs read the options from the context; only the controls rendered
   // here need the setter directly.
@@ -123,6 +163,7 @@ function LtlApp(props) {
             label={action === 2 ? "First formula" : "Input formula"}
             expert={expert}
             autoFocus
+            defaultValue={formula}
             setFormula={setFormula}
             formulalbt={formulalbt}
             formulaerr={formulaerr}
@@ -149,15 +190,17 @@ function LtlApp(props) {
     </OptionsProvider>
   );
 }
-function LtlApps() {
+function LtlApps({ action }) {
   // A second panel can be opened next to the first one, and the help panel can
   // be opened over them. Both are all-or-nothing, so a flag says it all.
   const [duplicated, setDuplicated] = React.useState(false);
   const [showingHelp, setShowingHelp] = React.useState(false);
+  const urlState = useUrlState(action);
 
   return (
     <Toplevel>
       <LtlApp
+        state={urlState}
         topright={
           <React.Fragment>
             <WindowButton
@@ -197,6 +240,27 @@ function LtlApps() {
   );
 }
 
+/** Checks the mode in the path, then renders the app for it. */
+function ModePage() {
+  const { mode } = useParams();
+  const action = actionOfMode(mode);
+  if (action === null) return <Navigate to={"/" + DEFAULT_MODE} replace />;
+  return <LtlApps action={action} />;
+}
+
 // Exported for the component tests, which render the app state directly.
 export { LtlApp };
-export default LtlApps;
+
+/**
+ * The mode lives in the path (`/app/translate?...`), so every view has a URL;
+ * `<BrowserRouter>` in `index.jsx` supplies the history and the `/app/` base.
+ */
+export default function App() {
+  return (
+    <Routes>
+      <Route path="/" element={<Navigate to={"/" + DEFAULT_MODE} replace />} />
+      <Route path="/:mode" element={<ModePage />} />
+      <Route path="*" element={<Navigate to={"/" + DEFAULT_MODE} replace />} />
+    </Routes>
+  );
+}

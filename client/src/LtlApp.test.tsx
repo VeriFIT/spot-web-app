@@ -9,6 +9,7 @@ import {
 } from "@testing-library/react";
 import { useReducer, useState, version as reactVersion } from "react";
 import type { ReactNode } from "react";
+import { MemoryRouter, useLocation, useNavigate } from "react-router";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import App, { LtlApp } from "./App";
@@ -159,6 +160,37 @@ function readInput() {
 /** The dice button that overwrites the input with a random formula. */
 function randomButton() {
   return screen.getByRole("button");
+}
+
+/** The URL the app is currently on, and a way to go back in its history. */
+function HistoryProbe() {
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  return (
+    <>
+      <output data-testid="location">{location.pathname + location.search}</output>
+      <button onClick={() => navigate(-1)}>back</button>
+    </>
+  );
+}
+
+/**
+ * Render the whole app under a memory history. The mode is a path segment, so
+ * the app has to be rendered inside a router.
+ */
+function renderApp(entries: string[] = ["/translate"]) {
+  return render(
+    <MemoryRouter initialEntries={entries}>
+      <App />
+      <HistoryProbe />
+    </MemoryRouter>
+  );
+}
+
+/** The path and query string the app is on. */
+function location() {
+  return screen.getByTestId("location").textContent;
 }
 
 /**
@@ -930,7 +962,7 @@ describe("app shell", () => {
 
   it("opens the help panel and duplicates the app", () => {
     stubFetch();
-    render(<App />);
+    renderApp();
 
     expect(screen.getByRole("tab", { name: "Translate" })).toBeTruthy();
     expect(screen.getByLabelText("Input formula")).toBeTruthy();
@@ -957,7 +989,7 @@ describe("app shell", () => {
     const { requests } = stubFetch();
     // React reports the caught error; the assertion below is what matters.
     vi.spyOn(console, "error").mockImplementation(() => {});
-    render(<App />);
+    renderApp();
 
     const input = screen.getByLabelText("Input formula");
     fireEvent.change(input, { target: { value: "G a" } });
@@ -969,6 +1001,127 @@ describe("app shell", () => {
 
     expect(screen.getByText("This panel could not be displayed")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Reload the page" })).toBeTruthy();
+  });
+});
+
+describe("app URL", () => {
+  afterEach(() => {
+    cleanup();
+    vi.unstubAllGlobals();
+  });
+
+  it("asks for what a link describes", () => {
+    const { requests } = stubFetch();
+    renderApp(["/translate?f=a+U+b&acc=p&minmax=max"]);
+
+    expect(readInput().value).toBe("a U b");
+    expect(requests).toHaveLength(1);
+
+    const url = requestUrl(requests[0].url);
+    expect(url.pathname).toBe("/api/translate/a%20U%20b");
+    expect(url.searchParams.get("a")).toBe("p");
+    expect(url.searchParams.get("m")).toBe("max");
+  });
+
+  it("restores both formulas in compare mode", () => {
+    const { requests } = stubFetch();
+    renderApp(["/compare?f=a+U+b&g=b+U+a"]);
+
+    expect(requests).toHaveLength(1);
+    const url = requestUrl(requests[0].url);
+    expect(url.pathname).toBe("/api/compare/a%20U%20b");
+    expect(url.searchParams.get("g")).toBe("b U a");
+    expect(screen.getByLabelText("Second formula")).toHaveProperty("value", "b U a");
+  });
+
+  it("reads non-default options from the URL", () => {
+    const { requests } = stubFetch();
+    renderApp(["/rewrite?f=a&syntax=l&simp=br"]);
+
+    const url = requestUrl(requests[0].url);
+    expect(url.pathname).toBe("/api/rewrite/a");
+    expect(url.searchParams.get("ff")).toBe("l");
+    expect(url.searchParams.getAll("r")).toEqual(["br"]);
+  });
+
+  it("writes the mode into the path, and Back restores the previous tab", () => {
+    stubFetch();
+    renderApp(["/translate"]);
+    expect(location()).toBe("/translate");
+
+    fireEvent.click(screen.getByRole("tab", { name: "Study" }));
+
+    expect(location()).toBe("/study");
+    expect(screen.getByRole("tab", { name: "Study" }).getAttribute("aria-selected")).toBe(
+      "true"
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "back" }));
+
+    expect(location()).toBe("/translate");
+    expect(
+      screen.getByRole("tab", { name: "Translate" }).getAttribute("aria-selected")
+    ).toBe("true");
+  });
+
+  it("writes a toggled option into the query string", () => {
+    const { requests } = stubFetch();
+    renderApp(["/rewrite?f=a"]);
+
+    // The simplification checkboxes are expert-only; expert mode itself is not
+    // part of the URL. `br` is on by default, so turning it off leaves four.
+    fireEvent.click(screen.getByLabelText("Expert mode"));
+    fireEvent.click(screen.getByLabelText("basic rewritings"));
+
+    expect(location()).toBe("/rewrite?f=a&simp=lf,si,eu,lc");
+    expect(searchParams(requests.at(-1)!.url).getAll("r")).toEqual([
+      "lf",
+      "si",
+      "eu",
+      "lc",
+    ]);
+  });
+
+  it("puts the submitted formula in the query string", () => {
+    stubFetch();
+    renderApp(["/rewrite"]);
+
+    const input = screen.getByLabelText("Input formula");
+    fireEvent.change(input, { target: { value: "G a" } });
+    fireEvent.keyDown(input, { key: "Enter" });
+
+    expect(location()).toBe("/rewrite?f=G+a");
+  });
+
+  it("keeps presentation flags out of the URL", () => {
+    stubFetch();
+    renderApp(["/translate"]);
+
+    fireEvent.click(screen.getByLabelText("Expert mode"));
+
+    // Expert mode shows the versions menu but asks nothing different of the
+    // server, so the link is unchanged.
+    expect(screen.getByRole("button", { name: "Versions" })).toBeTruthy();
+    expect(location()).toBe("/translate");
+  });
+
+  it("leaves the query string clean while the options are at their default", () => {
+    stubFetch();
+    renderApp(["/translate"]);
+    expect(location()).toBe("/translate");
+
+    const menuButton = () => screen.getByRole("button", { name: "Acceptance to use" });
+    fireEvent.click(menuButton());
+    fireEvent.click(screen.getByRole("menuitem", { name: "Acceptance: parity" }));
+
+    expect(location()).toBe("/translate?acc=p");
+
+    fireEvent.click(menuButton());
+    fireEvent.click(
+      screen.getByRole("menuitem", { name: "Acceptance: Generalized Büchi" })
+    );
+
+    expect(location()).toBe("/translate");
   });
 });
 

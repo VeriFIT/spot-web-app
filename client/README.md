@@ -31,6 +31,8 @@ npm run build
 
 Build output goes to `client/build/`. For deployment, copy this directory to `/var/www/html/app/` (the app is served at https://spot.lre.epita.fr/app/).
 
+The mode is a path segment (`/app/translate`, `/app/rewrite`, …), so the web server must serve `app/index.html` for any path under `/app/` that is not a file — with nginx, `try_files $uri /app/index.html;`. Without that fallback, opening or reloading a link other than `/app/` returns a 404.
+
 ## Lint, types and format
 
 ```bash

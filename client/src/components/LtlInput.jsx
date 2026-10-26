@@ -47,6 +47,14 @@ export function LtlInput(props) {
     };
   }, []);
 
+  // When the app changes the formula from the outside — a link was opened, or
+  // Back restored an earlier one — the field follows it.
+  const defaultValue = props.defaultValue || "";
+  React.useEffect(() => {
+    setTmpformula(defaultValue);
+    setFormula(defaultValue);
+  }, [defaultValue]);
+
   const handleChange = (event) => setTmpformula(event.target.value);
 
   const updateFormula = () => {
