@@ -160,7 +160,7 @@ function RewriteTab({ expert = false }: { expert?: boolean }) {
 function inputProps(overrides: Record<string, unknown> = {}) {
   return {
     label: "Input formula",
-    autoFocus: false,
+    focusOnMount: false,
     defaultValue: "",
     expert: false,
     setFormula: () => {},
@@ -398,6 +398,31 @@ describe("LtlInput", () => {
     expect(readInput().value).toBe("a U b");
     expect(screen.queryByText(CONFIRM_HINT)).toBeNull();
     expect(screen.queryByText(PREFIX_NOTE)).toBeNull();
+  });
+
+  it("takes the caret when it is asked to", () => {
+    render(<LtlInput {...inputProps({ focusOnMount: true })} />);
+
+    expect(document.activeElement).toBe(readInput());
+  });
+
+  it("leaves the caret alone when it is not asked to", () => {
+    render(<LtlInput {...inputProps()} />);
+
+    expect(document.activeElement).not.toBe(readInput());
+  });
+
+  it("keeps its hands off a focus the user has already reached", () => {
+    const elsewhere = document.createElement("button");
+    document.body.append(elsewhere);
+    elsewhere.focus();
+    try {
+      render(<LtlInput {...inputProps({ focusOnMount: true })} />);
+
+      expect(document.activeElement).toBe(elsewhere);
+    } finally {
+      elsewhere.remove();
+    }
   });
 
   it("only submits an edit on Enter", () => {
@@ -1018,6 +1043,13 @@ describe("app shell", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "close" }));
     expect(screen.getAllByLabelText("Input formula")).toHaveLength(1);
+  });
+
+  it("puts the caret in the main formula on arrival", () => {
+    stubFetch();
+    renderApp();
+
+    expect(document.activeElement).toBe(screen.getByLabelText("Input formula"));
   });
 
   it("reports a malformed response instead of blanking the page", async () => {

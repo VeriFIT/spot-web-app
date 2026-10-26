@@ -40,7 +40,8 @@ export interface LtlInputProps {
   label: string;
   /** Expert mode randomizes over PSL instead of LTL. */
   expert: boolean;
-  autoFocus?: boolean;
+  /** Take the caret when the field appears. Only the main panel asks for it. */
+  focusOnMount?: boolean;
   /** The confirmed formula, owned by the parent. */
   defaultValue: string;
   setFormula: (formula: string) => void;
@@ -59,6 +60,19 @@ export function LtlInput(props: LtlInputProps) {
   // produced no formula.
   const randomRequest = React.useRef<AbortController | null>(null);
   const [randomError, setRandomError] = React.useState<Error | null>(null);
+
+  const inputRef = React.useRef<HTMLInputElement>(null);
+
+  // The main panel asks for the caret on arrival, since typing a formula is
+  // what the page is for. Focusing here instead of with the `autoFocus`
+  // attribute lets the field stand back when something already has focus: the
+  // caret belongs where the user has got to, not to a field that mounted late.
+  React.useEffect(() => {
+    if (!props.focusOnMount) return;
+    const active = document.activeElement;
+    if (active !== null && active !== document.body) return;
+    inputRef.current?.focus();
+  }, [props.focusOnMount]);
 
   // A request still in flight when the input goes away must not land later.
   React.useEffect(() => {
@@ -120,7 +134,7 @@ export function LtlInput(props: LtlInputProps) {
         fullWidth
         value={tmpformula}
         label={props.label}
-        autoFocus={props.autoFocus}
+        inputRef={inputRef}
         onChange={handleChange}
         onKeyDown={handleKey}
         onBlur={updateFormula}

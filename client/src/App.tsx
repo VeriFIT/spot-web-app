@@ -161,7 +161,7 @@ function LtlApp(props: LtlAppProps) {
             highlight={action === 2 ? "first" : undefined}
             label={action === 2 ? "First formula" : "Input formula"}
             expert={expert}
-            autoFocus
+            focusOnMount
             defaultValue={formula}
             setFormula={setFormula}
             formulalbt={formulalbt}
