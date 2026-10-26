@@ -4,10 +4,25 @@ import IconButton from "@mui/material/IconButton";
 import InputAdornment from "@mui/material/InputAdornment";
 import TextField from "@mui/material/TextField";
 import Tooltip from "@mui/material/Tooltip";
+import { styled } from "@mui/material/styles";
 
 import { getRandomFormula, randomUrl } from "../api/client";
 import { DiceIcon } from "./icons";
 import { NoteText } from "./NoteText";
+
+/** Compare mode shows two inputs; tinting them tells the two formulas apart. */
+const HIGHLIGHT_SX = {
+  first: { backgroundColor: "#b2ffff" },
+  second: { backgroundColor: "#ffccff" },
+};
+
+const Wrapper = styled("div")({ width: "100%" });
+
+const Helper = styled(FormHelperText)({ marginTop: 0 });
+
+const ParseError = styled("pre")(({ theme }) => ({
+  color: theme.palette.error.main,
+}));
 
 export function LtlInput(props) {
   // The text being typed, and the formula the app actually queries. They
@@ -35,10 +50,10 @@ export function LtlInput(props) {
   };
 
   return (
-    <div className={props.classes.ltlInput}>
+    <Wrapper>
       <TextField
         error={Boolean(props.formulaerr)}
-        className={props.className}
+        sx={HIGHLIGHT_SX[props.highlight]}
         fullWidth
         value={tmpformula}
         label={props.label}
@@ -63,13 +78,13 @@ export function LtlInput(props) {
           ),
         }}
       />
-      <FormHelperText className={props.classes.helperText}>
+      <Helper>
         {tmpformula !== formula && (
           <span>
             Hit <i>Enter</i> or <i>Tab</i> to update the results.
           </span>
         )}
-      </FormHelperText>
+      </Helper>
       {props.formulalbt && (
         <NoteText
           text={
@@ -79,9 +94,7 @@ export function LtlInput(props) {
           }
         />
       )}
-      {props.formulaerr && (
-        <pre className={props.classes.parseerror}>{props.formulaerr}</pre>
-      )}
-    </div>
+      {props.formulaerr && <ParseError>{props.formulaerr}</ParseError>}
+    </Wrapper>
   );
 }

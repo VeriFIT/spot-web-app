@@ -6,50 +6,93 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import IconButton from "@mui/material/IconButton";
 import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
+import { styled } from "@mui/material/styles";
 
 import { CloseIcon } from "../../components/icons";
 import { Ltl } from "../../components/Ltl";
 
-function OpTable(array, width, classes) {
+/** The help panel, which sits beside the formula panels. */
+const HelpPaper = styled(Paper)(({ theme }) => ({
+  margin: theme.spacing(1),
+  paddingTop: theme.spacing(1),
+  width: 640 - 16,
+  [theme.breakpoints.down("sm")]: {
+    marginLeft: 0,
+    marginRight: 0,
+  },
+  "& h2": { color: theme.palette.primary.main },
+}));
+
+/** The row holding the close button and the title. */
+const HelpIcons = styled("div")(({ theme }) => ({
+  overflow: "auto",
+  marginRight: theme.spacing(1),
+}));
+
+const CloseButton = styled(IconButton)({ float: "right" });
+
+/** The title of the panel. */
+const HelpTitle = styled(Typography)({ padding: 4 });
+
+/**
+ * A collapsible section. Its border stays visible while it is open, and the
+ * sections sit flush against each other.
+ */
+const HelpAccordion = styled(Accordion)({
+  "&.Mui-expanded": {
+    margin: 0,
+    "&:before": { opacity: 1 },
+  },
+});
+
+/** Grid of the notations accepted for one category of operators. */
+const OpTableBox = styled("div")({
+  display: "flex",
+  flexDirection: "row",
+  flexWrap: "wrap",
+  width: "100%",
+  justifyContent: "space-around",
+});
+
+const OpPair = styled("div")({
+  display: "block",
+  padding: 2,
+  margin: 2,
+  backgroundColor: "#EEEEEE",
+});
+
+const OpDesc = styled("div")({ float: "left" });
+const OpSyn = styled("div")({ float: "right" });
+
+function OpTable(array, width) {
   return (
-    <div className={classes.optable}>
+    <OpTableBox>
       {array.map((value) => {
         return (
-          <div key={value[0]} className={classes.oppair} style={{ width: width }}>
-            <div className={classes.opdesc}>{value[0]}:</div>
-            <div className={classes.opsyn}>{value[1]}</div>
-          </div>
+          <OpPair key={value[0]} style={{ width: width }}>
+            <OpDesc>{value[0]}:</OpDesc>
+            <OpSyn>{value[1]}</OpSyn>
+          </OpPair>
         );
       })}
-    </div>
+    </OpTableBox>
   );
 }
 
 export class Help extends React.Component {
   render() {
     return (
-      <Paper className={this.props.classes.help}>
-        <div className={this.props.classes.helpiconsdiv}>
-          <IconButton
-            className={this.props.classes.helpicons}
-            color="primary"
-            onClick={this.props.onClose}
-            aria-label="close"
-          >
+      <HelpPaper>
+        <HelpIcons>
+          <CloseButton color="primary" onClick={this.props.onClose} aria-label="close">
             <CloseIcon />
-          </IconButton>
-          <Typography
-            variant="headline"
-            color="primary"
-            align="center"
-            className={this.props.classes.helptop}
-            gutterBottom
-          >
+          </CloseButton>
+          <HelpTitle variant="headline" color="primary" align="center" gutterBottom>
             Help
-          </Typography>
-        </div>
+          </HelpTitle>
+        </HelpIcons>
 
-        <Accordion classes={{ expanded: this.props.classes.helpexpanded }}>
+        <HelpAccordion>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
             <Typography variant="h6">About</Typography>
           </AccordionSummary>
@@ -80,9 +123,9 @@ export class Help extends React.Component {
               </Typography>
             </Typography>
           </AccordionDetails>
-        </Accordion>
+        </HelpAccordion>
 
-        <Accordion classes={{ expanded: this.props.classes.helpexpanded }}>
+        <HelpAccordion>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
             <Typography variant="h6">Operation modes</Typography>
           </AccordionSummary>
@@ -112,9 +155,9 @@ export class Help extends React.Component {
               </dl>
             </Typography>
           </AccordionDetails>
-        </Accordion>
+        </HelpAccordion>
 
-        <Accordion classes={{ expanded: this.props.classes.helpexpanded }}>
+        <HelpAccordion>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
             <Typography variant="h6">LTL Infix Syntax</Typography>
           </AccordionSummary>
@@ -191,8 +234,7 @@ export class Help extends React.Component {
                       </>,
                     ],
                   ],
-                  "180px",
-                  this.props.classes
+                  "180px"
                 )}
                 For compatibility with{" "}
                 <a href="http://www.ist.tugraz.at/staff/bloem/wring.html">Wring</a>
@@ -217,8 +259,7 @@ export class Help extends React.Component {
                       </>,
                     ],
                   ],
-                  "120px",
-                  this.props.classes
+                  "120px"
                 )}
                 The following unary (prefix) operators are supported:
                 {OpTable(
@@ -242,8 +283,7 @@ export class Help extends React.Component {
                       </>,
                     ],
                   ],
-                  "120px",
-                  this.props.classes
+                  "120px"
                 )}
                 Additionally, <Ltl f="X[n]" />, <Ltl f="F[n..m]" />, and{" "}
                 <Ltl f="G[n..m]" /> are syntactic sugar for differents types of repetition
@@ -252,9 +292,9 @@ export class Help extends React.Component {
               </Typography>
             </Typography>
           </AccordionDetails>
-        </Accordion>
+        </HelpAccordion>
 
-        <Accordion classes={{ expanded: this.props.classes.helpexpanded }}>
+        <HelpAccordion>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
             <Typography variant="h6">LTL Prefix Syntax</Typography>
           </AccordionSummary>
@@ -289,17 +329,16 @@ export class Help extends React.Component {
                     ["strong release", <Ltl key="M" f="M" />],
                     ["weak until", <Ltl key="W" f="W" />],
                   ],
-                  "120px",
-                  this.props.classes
+                  "120px"
                 )}
                 Double-quoted strings, as well as identifiers that do not look like
                 operators, are assumed to be atomic propositions.
               </Typography>
             </Typography>
           </AccordionDetails>
-        </Accordion>
+        </HelpAccordion>
 
-        <Accordion classes={{ expanded: this.props.classes.helpexpanded }}>
+        <HelpAccordion>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
             <Typography variant="h6">PSL Infix Syntax</Typography>
           </AccordionSummary>
@@ -349,8 +388,7 @@ export class Help extends React.Component {
                     ["intersection", <Ltl key="&amp;&amp;" f="&amp;&amp;" />],
                     ["NLM-intersection", <Ltl key="&amp;" f="&amp;" />],
                   ],
-                  "140px",
-                  this.props.classes
+                  "140px"
                 )}
                 The "Non-length-matching intersection" accepts words that match one
                 operand and that have a prefix matching the other operand.
@@ -376,8 +414,7 @@ export class Help extends React.Component {
                     ["goto", <Ltl key="[->i..j]" f="[->i..j]" />],
                     ["nonconseq. rep.", <Ltl key="[=i..j]" f="[=i..j]" />],
                   ],
-                  "200px",
-                  this.props.classes
+                  "200px"
                 )}
               </Typography>
               <Typography variant="body2">
@@ -391,8 +428,7 @@ export class Help extends React.Component {
                       </>,
                     ],
                   ],
-                  "200px",
-                  this.props.classes
+                  "200px"
                 )}
               </Typography>
               <Typography variant="body2" color="primary">
@@ -426,15 +462,14 @@ export class Help extends React.Component {
                     ["weak closure", <Ltl key="{r}" f="{r}" />],
                     ["strong closure", <Ltl key="{r}!" f="{r}!" />],
                   ],
-                  "300px",
-                  this.props.classes
+                  "300px"
                 )}
               </Typography>
             </Typography>
           </AccordionDetails>
-        </Accordion>
+        </HelpAccordion>
 
-        <Accordion classes={{ expanded: this.props.classes.helpexpanded }}>
+        <HelpAccordion>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
             <Typography variant="h6">Acceptance conditions</Typography>
           </AccordionSummary>
@@ -521,8 +556,8 @@ export class Help extends React.Component {
               </Typography>
             </Typography>
           </AccordionDetails>
-        </Accordion>
-      </Paper>
+        </HelpAccordion>
+      </HelpPaper>
     );
   }
 }

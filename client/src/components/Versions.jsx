@@ -5,10 +5,17 @@ import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
 import TableCell from "@mui/material/TableCell";
 import TableRow from "@mui/material/TableRow";
+import { styled } from "@mui/material/styles";
 
 import { getVersions, versionsUrl } from "../api/client";
 
-export function Versions(props) {
+/** The button that opens the version list, at the right of the panel header. */
+const VersionsButton = styled(Button)({
+  float: "right",
+  marginTop: "8px",
+});
+
+export function Versions() {
   const [anchorEl, setAnchorEl] = React.useState(null);
   const [versions, setVersions] = React.useState([]);
 
@@ -30,19 +37,18 @@ export function Versions(props) {
   const handleOpen = (event) => setAnchorEl(event.currentTarget);
   const handleClose = () => setAnchorEl(null);
 
-  const { classes } = props;
   return (
     <div>
-      <Button className={classes.versions} color="secondary" onClick={handleOpen}>
+      <VersionsButton color="secondary" onClick={handleOpen}>
         Versions
-      </Button>
+      </VersionsButton>
       <Menu
         id="lock-menu"
         anchorEl={anchorEl}
         open={Boolean(anchorEl)}
         onClose={handleClose}
       >
-        <Table className={classes.versiontable}>
+        <Table>
           <TableBody>
             {versions.map(([tool, version, url]) => {
               return (

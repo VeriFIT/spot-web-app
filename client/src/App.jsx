@@ -6,7 +6,7 @@ import Switch from "@mui/material/Switch";
 import Tab from "@mui/material/Tab";
 import Tabs from "@mui/material/Tabs";
 import HelpIcon from "@mui/icons-material/Help";
-import { withStyles } from "tss-react/mui";
+import { styled } from "@mui/material/styles";
 
 import { CloseIcon, DupeIcon } from "./components/icons";
 import { LtlInput } from "./components/LtlInput";
@@ -18,241 +18,36 @@ import { LtlStudy } from "./features/study/LtlStudy";
 import { LtlTranslate } from "./features/translate/LtlTranslate";
 import { INITIAL_OPTIONS, OptionsProvider, optionsReducer } from "./options";
 
-const styles = (theme) => ({
-  toplevel: {
-    display: "flex",
-    flexWrap: "wrap",
-    alignItems: "flex-start",
-    [theme.breakpoints.up("sm")]: {
-      justifyContent: "center",
-    },
+/** The page lays the panels out side by side, centered when there is room. */
+const Toplevel = styled("div")(({ theme }) => ({
+  display: "flex",
+  flexWrap: "wrap",
+  alignItems: "flex-start",
+  [theme.breakpoints.up("sm")]: {
+    justifyContent: "center",
   },
-  nottopmargin: { marginTop: 0 },
-  help: {
-    margin: theme.spacing(1),
-    paddingTop: theme.spacing(1),
-    width: 640 - 16,
-    [theme.breakpoints.down("sm")]: {
-      marginLeft: 0,
-      marginRight: 0,
-    },
-    "& h2": { color: theme.palette.primary.main },
-  },
-  helptop: {
-    padding: 4,
-  },
-  helpexpanded: {
-    margin: 0,
-    "&:before": {
-      opacity: 1,
-    },
-  },
-  optable: {
-    display: "flex",
-    flexDirection: "row",
-    flexWrap: "wrap",
-    width: "100%",
-    justifyContent: "space-around",
-  },
-  oppair: {
-    display: "block",
-    padding: 2,
-    margin: 2,
-    backgroundColor: "#EEEEEE",
-  },
-  opdesc: {
-    float: "left",
-  },
-  opsyn: {
-    float: "right",
-  },
-  root: {
-    margin: theme.spacing(1),
-    padding: theme.spacing(1),
-    width: 624,
-    minWidth: 624,
-    [theme.breakpoints.down("sm")]: {
-      marginLeft: 0,
-      marginRight: 0,
-    },
-  },
-  progress: {
-    display: "block",
-    margin: "auto",
-  },
-  optionstrans: {
-    display: "flex",
-    flexWrap: "wrap",
-    alignItems: "flex-start",
-  },
-  tab: {
-    maxWidth: 150,
-    minWidth: 50,
-  },
-  tablabel: {
-    fontSize: theme.typography.pxToRem(14),
-  },
-  fclvertical: {
+}));
+
+/** One analyser panel: its formula input, its tabs, and their results. */
+const Panel = styled(Paper)(({ theme }) => ({
+  margin: theme.spacing(1),
+  padding: theme.spacing(1),
+  width: 624,
+  minWidth: 624,
+  [theme.breakpoints.down("sm")]: {
+    marginLeft: 0,
     marginRight: 0,
   },
-  pre: {
-    overflow: "auto",
-    whiteSpace: "pre-wrap",
-    width: "100%",
-    margin: 0,
-  },
-  ltlInput: {
-    width: "100%",
-  },
-  ltlsyntax: {},
-  helperText: {
-    marginTop: 0,
-  },
-  borderedgroupprimary: {
-    padding: 8,
-    margin: 5,
-    borderWidth: 1,
-    borderStyle: "solid",
-    borderRadius: 4,
-    borderColor: theme.palette.primary.main,
-    "& legend": {
-      paddingLeft: 8,
-      paddingRight: 8,
-      backgroundColor: "white",
-      color: theme.palette.primary.light,
-    },
-  },
-  borderedgroupsecondary: {
-    padding: 8,
-    margin: 5,
-    borderWidth: 1,
-    borderStyle: "solid",
-    borderRadius: 4,
-    borderColor: theme.palette.secondary.main,
-    "& legend": {
-      paddingLeft: 8,
-      paddingRight: 8,
-      backgroundColor: "white",
-      color: theme.palette.secondary.light,
-    },
-    "& legend$focused": {
-      color: theme.palette.secondary.main,
-    },
-  },
-  flexhoriz: {
-    flexDirection: "row",
-  },
-  focused: {},
+}));
 
-  choicemenuitem: {
-    "&:focus": {
-      backgroundColor: theme.palette.primary.main,
-      color: theme.palette.common.white,
-    },
-  },
-  choicelistitem: {
-    borderWidth: 1,
-    borderStyle: "solid",
-    borderRadius: 4,
-    borderColor: theme.palette.divider,
-    backgroundColor: theme.palette.background.paper,
-    "&:hover": {
-      backgroundColor: theme.palette.action.hover,
-    },
-    "&.Mui-focusVisible": {
-      outline: `2px solid ${theme.palette.primary.main}`,
-      outlineOffset: 2,
-    },
-  },
-  choiceicon: {
-    color: theme.palette.primary.main,
-  },
-  unabbrev: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-  },
-  unabbrevboxroot: {
-    marginRight: "16px",
-    marginBottom: "-8px",
-    marginTop: "-8px",
-  },
-  unabbrevboxlabel: {
-    marginLeft: "-8px",
-  },
-  parseerror: {
-    color: theme.palette.error.main,
-  },
-  textField: {},
-  textField1: {
-    backgroundColor: "#b2ffff",
-  },
-  textField2: {
-    backgroundColor: "#ffccff",
-  },
-  update: {
-    width: "100px",
-    float: "right",
-  },
-  winicons: {
-    float: "right",
-  },
-  helpiconsdiv: {
-    overflow: "auto",
-    marginRight: theme.spacing(1),
-  },
-  helpicons: {
-    float: "right",
-  },
-  menu: {},
-  versions: {
-    float: "right",
-    marginTop: "8px",
-  },
-  vendiag: {
-    float: "right",
-  },
-  versiontable: {},
-  results: {
-    width: "100%",
-    padding: theme.spacing(1),
-    overflow: "auto",
-  },
-  hierarchy_svg: {
-    float: "right",
-  },
-  hierarchydiv: {
-    paddingBottom: 10,
-  },
-  satisfiabilitydiv: {
-    paddingBottom: 10,
-  },
-  stutterdiv: {},
-  indexdiv: {
-    paddingBottom: 10,
-  },
-  livenessdiv: {
-    paddingBottom: 10,
-  },
-  wordtable: {
-    width: "auto",
-  },
-  wordtablerow: {
-    height: "auto",
-  },
-  wordtablecell: {
-    borderBottom: "none",
-  },
-  wordtablecellw: {
-    borderBottom: "none",
-    fontWeight: "bold",
-  },
-  automaton_svg: {
-    overflow: "auto",
-    marginLeft: -4,
-    marginRight: -4,
-    display: "block",
-  },
-});
+const AppTab = styled(Tab)(({ theme }) => ({
+  maxWidth: 150,
+  minWidth: 50,
+  fontSize: theme.typography.pxToRem(14),
+}));
+
+/** The help, duplicate and close buttons in the header of a panel. */
+const WindowButton = styled(IconButton)({ float: "right" });
 
 function LtlApp(props) {
   const [options, dispatch] = React.useReducer(optionsReducer, INITIAL_OPTIONS);
@@ -276,14 +71,14 @@ function LtlApp(props) {
     setFormulalbt(res.prefix_syntax === true);
   }, []);
 
-  const { classes, topright } = props;
+  const { topright } = props;
   const { action, expert, hideoptions } = options;
 
   return (
     <OptionsProvider options={options} dispatch={dispatch}>
-      <Paper className={classes.root}>
+      <Panel>
         {topright}
-        {expert && <Versions classes={classes} />}
+        {expert && <Versions />}
         <FormControlLabel
           style={{ marginLeft: 0 }}
           control={
@@ -312,30 +107,13 @@ function LtlApp(props) {
           indicatorColor="primary"
           textColor="primary"
         >
-          <Tab
-            value={0}
-            classes={{ root: classes.tab, label: classes.tablabel }}
-            label="Rewrite"
-          />
-          <Tab
-            value={1}
-            classes={{ root: classes.tab, label: classes.tablabel }}
-            label="Study"
-          />
-          <Tab
-            value={2}
-            classes={{ root: classes.tab, label: classes.tablabel }}
-            label="Compare"
-          />
-          <Tab
-            value={3}
-            classes={{ root: classes.tab, label: classes.tablabel }}
-            label="Translate"
-          />
+          <AppTab value={0} label="Rewrite" />
+          <AppTab value={1} label="Study" />
+          <AppTab value={2} label="Compare" />
+          <AppTab value={3} label="Translate" />
         </Tabs>
         <LtlInput
-          classes={classes}
-          className={action === 2 ? classes.textField1 : classes.textField}
+          highlight={action === 2 ? "first" : undefined}
           label={action === 2 ? "First formula" : "Input formula"}
           expert={expert}
           autoFocus
@@ -344,22 +122,13 @@ function LtlApp(props) {
           formulaerr={formulaerr}
         />
         {action === 0 && (
-          <LtlRewrite
-            classes={classes}
-            formula={formula}
-            handleAnyParseError={handleAnyParseError}
-          />
+          <LtlRewrite formula={formula} handleAnyParseError={handleAnyParseError} />
         )}
         {action === 1 && (
-          <LtlStudy
-            classes={classes}
-            formula={formula}
-            handleAnyParseError={handleAnyParseError}
-          />
+          <LtlStudy formula={formula} handleAnyParseError={handleAnyParseError} />
         )}
         {action === 2 && (
           <LtlCompare
-            classes={classes}
             formula={formula}
             formula2={formula2}
             handleChangeFormula2={setFormula2}
@@ -367,13 +136,9 @@ function LtlApp(props) {
           />
         )}
         {action === 3 && (
-          <LtlTranslate
-            classes={classes}
-            formula={formula}
-            handleAnyParseError={handleAnyParseError}
-          />
+          <LtlTranslate formula={formula} handleAnyParseError={handleAnyParseError} />
         )}
-      </Paper>
+      </Panel>
     </OptionsProvider>
   );
 }
@@ -401,55 +166,44 @@ class LtlApps extends React.Component {
 
   render() {
     return (
-      <div className={this.props.classes.toplevel}>
+      <Toplevel>
         <LtlApp
-          classes={this.props.classes}
           topright={
             <React.Fragment>
-              <IconButton
+              <WindowButton
                 disabled={this.state.show_help === 1}
                 color="primary"
                 onClick={this.showHelp}
-                className={this.props.classes.winicons}
                 aria-label="help"
               >
                 <HelpIcon />
-              </IconButton>
-              <IconButton
+              </WindowButton>
+              <WindowButton
                 disabled={this.state.instances === 2}
                 color="primary"
                 onClick={this.handleDup}
-                className={this.props.classes.winicons}
                 aria-label="dup"
               >
                 <DupeIcon />
-              </IconButton>
+              </WindowButton>
             </React.Fragment>
           }
         />
         {this.state.instances === 2 && (
           <LtlApp
-            classes={this.props.classes}
             topright={
-              <IconButton
-                className={this.props.classes.winicons}
-                color="primary"
-                onClick={this.handleClose}
-                aria-label="close"
-              >
+              <WindowButton color="primary" onClick={this.handleClose} aria-label="close">
                 <CloseIcon />
-              </IconButton>
+              </WindowButton>
             }
           />
         )}
-        {this.state.show_help === 1 && (
-          <Help classes={this.props.classes} onClose={this.unshowHelp} />
-        )}
-      </div>
+        {this.state.show_help === 1 && <Help onClose={this.unshowHelp} />}
+      </Toplevel>
     );
   }
 }
 
 // Exported for the component tests, which render the app state directly.
 export { LtlApp };
-export default withStyles(LtlApps, styles);
+export default LtlApps;

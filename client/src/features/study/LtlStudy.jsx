@@ -1,10 +1,8 @@
 import React from "react";
 import CircularProgress from "@mui/material/CircularProgress";
-import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
-import TableCell from "@mui/material/TableCell";
-import TableRow from "@mui/material/TableRow";
 import Typography from "@mui/material/Typography";
+import { styled } from "@mui/material/styles";
 
 import { getStudy, studyUrl } from "../../api/client";
 import { useApiQuery } from "../../hooks/useApiQuery";
@@ -14,14 +12,26 @@ import { LtlResult } from "../../components/LtlResult";
 import { classhelp } from "../../components/optionHelp";
 import { renderError } from "../../components/renderError";
 import { SVGInline } from "../../components/SVGInline";
+import {
+  WordTable,
+  WordTableCell,
+  WordTableCellBold,
+  WordTableRow,
+} from "../../components/WordTable";
+
+/** One classification of the formula, separated from the next one. */
+const Section = styled("div")({ paddingBottom: 10 });
+
+/** The Manna-Pnueli hierarchy is drawn to the right of its text. */
+const HierarchySvg = styled(SVGInline)({ float: "right" });
 
 /** Body of the study tab, as a function of the answer so it stays pure. */
-function studyResult(res, classes) {
+function studyResult(res) {
   if (!("mp_class_text" in res)) return null;
   return (
     <React.Fragment>
-      <div className={classes.hierarchydiv}>
-        <SVGInline className={classes.hierarchy_svg} svg={res["mp_hierarchy_svg"]} />
+      <Section>
+        <HierarchySvg svg={res["mp_hierarchy_svg"]} />
         <Typography variant="body2" color="primary">
           Hierarchy of Manna and Pnueli
         </Typography>
@@ -48,8 +58,8 @@ function studyResult(res, classes) {
             syntactic class.
           </Typography>
         )}
-      </div>
-      <div className={classes.livenessdiv}>
+      </Section>
+      <Section>
         <Typography variant="body2" color="primary">
           Safety-Liveness classification
         </Typography>
@@ -74,35 +84,31 @@ function studyResult(res, classes) {
             necessarily is the <b>intersection</b> of a liveness and a safety property.
           </Typography>
         )}
-      </div>
-      <div className={classes.indexdiv}>
+      </Section>
+      <Section>
         <Typography variant="body2" color="primary">
           Indices
         </Typography>
         {(res["Rabin_index"] !== null || res["Streett_index"] !== null) && (
-          <Table className={classes.wordtable}>
+          <WordTable>
             <TableBody>
-              <TableRow className={classes.wordtablerow}>
-                <TableCell component="th" scope="row" className={classes.wordtablecell}>
+              <WordTableRow>
+                <WordTableCell component="th" scope="row">
                   Rabin index:
-                </TableCell>
-                <TableCell className={classes.wordtablecellw}>
-                  {res["Rabin_index"]}
-                </TableCell>
-              </TableRow>
-              <TableRow className={classes.wordtablerow}>
-                <TableCell component="th" scope="row" className={classes.wordtablecell}>
+                </WordTableCell>
+                <WordTableCellBold>{res["Rabin_index"]}</WordTableCellBold>
+              </WordTableRow>
+              <WordTableRow>
+                <WordTableCell component="th" scope="row">
                   Streett index:
-                </TableCell>
-                <TableCell className={classes.wordtablecellw}>
-                  {res["Streett_index"]}
-                </TableCell>
-              </TableRow>
+                </WordTableCell>
+                <WordTableCellBold>{res["Streett_index"]}</WordTableCellBold>
+              </WordTableRow>
             </TableBody>
-          </Table>
+          </WordTable>
         )}
-      </div>
-      <div className={classes.satisfiabilitydiv}>
+      </Section>
+      <Section>
         <Typography variant="body2" color="primary">
           Satisfiability
         </Typography>
@@ -117,29 +123,25 @@ function studyResult(res, classes) {
           </Typography>
         )}
         {res["acc_word"] !== null && res["rej_word"] !== null && (
-          <Table className={classes.wordtable}>
+          <WordTable>
             <TableBody>
-              <TableRow className={classes.wordtablerow}>
-                <TableCell component="th" scope="row" className={classes.wordtablecell}>
+              <WordTableRow>
+                <WordTableCell component="th" scope="row">
                   Accepted word:
-                </TableCell>
-                <TableCell className={classes.wordtablecellw}>
-                  {res["acc_word"]}
-                </TableCell>
-              </TableRow>
-              <TableRow className={classes.wordtablerow}>
-                <TableCell component="th" scope="row" className={classes.wordtablecell}>
+                </WordTableCell>
+                <WordTableCellBold>{res["acc_word"]}</WordTableCellBold>
+              </WordTableRow>
+              <WordTableRow>
+                <WordTableCell component="th" scope="row">
                   Rejected word:
-                </TableCell>
-                <TableCell className={classes.wordtablecellw}>
-                  {res["rej_word"]}
-                </TableCell>
-              </TableRow>
+                </WordTableCell>
+                <WordTableCellBold>{res["rej_word"]}</WordTableCellBold>
+              </WordTableRow>
             </TableBody>
-          </Table>
+          </WordTable>
         )}
-      </div>
-      <div className={classes.stutterdiv}>
+      </Section>
+      <div>
         <Typography variant="body2" color="primary">
           Stutter invariance
         </Typography>
@@ -176,7 +178,7 @@ function studyResult(res, classes) {
 }
 
 export function LtlStudy(props) {
-  const { classes, formula } = props;
+  const { formula } = props;
 
   // The request URL identifies the query: it only changes when the formula
   // does, which is exactly when a new request is needed.
@@ -197,8 +199,9 @@ export function LtlStudy(props) {
 
   let result = null;
   if (error !== null) result = renderError(error);
-  else if (showSpinner) result = <CircularProgress className={classes.progress} />;
-  else if (data !== null) result = studyResult(data, classes);
+  else if (showSpinner)
+    result = <CircularProgress sx={{ display: "block", margin: "auto" }} />;
+  else if (data !== null) result = studyResult(data);
 
-  return <div>{result && <LtlResult classes={classes} result={result} />}</div>;
+  return <div>{result && <LtlResult result={result} />}</div>;
 }

@@ -107,11 +107,7 @@ function RewriteResult({
 }) {
   return (
     <OptionsHarness initial={{ hideoptions: true }}>
-      <LtlRewrite
-        classes={{}}
-        formula={formula}
-        handleAnyParseError={handleAnyParseError}
-      />
+      <LtlRewrite formula={formula} handleAnyParseError={handleAnyParseError} />
     </OptionsHarness>
   );
 }
@@ -120,16 +116,14 @@ function RewriteResult({
 function RewriteTab({ expert = false }: { expert?: boolean }) {
   return (
     <OptionsHarness initial={{ expert }}>
-      <LtlRewrite classes={{}} formula="a U b" handleAnyParseError={ignoreParseError} />
+      <LtlRewrite formula="a U b" handleAnyParseError={ignoreParseError} />
     </OptionsHarness>
   );
 }
 
-/** Props of the formula input; the app passes the first two through unchanged. */
+/** Props of the formula input, with the ones a test needs overridden. */
 function inputProps(overrides: Record<string, unknown> = {}) {
   return {
-    classes: {},
-    className: "input",
     label: "Input formula",
     autoFocus: false,
     defaultValue: "",
@@ -470,9 +464,7 @@ describe("LtlStudy", () => {
   it("requests the formula and describes its class", async () => {
     const { requests } = stubFetch();
     const handleAnyParseError = vi.fn();
-    render(
-      <LtlStudy classes={{}} formula="G a" handleAnyParseError={handleAnyParseError} />
-    );
+    render(<LtlStudy formula="G a" handleAnyParseError={handleAnyParseError} />);
 
     expect(requests).toHaveLength(1);
     expect(new URL(requests[0].url).pathname).toBe("/api/study/G%20a");
@@ -493,9 +485,7 @@ describe("LtlStudy", () => {
   it("does not query an empty formula and clears a previous parse error", async () => {
     const handleAnyParseError = vi.fn();
     const { fetchMock } = stubFetch();
-    render(
-      <LtlStudy classes={{}} formula="" handleAnyParseError={handleAnyParseError} />
-    );
+    render(<LtlStudy formula="" handleAnyParseError={handleAnyParseError} />);
 
     await act(async () => {});
 
@@ -521,7 +511,6 @@ describe("LtlCompare", () => {
     return (
       <OptionsHarness>
         <LtlCompare
-          classes={{}}
           formula="a U b"
           formula2={formula2}
           handleChangeFormula2={() => {}}
@@ -594,11 +583,7 @@ describe("LtlTranslate", () => {
   }) {
     return (
       <OptionsHarness initial={{ ...TRANSLATE_OPTIONS, hideoptions, ...initial }}>
-        <LtlTranslate
-          classes={{}}
-          formula={formula}
-          handleAnyParseError={handleAnyParseError}
-        />
+        <LtlTranslate formula={formula} handleAnyParseError={handleAnyParseError} />
       </OptionsHarness>
     );
   }
@@ -845,7 +830,7 @@ describe("Versions", () => {
 
   it("lists the versions reported by the server, plus React", async () => {
     const { requests } = stubFetch();
-    render(<Versions classes={{}} />);
+    render(<Versions />);
 
     expect(requests).toHaveLength(1);
     expect(new URL(requests[0].url).pathname).toBe("/api/versions");
@@ -920,7 +905,7 @@ describe("LtlApp expert mode", () => {
 
   it("reaches the compare tab's second formula input", () => {
     const { requests } = stubFetch();
-    render(<LtlApp classes={{}} />);
+    render(<LtlApp />);
 
     fireEvent.click(screen.getByRole("tab", { name: "Compare" }));
 
@@ -952,7 +937,7 @@ describe("LtlApp options", () => {
 
   it("hides and restores the options of the active tab", () => {
     stubFetch();
-    render(<LtlApp classes={{}} />);
+    render(<LtlApp />);
 
     // Translate is the default tab, so its options are shown.
     expect(screen.getByRole("button", { name: "Acceptance to use" })).toBeTruthy();
@@ -972,7 +957,7 @@ describe("LtlApp options", () => {
 
   it("turns the option state into rewrite requests", () => {
     const { requests } = stubFetch();
-    render(<LtlApp classes={{}} />);
+    render(<LtlApp />);
 
     fireEvent.click(screen.getByRole("tab", { name: "Rewrite" }));
     const input = screen.getByLabelText("Input formula");

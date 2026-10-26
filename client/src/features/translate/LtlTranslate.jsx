@@ -3,17 +3,15 @@ import Button from "@mui/material/Button";
 import Checkbox from "@mui/material/Checkbox";
 import CircularProgress from "@mui/material/CircularProgress";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import FormControl from "@mui/material/FormControl";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import FormLabel from "@mui/material/FormLabel";
 import List from "@mui/material/List";
-import ListItem from "@mui/material/ListItem";
 import ListItemText from "@mui/material/ListItemText";
 import Menu from "@mui/material/Menu";
-import MenuItem from "@mui/material/MenuItem";
 import Radio from "@mui/material/Radio";
 import RadioGroup from "@mui/material/RadioGroup";
 import Typography from "@mui/material/Typography";
+import { styled } from "@mui/material/styles";
 
 import { getTranslate, translateUrl } from "../../api/client";
 import { useApiQuery } from "../../hooks/useApiQuery";
@@ -23,7 +21,39 @@ import { NoteText } from "../../components/NoteText";
 import { righthelp } from "../../components/optionHelp";
 import { renderError } from "../../components/renderError";
 import { SVGInline } from "../../components/SVGInline";
+import {
+  ChoiceListItem,
+  ChoiceMenuItem,
+  ExpertOptionGroup,
+  OptionGroup,
+} from "../../components/OptionWidgets";
 import { useOptions } from "../../options";
+
+/** The option groups of the translate panel, side by side. */
+const OptionsRow = styled("div")({
+  display: "flex",
+  flexWrap: "wrap",
+  alignItems: "flex-start",
+});
+
+/** A label of an option group; these groups stack their labels. */
+const VerticalLabel = styled(FormControlLabel)({ marginRight: 0 });
+
+/** The HOA or NeverClaim source shown under the automaton. */
+const SourceText = styled("pre")({
+  overflow: "auto",
+  whiteSpace: "pre-wrap",
+  width: "100%",
+  margin: 0,
+});
+
+/** The automaton drawing of the translate panel. */
+const AutomatonSvg = styled(SVGInline)({
+  overflow: "auto",
+  marginLeft: -4,
+  marginRight: -4,
+  display: "block",
+});
 
 /** Entries of the acceptance-condition menu, in display order. */
 const ACCEPTANCE_OPTIONS = {
@@ -35,9 +65,8 @@ const ACCEPTANCE_OPTIONS = {
   e: "Acceptance: Emerson-Lei (generic acceptance)",
 };
 
-function AccChoice(props) {
+function AccChoice() {
   const [anchorEl, setAnchorEl] = React.useState(null);
-  const { classes } = props;
   const { options, setOption } = useOptions();
 
   const chooseAcc = (key) => {
@@ -46,20 +75,19 @@ function AccChoice(props) {
   };
 
   return (
-    <div className={classes.ltlsyntax}>
+    <div>
       <List component="nav">
-        <ListItem
+        <ChoiceListItem
           button
           aria-haspopup="true"
           aria-controls="acc-menu"
           aria-label="Acceptance to use"
           aria-expanded={Boolean(anchorEl)}
-          className={classes.choicelistitem}
           onClick={(event) => setAnchorEl(event.currentTarget)}
         >
           <ListItemText primary={ACCEPTANCE_OPTIONS[options.acc]} />
-          <ExpandMoreIcon className={classes.choiceicon} />
-        </ListItem>
+          <ExpandMoreIcon color="primary" />
+        </ChoiceListItem>
       </List>
       <Menu
         id="acc-menu"
@@ -68,14 +96,13 @@ function AccChoice(props) {
         onClose={() => setAnchorEl(null)}
       >
         {Object.entries(ACCEPTANCE_OPTIONS).map(([key, option]) => (
-          <MenuItem
+          <ChoiceMenuItem
             key={key}
-            className={classes.choicemenuitem}
             selected={key === options.acc}
             onClick={() => chooseAcc(key)}
           >
             {option}
-          </MenuItem>
+          </ChoiceMenuItem>
         ))}
       </Menu>
     </div>
@@ -83,7 +110,7 @@ function AccChoice(props) {
 }
 
 /** Body of the translate tab; `showfile` picks the source shown, if any. */
-function translateResult(res, classes, showfile, showfilehoa, showfilespin) {
+function translateResult(res, showfile, showfilehoa, showfilespin) {
   return (
     <React.Fragment>
       {"states" in res && (
@@ -95,13 +122,7 @@ function translateResult(res, classes, showfile, showfilehoa, showfilespin) {
         </Typography>
       )}
       {"note" in res && res["note"].map((note) => <NoteText key={note} text={note} />)}
-      {"automaton_svg" in res && (
-        <SVGInline
-          className={classes.automaton_svg}
-          component="div"
-          svg={res["automaton_svg"]}
-        />
-      )}
+      {"automaton_svg" in res && <AutomatonSvg svg={res["automaton_svg"]} />}
       {"automaton_hoa" in res && (
         <Button color="primary" onClick={showfilehoa}>
           HOA
@@ -112,15 +133,14 @@ function translateResult(res, classes, showfile, showfilehoa, showfilespin) {
           NeverClaim
         </Button>
       )}
-      {showfile === 1 && <pre className={classes.pre}>{res["automaton_hoa"]}</pre>}
-      {showfile === 2 && <pre className={classes.pre}>{res["automaton_spin"]}</pre>}
+      {showfile === 1 && <SourceText>{res["automaton_hoa"]}</SourceText>}
+      {showfile === 2 && <SourceText>{res["automaton_spin"]}</SourceText>}
     </React.Fragment>
   );
 }
 
 /** Option widgets of the translate tab. */
-function TranslateOptions(props) {
-  const { classes } = props;
+function TranslateOptions() {
   const { options, setOption, toggleOption } = useOptions();
   const { acc, autpref, optlevel, minmax, oddeven, transopts, hideoptions, expert } =
     options;
@@ -129,9 +149,9 @@ function TranslateOptions(props) {
     <React.Fragment>
       {hideoptions || (
         <React.Fragment>
-          <AccChoice classes={classes} />
-          <div className={classes.optionstrans}>
-            <FormControl component="fieldset" className={classes.borderedgroupprimary}>
+          <AccChoice />
+          <OptionsRow>
+            <OptionGroup component="fieldset">
               <FormLabel component="legend">Translation pref.</FormLabel>
               <RadioGroup
                 aria-label="Translation preferences"
@@ -139,32 +159,24 @@ function TranslateOptions(props) {
                 value={autpref}
                 onChange={(event) => setOption("autpref", event.target.value)}
               >
-                <FormControlLabel
-                  classes={{ root: classes.fclvertical }}
+                <VerticalLabel
                   value="s"
                   control={<Radio color="primary" />}
                   label="small"
                 />
-                <FormControlLabel
-                  classes={{ root: classes.fclvertical }}
+                <VerticalLabel
                   value="d"
                   control={<Radio color="primary" />}
                   label="deterministic"
                 />
                 {(expert || autpref === "a") && (
-                  <FormControlLabel
-                    classes={{ root: classes.fclvertical }}
-                    value="a"
-                    control={<Radio />}
-                    label="any"
-                  />
+                  <VerticalLabel value="a" control={<Radio />} label="any" />
                 )}
               </RadioGroup>
-            </FormControl>
-            <FormControl component="fieldset" className={classes.borderedgroupprimary}>
+            </OptionGroup>
+            <OptionGroup component="fieldset">
               <FormLabel component="legend">Translation constraints</FormLabel>
-              <FormControlLabel
-                classes={{ root: classes.fclvertical }}
+              <VerticalLabel
                 control={
                   <Checkbox
                     checked={transopts["complete"]}
@@ -177,8 +189,7 @@ function TranslateOptions(props) {
                   "Make sure we can always move forward in the automaton, regardless of where we are and what letter we read."
                 )}
               />
-              <FormControlLabel
-                classes={{ root: classes.fclvertical }}
+              <VerticalLabel
                 control={
                   <Checkbox
                     checked={transopts["unambiguous"]}
@@ -191,8 +202,7 @@ function TranslateOptions(props) {
                   "Accepted words should have only one accepting run.  Rejecting words may be rejected by many runs."
                 )}
               />
-              <FormControlLabel
-                classes={{ root: classes.fclvertical }}
+              <VerticalLabel
                 control={
                   <Checkbox
                     checked={transopts["statebased"]}
@@ -206,11 +216,10 @@ function TranslateOptions(props) {
                   "Automata with state-based acceptance are sometimes larger than those with transition-based acceptance, and never smaller.  By defaut we use state-based acceptance only when it is clear that transition-based acceptance has no benefit."
                 )}
               />
-            </FormControl>
-            <FormControl component="fieldset" className={classes.borderedgroupprimary}>
+            </OptionGroup>
+            <OptionGroup component="fieldset">
               <FormLabel component="legend">Display options</FormLabel>
-              <FormControlLabel
-                classes={{ root: classes.fclvertical }}
+              <VerticalLabel
                 control={
                   <Checkbox
                     checked={transopts["showscc"]}
@@ -223,8 +232,7 @@ function TranslateOptions(props) {
                   "Strongly Connected Components will be highlighted in green (accepting), red (rejecting), black (transient), and gray (rejecting and useless)."
                 )}
               />
-              <FormControlLabel
-                classes={{ root: classes.fclvertical }}
+              <VerticalLabel
                 control={
                   <Checkbox
                     checked={transopts["showndet"]}
@@ -234,8 +242,7 @@ function TranslateOptions(props) {
                 }
                 label={"show non-determinism"}
               />
-              <FormControlLabel
-                classes={{ root: classes.fclvertical }}
+              <VerticalLabel
                 control={
                   <Checkbox
                     checked={transopts["forcetacc"]}
@@ -249,9 +256,9 @@ function TranslateOptions(props) {
                   "If an automaton with state-based acceptance has been built, move the acceptance marks of each state to its outgoing transitions.  (This is actually how automata are stored in Spot.)"
                 )}
               />
-            </FormControl>
+            </OptionGroup>
             {acc === "p" && (
-              <FormControl component="fieldset" className={classes.borderedgroupprimary}>
+              <OptionGroup component="fieldset">
                 <FormLabel component="legend">Parity style</FormLabel>
                 <FormControlLabel
                   control={
@@ -271,7 +278,7 @@ function TranslateOptions(props) {
                   name="minmax"
                   value={minmax}
                   onChange={(event) => setOption("minmax", event.target.value)}
-                  className={classes.flexhoriz}
+                  sx={{ flexDirection: "row" }}
                 >
                   <FormControlLabel
                     value="any"
@@ -294,7 +301,7 @@ function TranslateOptions(props) {
                   name="oddeven"
                   value={oddeven}
                   onChange={(event) => setOption("oddeven", event.target.value)}
-                  className={classes.flexhoriz}
+                  sx={{ flexDirection: "row" }}
                 >
                   <FormControlLabel
                     value="any"
@@ -312,21 +319,16 @@ function TranslateOptions(props) {
                     label="even"
                   />
                 </RadioGroup>
-              </FormControl>
+              </OptionGroup>
             )}
             {expert && (
-              <FormControl
-                component="fieldset"
-                className={classes.borderedgroupsecondary}
-              >
-                <FormLabel component="legend" classes={{ focused: classes.focused }}>
-                  Optimization level
-                </FormLabel>
+              <ExpertOptionGroup component="fieldset">
+                <FormLabel component="legend">Optimization level</FormLabel>
                 <RadioGroup
                   aria-label="Optimization level"
                   name="optlevel"
                   value={optlevel}
-                  className={classes.flexhoriz}
+                  sx={{ flexDirection: "row" }}
                   onChange={(event) => setOption("optlevel", event.target.value)}
                 >
                   <FormControlLabel
@@ -345,9 +347,9 @@ function TranslateOptions(props) {
                     label="low"
                   />
                 </RadioGroup>
-              </FormControl>
+              </ExpertOptionGroup>
             )}
-          </div>
+          </OptionsRow>
         </React.Fragment>
       )}
     </React.Fragment>
@@ -355,7 +357,7 @@ function TranslateOptions(props) {
 }
 
 export function LtlTranslate(props) {
-  const { classes, formula, handleAnyParseError } = props;
+  const { formula, handleAnyParseError } = props;
   const { options } = useOptions();
   const { acc, autpref, optlevel, minmax, oddeven, transopts } = options;
 
@@ -381,14 +383,15 @@ export function LtlTranslate(props) {
 
   let result = null;
   if (error !== null) result = renderError(error);
-  else if (showSpinner) result = <CircularProgress className={classes.progress} />;
+  else if (showSpinner)
+    result = <CircularProgress sx={{ display: "block", margin: "auto" }} />;
   else if (data !== null)
-    result = translateResult(data, classes, showfile, showfilehoa, showfilespin);
+    result = translateResult(data, showfile, showfilehoa, showfilespin);
 
   return (
     <React.Fragment>
-      <TranslateOptions classes={classes} />
-      {result && <LtlResult classes={classes} result={result} />}
+      <TranslateOptions />
+      {result && <LtlResult result={result} />}
     </React.Fragment>
   );
 }

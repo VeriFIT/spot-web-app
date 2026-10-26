@@ -2,22 +2,26 @@ import React from "react";
 import Checkbox from "@mui/material/Checkbox";
 import CircularProgress from "@mui/material/CircularProgress";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import FormControl from "@mui/material/FormControl";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import FormLabel from "@mui/material/FormLabel";
 import List from "@mui/material/List";
-import ListItem from "@mui/material/ListItem";
 import ListItemText from "@mui/material/ListItemText";
 import Menu from "@mui/material/Menu";
-import MenuItem from "@mui/material/MenuItem";
 import Switch from "@mui/material/Switch";
 import Typography from "@mui/material/Typography";
+import { styled } from "@mui/material/styles";
 
 import { getRewrite, rewriteUrl } from "../../api/client";
 import { useApiQuery } from "../../hooks/useApiQuery";
 import { useDelayedFlag } from "../../hooks/useDelayedFlag";
 import { LtlResult } from "../../components/LtlResult";
 import { righthelp } from "../../components/optionHelp";
+import {
+  ChoiceListItem,
+  ChoiceMenuItem,
+  ExpertOptionGroup,
+  OptionGroup,
+} from "../../components/OptionWidgets";
 import { renderError } from "../../components/renderError";
 import { SVGInline } from "../../components/SVGInline";
 import { useOptions } from "../../options";
@@ -30,9 +34,8 @@ const SYNTAX_OPTIONS = {
   g: "Show Abstract Syntax Tree",
 };
 
-function LtlSyntaxChoice(props) {
+function LtlSyntaxChoice() {
   const [anchorEl, setAnchorEl] = React.useState(null);
-  const { classes } = props;
   const { options, setOption } = useOptions();
 
   const chooseSyntax = (key) => {
@@ -41,20 +44,19 @@ function LtlSyntaxChoice(props) {
   };
 
   return (
-    <div className={classes.ltlsyntax}>
+    <div>
       <List component="nav">
-        <ListItem
+        <ChoiceListItem
           button
           aria-haspopup="true"
           aria-controls="syntax-menu"
           aria-label="LTL syntax to output"
           aria-expanded={Boolean(anchorEl)}
-          className={classes.choicelistitem}
           onClick={(event) => setAnchorEl(event.currentTarget)}
         >
           <ListItemText primary={SYNTAX_OPTIONS[options.syntax]} />
-          <ExpandMoreIcon className={classes.choiceicon} />
-        </ListItem>
+          <ExpandMoreIcon color="primary" />
+        </ChoiceListItem>
       </List>
       <Menu
         id="syntax-menu"
@@ -63,14 +65,13 @@ function LtlSyntaxChoice(props) {
         onClose={() => setAnchorEl(null)}
       >
         {Object.entries(SYNTAX_OPTIONS).map(([key, option]) => (
-          <MenuItem
+          <ChoiceMenuItem
             key={key}
-            className={classes.choicemenuitem}
             selected={key === options.syntax}
             onClick={() => chooseSyntax(key)}
           >
             {option}
-          </MenuItem>
+          </ChoiceMenuItem>
         ))}
       </Menu>
     </div>
@@ -89,15 +90,12 @@ const SIMPLIFICATION_OPTIONS = {
   bi: "rewrite Boolean subformulas to irredundant-sum-of-products",
 };
 
-function LtlSimplificationOptions(props) {
-  const { classes } = props;
+function LtlSimplificationOptions() {
   const { options, toggleOption } = useOptions();
 
   return (
-    <FormControl component="fieldset" className={classes.borderedgroupsecondary}>
-      <FormLabel component="legend" classes={{ focused: classes.focused }}>
-        Simplification options
-      </FormLabel>
+    <ExpertOptionGroup component="fieldset">
+      <FormLabel component="legend">Simplification options</FormLabel>
       {Object.entries(SIMPLIFICATION_OPTIONS).map(([key, value]) => (
         <FormControlLabel
           key={key}
@@ -111,7 +109,7 @@ function LtlSimplificationOptions(props) {
           label={value}
         />
       ))}
-    </FormControl>
+    </ExpertOptionGroup>
   );
 }
 
@@ -131,14 +129,21 @@ const UNABBREV_OPTIONS_2 = {
   "^": ["xor", "xor", "^"],
 };
 
-function LtlUnabbrevOptions(props) {
+/** A checkbox of the "Unabbreviate" group: the rows are packed tighter. */
+const UnabbrevLabel = styled(FormControlLabel)({
+  marginRight: 16,
+  marginBottom: -8,
+  marginTop: -8,
+  "& .MuiFormControlLabel-label": { marginLeft: -8 },
+});
+
+function LtlUnabbrevOptions() {
   // Each option is labelled with its notation in the selected output syntax.
   const { options, toggleOption } = useOptions();
   const syntaxId = options.syntax === "i" ? 1 : options.syntax === "l" ? 2 : 0;
-  const { classes } = props;
 
   const option = ([key, values]) => (
-    <FormControlLabel
+    <UnabbrevLabel
       key={key}
       control={
         <Checkbox
@@ -148,19 +153,12 @@ function LtlUnabbrevOptions(props) {
           color="primary"
         />
       }
-      classes={{
-        root: classes.unabbrevboxroot,
-        label: classes.unabbrevboxlabel,
-      }}
       label={<code>{values[syntaxId]}</code>}
     />
   );
 
   return (
-    <FormControl
-      component="fieldset"
-      className={`${classes.borderedgroupprimary} ${classes.unabbrev}`}
-    >
+    <OptionGroup component="fieldset" sx={{ flexDirection: "row", flexWrap: "wrap" }}>
       <FormLabel component="legend">
         {righthelp(
           "Unabbreviate",
@@ -169,12 +167,12 @@ function LtlUnabbrevOptions(props) {
       </FormLabel>
       <span>{Object.entries(UNABBREV_OPTIONS_1).map(option)}</span>
       <span>{Object.entries(UNABBREV_OPTIONS_2).map(option)}</span>
-    </FormControl>
+    </OptionGroup>
   );
 }
 
 export function LtlRewrite(props) {
-  const { classes, formula, handleAnyParseError } = props;
+  const { formula, handleAnyParseError } = props;
   const { options, setOption } = useOptions();
   const { syntax, simplify, ltlsimp, unabbrev, delta2, hideoptions, expert } = options;
 
@@ -198,7 +196,8 @@ export function LtlRewrite(props) {
 
   let result = null;
   if (error !== null) result = renderError(error);
-  else if (showSpinner) result = <CircularProgress className={classes.progress} />;
+  else if (showSpinner)
+    result = <CircularProgress sx={{ display: "block", margin: "auto" }} />;
   else if (data !== null) {
     if ("formula" in data) result = <Typography>{data.formula}</Typography>;
     else if ("svg" in data) result = <SVGInline svg={data.svg} />;
@@ -209,7 +208,7 @@ export function LtlRewrite(props) {
     <React.Fragment>
       {hideoptions || (
         <React.Fragment>
-          <LtlSyntaxChoice classes={classes} />
+          <LtlSyntaxChoice />
           <FormControlLabel
             control={
               <Switch
@@ -221,8 +220,8 @@ export function LtlRewrite(props) {
             }
             label="Simplify"
           />
-          <LtlUnabbrevOptions classes={classes} />
-          {expert && <LtlSimplificationOptions classes={classes} />}
+          <LtlUnabbrevOptions />
+          {expert && <LtlSimplificationOptions />}
           <FormControlLabel
             control={
               <Switch
@@ -236,7 +235,7 @@ export function LtlRewrite(props) {
           />
         </React.Fragment>
       )}
-      {result && <LtlResult classes={classes} result={result} />}
+      {result && <LtlResult result={result} />}
     </React.Fragment>
   );
 }

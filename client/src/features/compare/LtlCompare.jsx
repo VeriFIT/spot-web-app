@@ -1,10 +1,8 @@
 import React from "react";
 import CircularProgress from "@mui/material/CircularProgress";
-import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
-import TableCell from "@mui/material/TableCell";
-import TableRow from "@mui/material/TableRow";
 import Typography from "@mui/material/Typography";
+import { styled } from "@mui/material/styles";
 
 import { compareUrl, getCompare } from "../../api/client";
 import { useApiQuery } from "../../hooks/useApiQuery";
@@ -14,58 +12,70 @@ import { LtlResult } from "../../components/LtlResult";
 import { classhelp } from "../../components/optionHelp";
 import { renderError } from "../../components/renderError";
 import { SVGInline } from "../../components/SVGInline";
+import {
+  WordTable,
+  WordTableCell,
+  WordTableCellBold,
+  WordTableRow,
+} from "../../components/WordTable";
 import { useOptions } from "../../options";
 
+/** The Venn diagram of the two languages, to the right of the text. */
+const VennDiagram = styled(SVGInline)({ float: "right" });
+
+/** The two syntactic classes listed under the Venn diagram. */
+const ToplessList = styled("ul")({ marginTop: 0 });
+
 /** Body of the compare tab, as a function of the answer so it stays pure. */
-function compareResult(res, classes) {
+function compareResult(res) {
   if (!("txt" in res && "svg" in res)) return null;
   return (
     <React.Fragment>
       {"txt" in res && <Typography>{res["txt"]}</Typography>}
-      {"svg" in res && <SVGInline svg={res["svg"]} className={classes.vendiag} />}
-      <Table className={classes.wordtable}>
+      {"svg" in res && <VennDiagram svg={res["svg"]} />}
+      <WordTable>
         <TableBody>
           {"w1" in res && (
-            <TableRow className={classes.wordtablerow}>
-              <TableCell component="th" scope="row" className={classes.wordtablecell}>
+            <WordTableRow>
+              <WordTableCell component="th" scope="row">
                 w₁:
-              </TableCell>
-              <TableCell className={classes.wordtablecellw}>{res["w1"]}</TableCell>
-            </TableRow>
+              </WordTableCell>
+              <WordTableCellBold>{res["w1"]}</WordTableCellBold>
+            </WordTableRow>
           )}
           {"w2" in res && (
-            <TableRow className={classes.wordtablerow}>
-              <TableCell component="th" scope="row" className={classes.wordtablecell}>
+            <WordTableRow>
+              <WordTableCell component="th" scope="row">
                 w₂:
-              </TableCell>
-              <TableCell className={classes.wordtablecellw}>{res["w2"]}</TableCell>
-            </TableRow>
+              </WordTableCell>
+              <WordTableCellBold>{res["w2"]}</WordTableCellBold>
+            </WordTableRow>
           )}
           {"w3" in res && (
-            <TableRow className={classes.wordtablerow}>
-              <TableCell component="th" scope="row" className={classes.wordtablecell}>
+            <WordTableRow>
+              <WordTableCell component="th" scope="row">
                 w₃:
-              </TableCell>
-              <TableCell className={classes.wordtablecellw}>{res["w3"]}</TableCell>
-            </TableRow>
+              </WordTableCell>
+              <WordTableCellBold>{res["w3"]}</WordTableCellBold>
+            </WordTableRow>
           )}
           {"w4" in res && (
-            <TableRow className={classes.wordtablerow}>
-              <TableCell component="th" scope="row" className={classes.wordtablecell}>
+            <WordTableRow>
+              <WordTableCell component="th" scope="row">
                 w₄:
-              </TableCell>
-              <TableCell className={classes.wordtablecellw}>{res["w4"]}</TableCell>
-            </TableRow>
+              </WordTableCell>
+              <WordTableCellBold>{res["w4"]}</WordTableCellBold>
+            </WordTableRow>
           )}
         </TableBody>
-      </Table>
+      </WordTable>
       {"sfh1" in res && (
         <Typography>
           Although they are equivalent,
-          <ul className={classes.nottopmargin}>
+          <ToplessList>
             <li>First formula belongs to {classhelp(res["sfh1"], res["sfh1_text"])},</li>
             <li>Second formula belongs to {classhelp(res["sfh2"], res["sfh2_text"])}.</li>
-          </ul>
+          </ToplessList>
         </Typography>
       )}
     </React.Fragment>
@@ -73,7 +83,7 @@ function compareResult(res, classes) {
 }
 
 export function LtlCompare(props) {
-  const { classes, formula, formula2 } = props;
+  const { formula, formula2 } = props;
   const { options } = useOptions();
 
   const requestUrl = React.useMemo(
@@ -97,14 +107,14 @@ export function LtlCompare(props) {
 
   let result = null;
   if (error !== null) result = renderError(error);
-  else if (showSpinner) result = <CircularProgress className={classes.progress} />;
-  else if (data !== null) result = compareResult(data, classes);
+  else if (showSpinner)
+    result = <CircularProgress sx={{ display: "block", margin: "auto" }} />;
+  else if (data !== null) result = compareResult(data);
 
   return (
     <React.Fragment>
       <LtlInput
-        classes={classes}
-        className={classes.textField2}
+        highlight="second"
         label="Second formula"
         expert={options.expert}
         defaultValue={formula2}
@@ -112,7 +122,7 @@ export function LtlCompare(props) {
         formulalbt={formula2lbt}
         formulaerr={formula2err}
       />
-      {result && <LtlResult classes={classes} result={result} />}
+      {result && <LtlResult result={result} />}
     </React.Fragment>
   );
 }
