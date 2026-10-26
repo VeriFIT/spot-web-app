@@ -1,6 +1,5 @@
 import React from "react";
 import Checkbox from "@mui/material/Checkbox";
-import CircularProgress from "@mui/material/CircularProgress";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import FormLabel from "@mui/material/FormLabel";
@@ -14,7 +13,6 @@ import { styled } from "@mui/material/styles";
 import { getRewrite, rewriteUrl } from "../../api/client";
 import { useApiQuery } from "../../hooks/useApiQuery";
 import { useDelayedFlag } from "../../hooks/useDelayedFlag";
-import { LtlResult } from "../../components/LtlResult";
 import { righthelp } from "../../components/optionHelp";
 import {
   ChoiceListItem,
@@ -22,16 +20,24 @@ import {
   ExpertOptionGroup,
   OptionGroup,
 } from "../../components/OptionWidgets";
-import { renderError } from "../../components/renderError";
 import { SVGInline } from "../../components/SVGInline";
+import { TabResult } from "../../components/TabResult";
 import { useOptions } from "../../options";
 import type { SimplificationOptions, UnabbrevOptions } from "../../options";
-import type { ParseInfo } from "../../api/types";
+import type { ParseInfo, RewriteResponse } from "../../api/types";
 
 /** What the rewrite tab needs from the panel that owns the formula input. */
 export interface LtlRewriteProps {
   formula: string;
   handleAnyParseError: (res: ParseInfo) => void;
+}
+
+/** Body of the rewrite tab, as a function of the answer so it stays pure. */
+function rewriteResult(res: RewriteResponse) {
+  if ("formula" in res) return <Typography>{res.formula}</Typography>;
+  if ("svg" in res) return <SVGInline svg={res.svg} />;
+  if ("error" in res) return <Typography>{res.error}</Typography>;
+  return null;
 }
 
 /** Entries of the output-syntax menu, in display order. */
@@ -203,16 +209,6 @@ export function LtlRewrite(props: LtlRewriteProps) {
     else if (requestUrl === null) handleAnyParseError({});
   }, [data, requestUrl, handleAnyParseError]);
 
-  let result: React.ReactNode = null;
-  if (error !== null) result = renderError(error);
-  else if (showSpinner)
-    result = <CircularProgress sx={{ display: "block", margin: "auto" }} />;
-  else if (data !== null) {
-    if ("formula" in data) result = <Typography>{data.formula}</Typography>;
-    else if ("svg" in data) result = <SVGInline svg={data.svg} />;
-    else if ("error" in data) result = <Typography>{data.error}</Typography>;
-  }
-
   return (
     <React.Fragment>
       {hideoptions || (
@@ -244,7 +240,12 @@ export function LtlRewrite(props: LtlRewriteProps) {
           />
         </React.Fragment>
       )}
-      {result && <LtlResult result={result} />}
+      <TabResult
+        error={error}
+        showSpinner={showSpinner}
+        data={data}
+        render={rewriteResult}
+      />
     </React.Fragment>
   );
 }

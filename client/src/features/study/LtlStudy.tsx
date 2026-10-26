@@ -1,5 +1,4 @@
 import React from "react";
-import CircularProgress from "@mui/material/CircularProgress";
 import TableBody from "@mui/material/TableBody";
 import Typography from "@mui/material/Typography";
 import { styled } from "@mui/material/styles";
@@ -8,10 +7,9 @@ import { getStudy, studyUrl } from "../../api/client";
 import { useApiQuery } from "../../hooks/useApiQuery";
 import { useDelayedFlag } from "../../hooks/useDelayedFlag";
 import { Ltl } from "../../components/Ltl";
-import { LtlResult } from "../../components/LtlResult";
 import { classhelp } from "../../components/optionHelp";
-import { renderError } from "../../components/renderError";
 import { SVGInline } from "../../components/SVGInline";
+import { TabResult } from "../../components/TabResult";
 import {
   WordTable,
   WordTableCell,
@@ -204,11 +202,7 @@ export function LtlStudy(props: LtlStudyProps) {
     else if (requestUrl === null) handleAnyParseError({});
   }, [data, requestUrl, handleAnyParseError]);
 
-  let result: React.ReactNode = null;
-  if (error !== null) result = renderError(error);
-  else if (showSpinner)
-    result = <CircularProgress sx={{ display: "block", margin: "auto" }} />;
-  else if (data !== null) result = studyResult(data);
-
-  return <div>{result && <LtlResult result={result} />}</div>;
+  return (
+    <TabResult error={error} showSpinner={showSpinner} data={data} render={studyResult} />
+  );
 }

@@ -1,5 +1,4 @@
 import React from "react";
-import CircularProgress from "@mui/material/CircularProgress";
 import TableBody from "@mui/material/TableBody";
 import Typography from "@mui/material/Typography";
 import { styled } from "@mui/material/styles";
@@ -8,10 +7,9 @@ import { compareUrl, getCompare } from "../../api/client";
 import { useApiQuery } from "../../hooks/useApiQuery";
 import { useDelayedFlag } from "../../hooks/useDelayedFlag";
 import { LtlInput } from "../../components/LtlInput";
-import { LtlResult } from "../../components/LtlResult";
 import { classhelp } from "../../components/optionHelp";
-import { renderError } from "../../components/renderError";
 import { SVGInline } from "../../components/SVGInline";
+import { TabResult } from "../../components/TabResult";
 import {
   WordTable,
   WordTableCell,
@@ -121,12 +119,6 @@ export function LtlCompare(props: LtlCompareProps) {
     }
   }, [data, requestUrl, handleAnyParseError]);
 
-  let result: React.ReactNode = null;
-  if (error !== null) result = renderError(error);
-  else if (showSpinner)
-    result = <CircularProgress sx={{ display: "block", margin: "auto" }} />;
-  else if (data !== null) result = compareResult(data);
-
   return (
     <React.Fragment>
       <LtlInput
@@ -138,7 +130,12 @@ export function LtlCompare(props: LtlCompareProps) {
         formulalbt={formula2lbt}
         formulaerr={formula2err}
       />
-      {result && <LtlResult result={result} />}
+      <TabResult
+        error={error}
+        showSpinner={showSpinner}
+        data={data}
+        render={compareResult}
+      />
     </React.Fragment>
   );
 }

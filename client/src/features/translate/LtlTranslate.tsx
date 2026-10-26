@@ -1,7 +1,6 @@
 import React from "react";
 import Button from "@mui/material/Button";
 import Checkbox from "@mui/material/Checkbox";
-import CircularProgress from "@mui/material/CircularProgress";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import FormLabel from "@mui/material/FormLabel";
@@ -16,11 +15,10 @@ import { styled } from "@mui/material/styles";
 import { getTranslate, translateUrl } from "../../api/client";
 import { useApiQuery } from "../../hooks/useApiQuery";
 import { useDelayedFlag } from "../../hooks/useDelayedFlag";
-import { LtlResult } from "../../components/LtlResult";
 import { NoteText } from "../../components/NoteText";
 import { righthelp } from "../../components/optionHelp";
-import { renderError } from "../../components/renderError";
 import { SVGInline } from "../../components/SVGInline";
+import { TabResult } from "../../components/TabResult";
 import {
   ChoiceListItem,
   ChoiceMenuItem,
@@ -395,17 +393,15 @@ export function LtlTranslate(props: LtlTranslateProps) {
     else if (requestUrl === null) handleAnyParseError({});
   }, [data, requestUrl, handleAnyParseError]);
 
-  let result: React.ReactNode = null;
-  if (error !== null) result = renderError(error);
-  else if (showSpinner)
-    result = <CircularProgress sx={{ display: "block", margin: "auto" }} />;
-  else if (data !== null)
-    result = translateResult(data, showfile, showfilehoa, showfilespin);
-
   return (
     <React.Fragment>
       <TranslateOptions />
-      {result && <LtlResult result={result} />}
+      <TabResult
+        error={error}
+        showSpinner={showSpinner}
+        data={data}
+        render={(data) => translateResult(data, showfile, showfilehoa, showfilespin)}
+      />
     </React.Fragment>
   );
 }
