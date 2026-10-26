@@ -19,7 +19,7 @@ function toError(value: unknown): Error {
  *
  * Passing `null` disables the query and clears its result. A superseded or
  * aborted request never writes state, so a slow answer can no longer overwrite
- * a newer one (see modernize.md 5.2).
+ * a newer one.
  */
 export function useApiQuery<T>(
   key: string | null,

@@ -9,7 +9,7 @@ import type {
 
 /**
  * HTTP error carrying the status code, so the UI can branch on it instead of
- * parsing the message text (see modernize.md 5.7).
+ * parsing the message text.
  */
 export class ApiError extends Error {
   readonly status: number;

@@ -3,7 +3,7 @@ import React from "react";
 /**
  * Preferences of one app instance, grouped in a single object: they are what
  * the tabs turn into query parameters, so one reducer keeps the handlers and
- * the requests in step (see modernize.md 3.5).
+ * the requests in step.
  */
 export const INITIAL_OPTIONS = {
   action: 3,
