@@ -36,7 +36,7 @@ os.environ['SPOT_DOTEXTRA'] = 'size="6,12" edge[arrowhead=vee, arrowsize=.7]'
 
 import spot
 from spot.aux import str_to_svg
-from functools import wraps
+from functools import cache, wraps
 
 def cachecontrol(max_age=3600):
     def decorate_f(f):
@@ -72,24 +72,28 @@ def warn(res, msg):
     else:
         res['note'] = [msg]
 
+# The Graphviz in use cannot change while this process lives, so ask `dot -V`
+# once and keep the answer.
+@cache
+def dot_version():
+    dot = subprocess.Popen(['dot', '-V'],
+                           stdout=subprocess.PIPE,
+                           stderr=subprocess.PIPE)
+    (_, err) = dot.communicate()
+    try:
+        return err.split(b"\n")[0].split(b"version ")[1].decode("utf-8")
+    except Exception:
+        return "missing"
+
 # Return a Json list of triplets [[tool,version,url],...].
 @app.route('/api/versions')
 @cachecontrol()
 def versions():
-    dot = subprocess.Popen(['dot', '-V'],
-                           stdout=subprocess.PIPE,
-                           stderr=subprocess.PIPE)
-    (out, err) = dot.communicate()
-    try:
-        dot_version = err.split(b"\n")[0].split(b"version ")[1].decode("utf-8")
-    except Exception as e:
-        dot_version = "missing"
-
     return jsonify([
         ("Spot", spot.version(), "https://spot.lrde.epita.fr/"),
         ("Python", python_version(), "https://www.python.org/"),
         ("Flask", flask_version, "http://flask.pocoo.org/"),
-        ("GraphViz", dot_version, "https://graphviz.gitlab.io/"),
+        ("GraphViz", dot_version(), "https://graphviz.gitlab.io/"),
         ])
 
 

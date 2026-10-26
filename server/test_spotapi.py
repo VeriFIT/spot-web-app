@@ -24,6 +24,7 @@ the Spot that is actually installed.
 """
 
 import unittest
+from unittest import mock
 
 import spotapi
 
@@ -46,6 +47,18 @@ class SpotApiTest(unittest.TestCase):
             self.assertTrue(version is None or isinstance(version, str))
             self.assertTrue(url is None or isinstance(url, str))
         self.assertIn('Spot', [tool for tool, _, _ in versions])
+
+    def test_versions_asks_graphviz_only_once(self):
+        # The version cannot change while the server runs, so the subprocess
+        # should be started the first time and never again.
+        spotapi.dot_version.cache_clear()
+        with mock.patch(
+            'spotapi.subprocess.Popen', wraps=spotapi.subprocess.Popen
+        ) as popen:
+            self.get('/api/versions')
+            self.get('/api/versions')
+
+        self.assertEqual(popen.call_count, 1)
 
     def test_random_formulas_differ_between_calls(self):
         # The seed used to be the whole second, which made every call within
