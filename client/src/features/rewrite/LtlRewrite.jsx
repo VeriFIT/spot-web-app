@@ -20,6 +20,7 @@ import { LtlResult } from "../../components/LtlResult";
 import { righthelp } from "../../components/optionHelp";
 import { renderError } from "../../components/renderError";
 import { SVGInline } from "../../components/SVGInline";
+import { useOptions } from "../../options";
 
 /** Entries of the output-syntax menu, in display order. */
 const SYNTAX_OPTIONS = {
@@ -32,9 +33,10 @@ const SYNTAX_OPTIONS = {
 function LtlSyntaxChoice(props) {
   const [anchorEl, setAnchorEl] = React.useState(null);
   const { classes } = props;
+  const { options, setOption } = useOptions();
 
   const chooseSyntax = (key) => {
-    props.changeSyntax(key);
+    setOption("syntax", key);
     setAnchorEl(null);
   };
 
@@ -50,7 +52,7 @@ function LtlSyntaxChoice(props) {
           className={classes.choicelistitem}
           onClick={(event) => setAnchorEl(event.currentTarget)}
         >
-          <ListItemText primary={SYNTAX_OPTIONS[props.syntax]} />
+          <ListItemText primary={SYNTAX_OPTIONS[options.syntax]} />
           <ExpandMoreIcon className={classes.choiceicon} />
         </ListItem>
       </List>
@@ -64,7 +66,7 @@ function LtlSyntaxChoice(props) {
           <MenuItem
             key={key}
             className={classes.choicemenuitem}
-            selected={key === props.syntax}
+            selected={key === options.syntax}
             onClick={() => chooseSyntax(key)}
           >
             {option}
@@ -89,6 +91,7 @@ const SIMPLIFICATION_OPTIONS = {
 
 function LtlSimplificationOptions(props) {
   const { classes } = props;
+  const { options, toggleOption } = useOptions();
 
   return (
     <FormControl component="fieldset" className={classes.borderedgroupsecondary}>
@@ -98,11 +101,11 @@ function LtlSimplificationOptions(props) {
       {Object.entries(SIMPLIFICATION_OPTIONS).map(([key, value]) => (
         <FormControlLabel
           key={key}
-          disabled={!props.simplify}
+          disabled={!options.simplify}
           control={
             <Checkbox
-              checked={props.ltlsimp[key]}
-              onChange={props.handleChangeLtlSimp(key)}
+              checked={options.ltlsimp[key]}
+              onChange={() => toggleOption("ltlsimp", key)}
             />
           }
           label={value}
@@ -130,7 +133,8 @@ const UNABBREV_OPTIONS_2 = {
 
 function LtlUnabbrevOptions(props) {
   // Each option is labelled with its notation in the selected output syntax.
-  const syntaxId = props.syntax === "i" ? 1 : props.syntax === "l" ? 2 : 0;
+  const { options, toggleOption } = useOptions();
+  const syntaxId = options.syntax === "i" ? 1 : options.syntax === "l" ? 2 : 0;
   const { classes } = props;
 
   const option = ([key, values]) => (
@@ -138,9 +142,9 @@ function LtlUnabbrevOptions(props) {
       key={key}
       control={
         <Checkbox
-          checked={props.unabbrev[key]}
+          checked={options.unabbrev[key]}
           disabled={syntaxId === 1 && "MW^".indexOf(key) >= 0}
-          onChange={props.handleChangeLtlUnabbrev(key)}
+          onChange={() => toggleOption("unabbrev", key)}
           color="primary"
         />
       }
@@ -170,7 +174,9 @@ function LtlUnabbrevOptions(props) {
 }
 
 export function LtlRewrite(props) {
-  const { classes, formula, syntax, simplify, ltlsimp, unabbrev, delta2 } = props;
+  const { classes, formula, handleAnyParseError } = props;
+  const { options, setOption } = useOptions();
+  const { syntax, simplify, ltlsimp, unabbrev, delta2, hideoptions, expert } = options;
 
   // The request URL identifies the query: it only changes when the formula or
   // one of the options does, which is exactly when a new request is needed.
@@ -186,7 +192,6 @@ export function LtlRewrite(props) {
 
   // Report a parse failure (and any prefix-syntax fallback) to the formula
   // input, which is owned by the parent.
-  const { handleAnyParseError } = props;
   React.useEffect(() => {
     if (data !== null) handleAnyParseError(data);
   }, [data, handleAnyParseError]);
@@ -202,43 +207,27 @@ export function LtlRewrite(props) {
 
   return (
     <React.Fragment>
-      {props.hideoptions || (
+      {hideoptions || (
         <React.Fragment>
-          <LtlSyntaxChoice
-            syntax={syntax}
-            classes={classes}
-            changeSyntax={props.changeSyntax}
-          />
+          <LtlSyntaxChoice classes={classes} />
           <FormControlLabel
             control={
               <Switch
                 checked={simplify}
-                onChange={props.handleChecked("simplify")}
+                onChange={(event) => setOption("simplify", event.target.checked)}
                 value="simplify"
                 color="primary"
               />
             }
             label="Simplify"
           />
-          <LtlUnabbrevOptions
-            handleChangeLtlUnabbrev={props.handleChangeLtlUnabbrev}
-            unabbrev={unabbrev}
-            classes={classes}
-            syntax={syntax}
-          />
-          {props.expert && (
-            <LtlSimplificationOptions
-              classes={classes}
-              ltlsimp={ltlsimp}
-              simplify={simplify}
-              handleChangeLtlSimp={props.handleChangeLtlSimp}
-            />
-          )}
+          <LtlUnabbrevOptions classes={classes} />
+          {expert && <LtlSimplificationOptions classes={classes} />}
           <FormControlLabel
             control={
               <Switch
                 checked={delta2}
-                onChange={props.handleChecked("delta2")}
+                onChange={(event) => setOption("delta2", event.target.checked)}
                 value="delta2"
                 color="primary"
               />

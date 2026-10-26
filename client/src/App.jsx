@@ -16,6 +16,7 @@ import { Help } from "./features/help/Help";
 import { LtlRewrite } from "./features/rewrite/LtlRewrite";
 import { LtlStudy } from "./features/study/LtlStudy";
 import { LtlTranslate } from "./features/translate/LtlTranslate";
+import { INITIAL_OPTIONS, OptionsProvider, optionsReducer } from "./options";
 
 const styles = (theme) => ({
   toplevel: {
@@ -253,141 +254,50 @@ const styles = (theme) => ({
   },
 });
 
-class LtlApp extends React.Component {
-  state = {
-    action: 3,
-    acc: "g",
-    autpref: "s",
-    optlevel: "h",
-    syntax: "o",
-    expert: false,
-    hideoptions: false,
-    simplify: true,
-    delta2: false,
-    formula: "",
-    formula2: "",
-    formulaerr: null,
-    formulalbt: false,
-    minmax: "any",
-    oddeven: "any",
-    transopts: {
-      // translation constraints
-      unambiguous: false,
-      complete: false,
-      statebased: false,
-      // display options
-      showscc: false,
-      showndet: false,
-      forcetacc: false,
-      // parity options
-      colored: false,
-    },
-    ltlunabbrev: {
-      M: false,
-      W: false,
-      R: false,
-      G: false,
-      F: false,
-      e: false,
-      i: false,
-      "^": false,
-    },
-    ltlsimp: {
-      br: true,
-      lf: true,
-      si: true,
-      eu: true,
-      lc: true,
-      fs: false,
-      pn: false,
-      bi: false,
-    },
-  };
-  handleChangeLtlSimp = (key) => () => {
-    let newltlsimp = Object.assign({}, this.state.ltlsimp);
-    newltlsimp[key] = !newltlsimp[key];
-    this.setState({ ltlsimp: newltlsimp });
-  };
-  handleChangeTransOpts = (key) => () => {
-    let newtransopts = Object.assign({}, this.state.transopts);
-    newtransopts[key] = !newtransopts[key];
-    this.setState({ transopts: newtransopts });
-  };
+function LtlApp(props) {
+  const [options, dispatch] = React.useReducer(optionsReducer, INITIAL_OPTIONS);
+  // The formula being analysed, and the parse information the server reported
+  // for it. Neither is an option: they come from the input, not from a menu.
+  const [formula, setFormula] = React.useState("");
+  const [formula2, setFormula2] = React.useState("");
+  const [formulaerr, setFormulaerr] = React.useState(null);
+  const [formulalbt, setFormulalbt] = React.useState(false);
 
-  handleChangeLtlUnabbrev = (key) => () => {
-    let newltlunabbrev = Object.assign({}, this.state.ltlunabbrev);
-    newltlunabbrev[key] = !newltlunabbrev[key];
-    this.setState({ ltlunabbrev: newltlunabbrev });
-  };
+  // The tabs read the options from the context; only the controls rendered
+  // here need the setter directly.
+  const setOption = (name, value) => dispatch({ type: "set", name, value });
+  const changeAction = (event, value) => setOption("action", value);
+  const handleChecked = (name) => (event) => setOption(name, event.target.checked);
 
-  changeAutpref = (event) => {
-    this.setState({ autpref: event.target.value });
-  };
-  changeOptLevel = (event) => {
-    this.setState({ optlevel: event.target.value });
-  };
-  changeOddEven = (event) => {
-    this.setState({ oddeven: event.target.value });
-  };
-  changeMinMax = (event) => {
-    this.setState({ minmax: event.target.value });
-  };
+  // The tabs call this from an effect, so its identity must be stable; the
+  // setters it uses are.
+  const handleAnyParseError = React.useCallback((res) => {
+    setFormulaerr("parse_error" in res ? res.parse_error : null);
+    setFormulalbt(res.prefix_syntax === true);
+  }, []);
 
-  setFormulaError = (val) => {
-    this.setState({ formulaerr: val });
-  };
-  setPrefixSyntax = (val) => {
-    this.setState({ formulalbt: val });
-  };
+  const { classes, topright } = props;
+  const { action, expert, hideoptions } = options;
 
-  handleAnyParseError = (res) => {
-    if ("parse_error" in res) this.setFormulaError(res["parse_error"]);
-    else this.setFormulaError(null);
-    this.setPrefixSyntax(res["prefix_syntax"] === true);
-  };
-
-  changeAction = (event, value) => {
-    this.setState({ action: value });
-  };
-  changeSyntax = (key) => {
-    this.setState({ syntax: key });
-  };
-  changeAcc = (key) => {
-    this.setState({ acc: key });
-  };
-  handleChecked = (name) => (event) => {
-    this.setState({ [name]: event.target.checked });
-  };
-  handleChangeFormula = (str) => {
-    this.setState({ formula: str });
-  };
-  handleChangeFormula2 = (str) => {
-    this.setState({ formula2: str });
-  };
-
-  render() {
-    return (
-      <Paper className={this.props.classes.root}>
-        {this.props.topright}
-        {this.state.expert && <Versions classes={this.props.classes} />}
+  return (
+    <OptionsProvider options={options} dispatch={dispatch}>
+      <Paper className={classes.root}>
+        {topright}
+        {expert && <Versions classes={classes} />}
         <FormControlLabel
           style={{ marginLeft: 0 }}
           control={
-            <Switch
-              checked={this.state.expert}
-              onChange={this.handleChecked("expert")}
-              value="expert"
-            />
+            <Switch checked={expert} onChange={handleChecked("expert")} value="expert" />
           }
           label="Expert mode"
         />
-        {(this.state.expert || this.state.hideoptions) && (
+        {(expert || hideoptions) && (
           <FormControlLabel
             control={
               <Switch
-                checked={this.state.hideoptions}
-                disabled={this.state.action === 1 || this.state.action === 2}
-                onChange={this.handleChecked("hideoptions")}
+                checked={hideoptions}
+                disabled={action === 1 || action === 2}
+                onChange={handleChecked("hideoptions")}
                 color="secondary"
                 value="hideoptions"
               />
@@ -396,126 +306,77 @@ class LtlApp extends React.Component {
           />
         )}
         <Tabs
-          value={this.state.action}
-          onChange={this.changeAction}
+          value={action}
+          onChange={changeAction}
           centered
           indicatorColor="primary"
           textColor="primary"
         >
           <Tab
             value={0}
-            classes={{
-              root: this.props.classes.tab,
-              label: this.props.classes.tablabel,
-            }}
+            classes={{ root: classes.tab, label: classes.tablabel }}
             label="Rewrite"
           />
           <Tab
             value={1}
-            classes={{
-              root: this.props.classes.tab,
-              label: this.props.classes.tablabel,
-            }}
+            classes={{ root: classes.tab, label: classes.tablabel }}
             label="Study"
           />
           <Tab
             value={2}
-            classes={{
-              root: this.props.classes.tab,
-              label: this.props.classes.tablabel,
-            }}
+            classes={{ root: classes.tab, label: classes.tablabel }}
             label="Compare"
           />
           <Tab
             value={3}
-            classes={{
-              root: this.props.classes.tab,
-              label: this.props.classes.tablabel,
-            }}
+            classes={{ root: classes.tab, label: classes.tablabel }}
             label="Translate"
           />
         </Tabs>
         <LtlInput
-          classes={this.props.classes}
-          className={
-            this.state.action === 2
-              ? this.props.classes.textField1
-              : this.props.classes.textField
-          }
-          label={this.state.action === 2 ? "First formula" : "Input formula"}
-          expert={this.state.expert}
+          classes={classes}
+          className={action === 2 ? classes.textField1 : classes.textField}
+          label={action === 2 ? "First formula" : "Input formula"}
+          expert={expert}
           autoFocus
-          setFormula={this.handleChangeFormula}
-          formulalbt={this.state.formulalbt}
-          formulaerr={this.state.formulaerr}
+          setFormula={setFormula}
+          formulalbt={formulalbt}
+          formulaerr={formulaerr}
         />
-        {this.state.action === 0 && (
+        {action === 0 && (
           <LtlRewrite
-            syntax={this.state.syntax}
-            hideoptions={this.state.hideoptions}
-            classes={this.props.classes}
-            changeSyntax={this.changeSyntax}
-            ltlsimp={this.state.ltlsimp}
-            expert={this.state.expert}
-            formula={this.state.formula}
-            handleChecked={this.handleChecked}
-            simplify={this.state.simplify}
-            unabbrev={this.state.ltlunabbrev}
-            delta2={this.state.delta2}
-            handleChangeLtlSimp={this.handleChangeLtlSimp}
-            handleChangeLtlUnabbrev={this.handleChangeLtlUnabbrev}
-            handleAnyParseError={this.handleAnyParseError}
+            classes={classes}
+            formula={formula}
+            handleAnyParseError={handleAnyParseError}
           />
         )}
-        {this.state.action === 1 && (
+        {action === 1 && (
           <LtlStudy
-            classes={this.props.classes}
-            hideoptions={this.state.hideoptions}
-            expert={this.state.expert}
-            formula={this.state.formula}
-            handleAnyParseError={this.handleAnyParseError}
+            classes={classes}
+            formula={formula}
+            handleAnyParseError={handleAnyParseError}
           />
         )}
-        {this.state.action === 2 && (
+        {action === 2 && (
           <LtlCompare
-            classes={this.props.classes}
-            hideoptions={this.state.hideoptions}
-            formula={this.state.formula}
-            formula2={this.state.formula2}
-            handleChangeFormula2={this.handleChangeFormula2}
-            handleAnyParseError={this.handleAnyParseError}
-            expert={this.state.expert}
+            classes={classes}
+            formula={formula}
+            formula2={formula2}
+            handleChangeFormula2={setFormula2}
+            handleAnyParseError={handleAnyParseError}
           />
         )}
-        {this.state.action === 3 && (
+        {action === 3 && (
           <LtlTranslate
-            classes={this.props.classes}
-            hideoptions={this.state.hideoptions}
-            acc={this.state.acc}
-            expert={this.state.expert}
-            formula={this.state.formula}
-            changeAcc={this.changeAcc}
-            changeAutpref={this.changeAutpref}
-            changeOptLevel={this.changeOptLevel}
-            autpref={this.state.autpref}
-            optlevel={this.state.optlevel}
-            transopts={this.state.transopts}
-            handleChangeTransOpts={this.handleChangeTransOpts}
-            handleAnyParseError={this.handleAnyParseError}
-            minmax={this.state.minmax}
-            oddeven={this.state.oddeven}
-            changeMinMax={this.changeMinMax}
-            changeOddEven={this.changeOddEven}
+            classes={classes}
+            formula={formula}
+            handleAnyParseError={handleAnyParseError}
           />
         )}
-        {
-          //<div> {JSON.stringify(...)} </div>
-        }
       </Paper>
-    );
-  }
+    </OptionsProvider>
+  );
 }
-
 class LtlApps extends React.Component {
   state = {
     instances: 1,

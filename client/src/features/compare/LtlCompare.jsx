@@ -14,6 +14,7 @@ import { LtlResult } from "../../components/LtlResult";
 import { classhelp } from "../../components/optionHelp";
 import { renderError } from "../../components/renderError";
 import { SVGInline } from "../../components/SVGInline";
+import { useOptions } from "../../options";
 
 /** Body of the compare tab, as a function of the answer so it stays pure. */
 function compareResult(res, classes) {
@@ -73,6 +74,7 @@ function compareResult(res, classes) {
 
 export function LtlCompare(props) {
   const { classes, formula, formula2 } = props;
+  const { options } = useOptions();
 
   const requestUrl = React.useMemo(
     () => (formula === "" || formula2 === "" ? null : compareUrl(formula, formula2)),
@@ -104,7 +106,7 @@ export function LtlCompare(props) {
         classes={classes}
         className={classes.textField2}
         label="Second formula"
-        expert={props.expert}
+        expert={options.expert}
         defaultValue={formula2}
         setFormula={props.handleChangeFormula2}
         formulalbt={formula2lbt}

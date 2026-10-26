@@ -23,6 +23,7 @@ import { NoteText } from "../../components/NoteText";
 import { righthelp } from "../../components/optionHelp";
 import { renderError } from "../../components/renderError";
 import { SVGInline } from "../../components/SVGInline";
+import { useOptions } from "../../options";
 
 /** Entries of the acceptance-condition menu, in display order. */
 const ACCEPTANCE_OPTIONS = {
@@ -37,9 +38,10 @@ const ACCEPTANCE_OPTIONS = {
 function AccChoice(props) {
   const [anchorEl, setAnchorEl] = React.useState(null);
   const { classes } = props;
+  const { options, setOption } = useOptions();
 
   const chooseAcc = (key) => {
-    props.changeAcc(key);
+    setOption("acc", key);
     setAnchorEl(null);
   };
 
@@ -55,7 +57,7 @@ function AccChoice(props) {
           className={classes.choicelistitem}
           onClick={(event) => setAnchorEl(event.currentTarget)}
         >
-          <ListItemText primary={ACCEPTANCE_OPTIONS[props.acc]} />
+          <ListItemText primary={ACCEPTANCE_OPTIONS[options.acc]} />
           <ExpandMoreIcon className={classes.choiceicon} />
         </ListItem>
       </List>
@@ -69,7 +71,7 @@ function AccChoice(props) {
           <MenuItem
             key={key}
             className={classes.choicemenuitem}
-            selected={key === props.acc}
+            selected={key === options.acc}
             onClick={() => chooseAcc(key)}
           >
             {option}
@@ -117,43 +119,41 @@ function translateResult(res, classes, showfile, showfilehoa, showfilespin) {
 }
 
 /** Option widgets of the translate tab. */
-function translateOptions(props) {
+function TranslateOptions(props) {
+  const { classes } = props;
+  const { options, setOption, toggleOption } = useOptions();
+  const { acc, autpref, optlevel, minmax, oddeven, transopts, hideoptions, expert } =
+    options;
+
   return (
     <React.Fragment>
-      {props.hideoptions || (
+      {hideoptions || (
         <React.Fragment>
-          <AccChoice
-            acc={props.acc}
-            classes={props.classes}
-            changeAcc={props.changeAcc}
-          />
-          <div className={props.classes.optionstrans}>
-            <FormControl
-              component="fieldset"
-              className={props.classes.borderedgroupprimary}
-            >
+          <AccChoice classes={classes} />
+          <div className={classes.optionstrans}>
+            <FormControl component="fieldset" className={classes.borderedgroupprimary}>
               <FormLabel component="legend">Translation pref.</FormLabel>
               <RadioGroup
                 aria-label="Translation preferences"
                 name="autpref"
-                value={props.autpref}
-                onChange={props.changeAutpref}
+                value={autpref}
+                onChange={(event) => setOption("autpref", event.target.value)}
               >
                 <FormControlLabel
-                  classes={{ root: props.classes.fclvertical }}
+                  classes={{ root: classes.fclvertical }}
                   value="s"
                   control={<Radio color="primary" />}
                   label="small"
                 />
                 <FormControlLabel
-                  classes={{ root: props.classes.fclvertical }}
+                  classes={{ root: classes.fclvertical }}
                   value="d"
                   control={<Radio color="primary" />}
                   label="deterministic"
                 />
-                {(props.expert || props.autpref === "a") && (
+                {(expert || autpref === "a") && (
                   <FormControlLabel
-                    classes={{ root: props.classes.fclvertical }}
+                    classes={{ root: classes.fclvertical }}
                     value="a"
                     control={<Radio />}
                     label="any"
@@ -161,18 +161,15 @@ function translateOptions(props) {
                 )}
               </RadioGroup>
             </FormControl>
-            <FormControl
-              component="fieldset"
-              className={props.classes.borderedgroupprimary}
-            >
+            <FormControl component="fieldset" className={classes.borderedgroupprimary}>
               <FormLabel component="legend">Translation constraints</FormLabel>
               <FormControlLabel
-                classes={{ root: props.classes.fclvertical }}
+                classes={{ root: classes.fclvertical }}
                 control={
                   <Checkbox
-                    checked={props.transopts["complete"]}
+                    checked={transopts["complete"]}
                     color="primary"
-                    onChange={props.handleChangeTransOpts("complete")}
+                    onChange={() => toggleOption("transopts", "complete")}
                   />
                 }
                 label={righthelp(
@@ -181,12 +178,12 @@ function translateOptions(props) {
                 )}
               />
               <FormControlLabel
-                classes={{ root: props.classes.fclvertical }}
+                classes={{ root: classes.fclvertical }}
                 control={
                   <Checkbox
-                    checked={props.transopts["unambiguous"]}
+                    checked={transopts["unambiguous"]}
                     color="primary"
-                    onChange={props.handleChangeTransOpts("unambiguous")}
+                    onChange={() => toggleOption("transopts", "unambiguous")}
                   />
                 }
                 label={righthelp(
@@ -195,13 +192,13 @@ function translateOptions(props) {
                 )}
               />
               <FormControlLabel
-                classes={{ root: props.classes.fclvertical }}
+                classes={{ root: classes.fclvertical }}
                 control={
                   <Checkbox
-                    checked={props.transopts["statebased"]}
+                    checked={transopts["statebased"]}
                     color="primary"
-                    disabled={props.acc === "m"}
-                    onChange={props.handleChangeTransOpts("statebased")}
+                    disabled={acc === "m"}
+                    onChange={() => toggleOption("transopts", "statebased")}
                   />
                 }
                 label={righthelp(
@@ -210,18 +207,15 @@ function translateOptions(props) {
                 )}
               />
             </FormControl>
-            <FormControl
-              component="fieldset"
-              className={props.classes.borderedgroupprimary}
-            >
+            <FormControl component="fieldset" className={classes.borderedgroupprimary}>
               <FormLabel component="legend">Display options</FormLabel>
               <FormControlLabel
-                classes={{ root: props.classes.fclvertical }}
+                classes={{ root: classes.fclvertical }}
                 control={
                   <Checkbox
-                    checked={props.transopts["showscc"]}
+                    checked={transopts["showscc"]}
                     color="primary"
-                    onChange={props.handleChangeTransOpts("showscc")}
+                    onChange={() => toggleOption("transopts", "showscc")}
                   />
                 }
                 label={righthelp(
@@ -230,24 +224,24 @@ function translateOptions(props) {
                 )}
               />
               <FormControlLabel
-                classes={{ root: props.classes.fclvertical }}
+                classes={{ root: classes.fclvertical }}
                 control={
                   <Checkbox
-                    checked={props.transopts["showndet"]}
+                    checked={transopts["showndet"]}
                     color="primary"
-                    onChange={props.handleChangeTransOpts("showndet")}
+                    onChange={() => toggleOption("transopts", "showndet")}
                   />
                 }
                 label={"show non-determinism"}
               />
               <FormControlLabel
-                classes={{ root: props.classes.fclvertical }}
+                classes={{ root: classes.fclvertical }}
                 control={
                   <Checkbox
-                    checked={props.transopts["forcetacc"]}
+                    checked={transopts["forcetacc"]}
                     color="primary"
-                    onChange={props.handleChangeTransOpts("forcetacc")}
-                    disabled={props.acc === "m"}
+                    onChange={() => toggleOption("transopts", "forcetacc")}
+                    disabled={acc === "m"}
                   />
                 }
                 label={righthelp(
@@ -256,18 +250,15 @@ function translateOptions(props) {
                 )}
               />
             </FormControl>
-            {props.acc === "p" && (
-              <FormControl
-                component="fieldset"
-                className={props.classes.borderedgroupprimary}
-              >
+            {acc === "p" && (
+              <FormControl component="fieldset" className={classes.borderedgroupprimary}>
                 <FormLabel component="legend">Parity style</FormLabel>
                 <FormControlLabel
                   control={
                     <Checkbox
-                      checked={props.transopts["colored"]}
+                      checked={transopts["colored"]}
                       color="primary"
-                      onChange={props.handleChangeTransOpts("colored")}
+                      onChange={() => toggleOption("transopts", "colored")}
                     />
                   }
                   label={righthelp(
@@ -278,9 +269,9 @@ function translateOptions(props) {
                 <RadioGroup
                   aria-label="min or max"
                   name="minmax"
-                  value={props.minmax}
-                  onChange={props.changeMinMax}
-                  className={props.classes.flexhoriz}
+                  value={minmax}
+                  onChange={(event) => setOption("minmax", event.target.value)}
+                  className={classes.flexhoriz}
                 >
                   <FormControlLabel
                     value="any"
@@ -301,9 +292,9 @@ function translateOptions(props) {
                 <RadioGroup
                   aria-label="odd or even"
                   name="oddeven"
-                  value={props.oddeven}
-                  onChange={props.changeOddEven}
-                  className={props.classes.flexhoriz}
+                  value={oddeven}
+                  onChange={(event) => setOption("oddeven", event.target.value)}
+                  className={classes.flexhoriz}
                 >
                   <FormControlLabel
                     value="any"
@@ -323,23 +314,20 @@ function translateOptions(props) {
                 </RadioGroup>
               </FormControl>
             )}
-            {props.expert && (
+            {expert && (
               <FormControl
                 component="fieldset"
-                className={props.classes.borderedgroupsecondary}
+                className={classes.borderedgroupsecondary}
               >
-                <FormLabel
-                  component="legend"
-                  classes={{ focused: props.classes.focused }}
-                >
+                <FormLabel component="legend" classes={{ focused: classes.focused }}>
                   Optimization level
                 </FormLabel>
                 <RadioGroup
                   aria-label="Optimization level"
                   name="optlevel"
-                  value={props.optlevel}
-                  className={props.classes.flexhoriz}
-                  onChange={props.changeOptLevel}
+                  value={optlevel}
+                  className={classes.flexhoriz}
+                  onChange={(event) => setOption("optlevel", event.target.value)}
                 >
                   <FormControlLabel
                     value="h"
@@ -367,7 +355,9 @@ function translateOptions(props) {
 }
 
 export function LtlTranslate(props) {
-  const { classes, formula, acc, autpref, optlevel, minmax, oddeven, transopts } = props;
+  const { classes, formula, handleAnyParseError } = props;
+  const { options } = useOptions();
+  const { acc, autpref, optlevel, minmax, oddeven, transopts } = options;
 
   const requestUrl = React.useMemo(
     () =>
@@ -385,7 +375,6 @@ export function LtlTranslate(props) {
   const showfilespin = () => setShowfile(showfile === 2 ? 0 : 2);
 
   // Report the parse information to the formula input.
-  const { handleAnyParseError } = props;
   React.useEffect(() => {
     if (data !== null) handleAnyParseError(data);
   }, [data, handleAnyParseError]);
@@ -398,7 +387,7 @@ export function LtlTranslate(props) {
 
   return (
     <React.Fragment>
-      {translateOptions(props)}
+      <TranslateOptions classes={classes} />
       {result && <LtlResult classes={classes} result={result} />}
     </React.Fragment>
   );

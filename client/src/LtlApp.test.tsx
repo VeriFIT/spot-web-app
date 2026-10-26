@@ -7,7 +7,8 @@ import {
   waitFor,
   within,
 } from "@testing-library/react";
-import { useState, version as reactVersion } from "react";
+import { useReducer, useState, version as reactVersion } from "react";
+import type { ReactNode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import App, { LtlApp } from "./App";
@@ -17,6 +18,7 @@ import { LtlCompare } from "./features/compare/LtlCompare";
 import { LtlRewrite } from "./features/rewrite/LtlRewrite";
 import { LtlStudy } from "./features/study/LtlStudy";
 import { LtlTranslate } from "./features/translate/LtlTranslate";
+import { INITIAL_OPTIONS, OptionsProvider, optionsReducer } from "./options";
 
 interface PendingRequest {
   url: string;
@@ -59,66 +61,29 @@ function stubFetch() {
   return { fetchMock, requests };
 }
 
-/** Defaults of `LtlApp`'s state, so the option tests start where the app does. */
-const DEFAULT_LTLSIMP = {
-  br: true,
-  lf: true,
-  si: true,
-  eu: true,
-  lc: true,
-  fs: false,
-  pn: false,
-  bi: false,
-};
-const NO_UNABBREV = {
-  M: false,
-  W: false,
-  R: false,
-  G: false,
-  F: false,
-  e: false,
-  i: false,
-  "^": false,
-};
-
 /** `LtlApp` starts with these simplification options enabled. */
 const ENABLED_SIMPLIFICATIONS = ["br", "lf", "si", "eu", "lc"];
 
 /**
- * The rewrite tab together with the state its parent owns in `LtlApp`, so the
- * option widgets really drive the request. Props the app passes through
- * unchanged are given no-ops.
+ * Provides the tab under test with the option state it reads, starting from
+ * the app's defaults plus `initial`, so a test names only what it cares about.
  */
-function RewriteTab({ expert = false }: { expert?: boolean }) {
-  const [syntax, setSyntax] = useState("o");
-  const [simplify, setSimplify] = useState(true);
-  const [ltlsimp, setLtlsimp] = useState<Record<string, boolean>>(DEFAULT_LTLSIMP);
-  const [unabbrev, setUnabbrev] = useState<Record<string, boolean>>(NO_UNABBREV);
-  const [delta2, setDelta2] = useState(false);
-
-  const handleChecked = (name: string) => (event: { target: { checked: boolean } }) => {
-    if (name === "simplify") setSimplify(event.target.checked);
-    else if (name === "delta2") setDelta2(event.target.checked);
-  };
-  const toggle = (setFlags: typeof setLtlsimp) => (key: string) => () =>
-    setFlags((previous) => ({ ...previous, [key]: !previous[key] }));
+function OptionsHarness({
+  initial = {},
+  children,
+}: {
+  initial?: Record<string, unknown>;
+  children: ReactNode;
+}) {
+  const [options, dispatch] = useReducer(optionsReducer, {
+    ...INITIAL_OPTIONS,
+    ...initial,
+  });
 
   return (
-    <LtlRewrite
-      classes={{}}
-      formula="a U b"
-      syntax={syntax}
-      simplify={simplify}
-      ltlsimp={ltlsimp}
-      unabbrev={unabbrev}
-      delta2={delta2}
-      expert={expert}
-      handleChecked={handleChecked}
-      changeSyntax={setSyntax}
-      handleChangeLtlSimp={toggle(setLtlsimp)}
-      handleChangeLtlUnabbrev={toggle(setUnabbrev)}
-      handleAnyParseError={ignoreParseError}
-    />
+    <OptionsProvider options={options} dispatch={dispatch}>
+      {children}
+    </OptionsProvider>
   );
 }
 
@@ -129,25 +94,35 @@ function searchParams(url: string) {
   return new URL(url).searchParams;
 }
 
-/** Props of the rewrite tab; `hideoptions` keeps the rendering to the result. */
-function rewriteProps(overrides: Record<string, unknown> = {}) {
-  return {
-    classes: {},
-    formula: "a U b",
-    syntax: "o",
-    simplify: false,
-    ltlsimp: {},
-    unabbrev: {},
-    delta2: false,
-    expert: false,
-    hideoptions: true,
-    handleAnyParseError: () => {},
-    changeSyntax: () => {},
-    handleChecked: () => () => {},
-    handleChangeLtlUnabbrev: () => {},
-    handleChangeLtlSimp: () => {},
-    ...overrides,
-  };
+/**
+ * The rewrite tab with its options hidden, so what a test renders is just the
+ * result panel.
+ */
+function RewriteResult({
+  formula = "a U b",
+  handleAnyParseError = ignoreParseError,
+}: {
+  formula?: string;
+  handleAnyParseError?: (res: Record<string, unknown>) => void;
+}) {
+  return (
+    <OptionsHarness initial={{ hideoptions: true }}>
+      <LtlRewrite
+        classes={{}}
+        formula={formula}
+        handleAnyParseError={handleAnyParseError}
+      />
+    </OptionsHarness>
+  );
+}
+
+/** The rewrite tab with its option widgets live, so they really drive the request. */
+function RewriteTab({ expert = false }: { expert?: boolean }) {
+  return (
+    <OptionsHarness initial={{ expert }}>
+      <LtlRewrite classes={{}} formula="a U b" handleAnyParseError={ignoreParseError} />
+    </OptionsHarness>
+  );
 }
 
 /** Props of the formula input; the app passes the first two through unchanged. */
@@ -216,7 +191,7 @@ function FormulaAndRewrite() {
           formulalbt,
         })}
       />
-      <LtlRewrite {...rewriteProps({ formula, handleAnyParseError })} />
+      <RewriteResult formula={formula} handleAnyParseError={handleAnyParseError} />
     </>
   );
 }
@@ -233,7 +208,7 @@ describe("LtlRewrite", () => {
 
   it("requests the formula and renders the rewritten result", async () => {
     const { fetchMock, requests } = stubFetch();
-    render(<LtlRewrite {...rewriteProps()} />);
+    render(<RewriteResult />);
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(requests[0].url).toContain("rewrite/a%20U%20b");
@@ -246,7 +221,7 @@ describe("LtlRewrite", () => {
   it("shows the spinner only after the request has been pending for 800 ms", async () => {
     vi.useFakeTimers();
     stubFetch();
-    render(<LtlRewrite {...rewriteProps()} />);
+    render(<RewriteResult />);
 
     expect(spinner()).toBeNull();
 
@@ -266,7 +241,7 @@ describe("LtlRewrite", () => {
   it("replaces the spinner with the answer when it arrives", async () => {
     vi.useFakeTimers();
     const { requests } = stubFetch();
-    render(<LtlRewrite {...rewriteProps()} />);
+    render(<RewriteResult />);
 
     await act(async () => {
       await vi.advanceTimersByTimeAsync(800);
@@ -283,7 +258,7 @@ describe("LtlRewrite", () => {
   it("never shows a spinner when the answer arrives quickly", async () => {
     vi.useFakeTimers();
     const { requests } = stubFetch();
-    render(<LtlRewrite {...rewriteProps()} />);
+    render(<RewriteResult />);
 
     expect(spinner()).toBeNull();
 
@@ -299,7 +274,7 @@ describe("LtlRewrite", () => {
 
   it("shows the error for a failed request", async () => {
     const { requests } = stubFetch();
-    render(<LtlRewrite {...rewriteProps()} />);
+    render(<RewriteResult />);
 
     await act(async () => requests[0].fail(500, "Internal Server Error"));
 
@@ -310,7 +285,7 @@ describe("LtlRewrite", () => {
 
   it("shows only the message for a failure other than 500", async () => {
     const { requests } = stubFetch();
-    render(<LtlRewrite {...rewriteProps()} />);
+    render(<RewriteResult />);
 
     await act(async () => requests[0].fail(404, "Not Found"));
 
@@ -320,7 +295,7 @@ describe("LtlRewrite", () => {
 
   it("shows a syntax error reported by the server instead of a formula", async () => {
     const { requests } = stubFetch();
-    render(<LtlRewrite {...rewriteProps()} />);
+    render(<RewriteResult />);
 
     const message = "The selected syntax only supports LTL formulas.";
     await act(async () => requests[0].respond({ error: message }));
@@ -332,7 +307,7 @@ describe("LtlRewrite", () => {
   it("reports a parse error to the formula input", async () => {
     const handleAnyParseError = vi.fn();
     const { requests } = stubFetch();
-    render(<LtlRewrite {...rewriteProps({ handleAnyParseError })} />);
+    render(<RewriteResult handleAnyParseError={handleAnyParseError} />);
 
     const response = { parse_error: "syntax error", prefix_syntax: true };
     await act(async () => requests[0].respond(response));
@@ -342,7 +317,7 @@ describe("LtlRewrite", () => {
 
   it("does not query while the formula is empty", async () => {
     const { fetchMock } = stubFetch();
-    render(<LtlRewrite {...rewriteProps({ formula: "" })} />);
+    render(<RewriteResult formula="" />);
 
     await act(async () => {});
 
@@ -492,15 +467,12 @@ describe("LtlStudy", () => {
     vi.unstubAllGlobals();
   });
 
-  /** Props of the study tab; `classes` is the styled-injection prop. */
-  function studyProps(overrides: Record<string, unknown> = {}) {
-    return { classes: {}, formula: "G a", handleAnyParseError: () => {}, ...overrides };
-  }
-
   it("requests the formula and describes its class", async () => {
     const { requests } = stubFetch();
     const handleAnyParseError = vi.fn();
-    render(<LtlStudy {...studyProps({ handleAnyParseError })} />);
+    render(
+      <LtlStudy classes={{}} formula="G a" handleAnyParseError={handleAnyParseError} />
+    );
 
     expect(requests).toHaveLength(1);
     expect(new URL(requests[0].url).pathname).toBe("/api/study/G%20a");
@@ -521,7 +493,9 @@ describe("LtlStudy", () => {
   it("does not query an empty formula and clears a previous parse error", async () => {
     const handleAnyParseError = vi.fn();
     const { fetchMock } = stubFetch();
-    render(<LtlStudy {...studyProps({ formula: "", handleAnyParseError })} />);
+    render(
+      <LtlStudy classes={{}} formula="" handleAnyParseError={handleAnyParseError} />
+    );
 
     await act(async () => {});
 
@@ -536,23 +510,31 @@ describe("LtlCompare", () => {
     vi.unstubAllGlobals();
   });
 
-  function compareProps(overrides: Record<string, unknown> = {}) {
-    return {
-      classes: {},
-      formula: "a U b",
-      formula2: "b U a",
-      expert: false,
-      hideoptions: true,
-      handleChangeFormula2: () => {},
-      handleAnyParseError: () => {},
-      ...overrides,
-    };
+  /** The compare tab, which reads only the expert option from the context. */
+  function CompareTab({
+    formula2 = "b U a",
+    handleAnyParseError = ignoreParseError,
+  }: {
+    formula2?: string;
+    handleAnyParseError?: (res: Record<string, unknown>) => void;
+  }) {
+    return (
+      <OptionsHarness>
+        <LtlCompare
+          classes={{}}
+          formula="a U b"
+          formula2={formula2}
+          handleChangeFormula2={() => {}}
+          handleAnyParseError={handleAnyParseError}
+        />
+      </OptionsHarness>
+    );
   }
 
   it("requests both formulas and reports each parse error", async () => {
     const { requests } = stubFetch();
     const handleAnyParseError = vi.fn();
-    render(<LtlCompare {...compareProps({ handleAnyParseError })} />);
+    render(<CompareTab handleAnyParseError={handleAnyParseError} />);
 
     expect(requests).toHaveLength(1);
     const url = new URL(requests[0].url);
@@ -577,7 +559,7 @@ describe("LtlCompare", () => {
 
   it("does not query while the second formula is empty", async () => {
     const { fetchMock } = stubFetch();
-    render(<LtlCompare {...compareProps({ formula2: "" })} />);
+    render(<CompareTab formula2="" />);
 
     await act(async () => {});
 
@@ -591,43 +573,39 @@ describe("LtlTranslate", () => {
     vi.unstubAllGlobals();
   });
 
-  function translateProps(overrides: Record<string, unknown> = {}) {
-    return {
-      classes: {},
-      formula: "a U b",
-      acc: "p",
-      autpref: "s",
-      optlevel: "h",
-      minmax: "max",
-      oddeven: "odd",
-      transopts: { complete: true, unambiguous: false, colored: false },
-      expert: false,
-      hideoptions: true,
-      handleAnyParseError: () => {},
-      changeAcc: () => {},
-      changeAutpref: () => {},
-      changeOptLevel: () => {},
-      changeMinMax: () => {},
-      changeOddEven: () => {},
-      handleChangeTransOpts: () => () => {},
-      ...overrides,
-    };
-  }
+  /** Options of the translate tests: parity acceptance with the parity style set. */
+  const TRANSLATE_OPTIONS = {
+    acc: "p",
+    minmax: "max",
+    oddeven: "odd",
+    transopts: { complete: true, unambiguous: false, colored: false },
+  };
 
-  /**
-   * The translate tab with the acceptance condition its parent owns, so the
-   * acceptance menu really drives the request.
-   */
-  function TranslateTab() {
-    const [acc, setAcc] = useState("p");
+  function TranslateTab({
+    formula = "a U b",
+    hideoptions = true,
+    initial = {},
+    handleAnyParseError = ignoreParseError,
+  }: {
+    formula?: string;
+    hideoptions?: boolean;
+    initial?: Record<string, unknown>;
+    handleAnyParseError?: (res: Record<string, unknown>) => void;
+  }) {
     return (
-      <LtlTranslate {...translateProps({ acc, changeAcc: setAcc, hideoptions: false })} />
+      <OptionsHarness initial={{ ...TRANSLATE_OPTIONS, hideoptions, ...initial }}>
+        <LtlTranslate
+          classes={{}}
+          formula={formula}
+          handleAnyParseError={handleAnyParseError}
+        />
+      </OptionsHarness>
     );
   }
 
   it("requests the translation and shows the automaton sources on demand", async () => {
     const { requests } = stubFetch();
-    render(<LtlTranslate {...translateProps()} />);
+    render(<TranslateTab />);
 
     expect(requests).toHaveLength(1);
     const url = new URL(requests[0].url);
@@ -666,7 +644,7 @@ describe("LtlTranslate", () => {
 
   it("does not query an empty formula", async () => {
     const { fetchMock } = stubFetch();
-    render(<LtlTranslate {...translateProps({ formula: "" })} />);
+    render(<TranslateTab formula="" />);
 
     await act(async () => {});
 
@@ -674,11 +652,8 @@ describe("LtlTranslate", () => {
   });
 
   it("renders its options when they are not hidden", () => {
-    stubFetch();
-    const handleChangeTransOpts = vi.fn(() => () => {});
-    render(
-      <LtlTranslate {...translateProps({ hideoptions: false, handleChangeTransOpts })} />
-    );
+    const { requests } = stubFetch();
+    render(<TranslateTab hideoptions={false} />);
 
     expect(
       screen.getByRole("radiogroup", { name: "Translation preferences" })
@@ -687,12 +662,13 @@ describe("LtlTranslate", () => {
 
     fireEvent.click(screen.getByLabelText("show SCCs"));
 
-    expect(handleChangeTransOpts).toHaveBeenCalledWith("showscc");
+    // The toggled option joins the one already enabled in the request.
+    expect(searchParams(requests[1].url).getAll("o")).toEqual(["complete", "showscc"]);
   });
 
   it("requests the acceptance picked from its menu", async () => {
     const { requests } = stubFetch();
-    render(<TranslateTab />);
+    render(<TranslateTab hideoptions={false} />);
 
     expect(searchParams(requests[0].url).get("a")).toBe("p");
     expect(searchParams(requests[0].url).get("m")).toBe("max");
@@ -957,5 +933,73 @@ describe("LtlApp expert mode", () => {
 
     // Expert mode asks the server for a PSL formula.
     expect(randomRequests(requests).at(-1)?.searchParams.get("p")).toBe("1");
+  });
+});
+
+describe("LtlApp options", () => {
+  afterEach(() => {
+    cleanup();
+    vi.unstubAllGlobals();
+  });
+
+  /** Query parameters of the rewrite requests, in the order they were sent. */
+  function rewriteParams(requests: PendingRequest[]) {
+    return requests
+      .map((request) => new URL(request.url))
+      .filter((url) => url.pathname.startsWith("/api/rewrite/"))
+      .map((url) => url.searchParams);
+  }
+
+  it("hides and restores the options of the active tab", () => {
+    stubFetch();
+    render(<LtlApp classes={{}} />);
+
+    // Translate is the default tab, so its options are shown.
+    expect(screen.getByRole("button", { name: "Acceptance to use" })).toBeTruthy();
+
+    // The switch that hides them only appears with expert mode or itself on.
+    expect(screen.queryByLabelText("Hide all options")).toBeNull();
+
+    fireEvent.click(screen.getByLabelText("Expert mode"));
+    fireEvent.click(screen.getByLabelText("Hide all options"));
+
+    expect(screen.queryByRole("button", { name: "Acceptance to use" })).toBeNull();
+
+    fireEvent.click(screen.getByLabelText("Hide all options"));
+
+    expect(screen.getByRole("button", { name: "Acceptance to use" })).toBeTruthy();
+  });
+
+  it("turns the option state into rewrite requests", () => {
+    const { requests } = stubFetch();
+    render(<LtlApp classes={{}} />);
+
+    fireEvent.click(screen.getByRole("tab", { name: "Rewrite" }));
+    const input = screen.getByLabelText("Input formula");
+    fireEvent.change(input, { target: { value: "a U b" } });
+    fireEvent.keyDown(input, { key: "Enter" });
+
+    expect(rewriteParams(requests)).toHaveLength(1);
+    expect(rewriteParams(requests)[0].get("ff")).toBe("o");
+    expect(rewriteParams(requests)[0].getAll("r")).toEqual(ENABLED_SIMPLIFICATIONS);
+
+    // `set`: the syntax menu replaces one option.
+    fireEvent.click(screen.getByRole("button", { name: "LTL syntax to output" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Output syntax: Spin" }));
+
+    expect(rewriteParams(requests).at(-1)?.get("ff")).toBe("i");
+
+    // Picking the current value again is a no-op, not a new request.
+    const count = rewriteParams(requests).length;
+    fireEvent.click(screen.getByRole("button", { name: "LTL syntax to output" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Output syntax: Spin" }));
+
+    expect(rewriteParams(requests)).toHaveLength(count);
+
+    // `toggle`: unchecking a simplification option drops it from the request.
+    fireEvent.click(screen.getByLabelText("Expert mode"));
+    fireEvent.click(screen.getByLabelText("basic rewritings"));
+
+    expect(rewriteParams(requests).at(-1)?.getAll("r")).toEqual(["lf", "si", "eu", "lc"]);
   });
 });
