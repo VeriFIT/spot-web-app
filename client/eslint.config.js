@@ -13,7 +13,8 @@ const a11yAsWarnings = Object.fromEntries(
   Object.keys(jsxA11y.flatConfigs.recommended.rules).map((rule) => [rule, "warn"])
 );
 
-const jsFiles = ["**/*.{js,jsx}"];
+// Every source module is TypeScript now; only the config files are plain JS.
+const jsFiles = ["**/*.js"];
 const tsFiles = ["**/*.{ts,tsx}"];
 
 const browserSource = {
@@ -52,16 +53,23 @@ export default [
     },
   },
 
-  // TypeScript sources: the modules written during the migration.
+  // TypeScript sources: components included, so React and accessibility rules
+  // apply here as well.
   ...tseslint.configs.recommended.map((config) => ({ ...config, files: tsFiles })),
+  { ...react.configs.flat.recommended, files: tsFiles },
+  { ...react.configs.flat["jsx-runtime"], files: tsFiles },
+  { ...jsxA11y.flatConfigs.recommended, files: tsFiles },
   {
     files: tsFiles,
     languageOptions: browserSource,
     plugins: { "react-hooks": reactHooks },
     settings: { react: { version: "detect" } },
     rules: {
+      ...a11yAsWarnings,
       "react-hooks/rules-of-hooks": "error",
       "react-hooks/exhaustive-deps": "warn",
+      "react/prop-types": "off",
+      "react/no-unescaped-entities": "off",
       "@typescript-eslint/no-unused-vars": [
         "error",
         { argsIgnorePattern: "^_", varsIgnorePattern: "^_", caughtErrors: "none" },
@@ -70,7 +78,7 @@ export default [
   },
 
   {
-    files: ["*.config.js"],
+    files: ["*.config.{js,ts}"],
     languageOptions: { globals: { ...globals.node } },
   },
   prettier,

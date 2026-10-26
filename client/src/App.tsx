@@ -19,7 +19,10 @@ import { LtlRewrite } from "./features/rewrite/LtlRewrite";
 import { LtlStudy } from "./features/study/LtlStudy";
 import { LtlTranslate } from "./features/translate/LtlTranslate";
 import { useUrlState } from "./hooks/useUrlState";
-import { INITIAL_OPTIONS, OptionsProvider, optionsReducer } from "./options";
+import type { UrlState } from "./hooks/useUrlState";
+import { INITIAL_OPTIONS, OptionsProvider, optionsReducer, setAction } from "./options";
+import type { Options, OptionsChange } from "./options";
+import type { ParseInfo } from "./api/types";
 import { actionOfMode, DEFAULT_MODE } from "./urlState";
 
 /** The page lays the panels out side by side, centered when there is room. */
@@ -53,7 +56,14 @@ const AppTab = styled(Tab)(({ theme }) => ({
 /** The help, duplicate and close buttons in the header of a panel. */
 const WindowButton = styled(IconButton)({ float: "right" });
 
-function LtlApp(props) {
+/** One panel of the page: `state` is set for the primary panel only. */
+interface LtlAppProps {
+  state?: UrlState;
+  /** The help, duplicate and close buttons drawn in the panel header. */
+  topright?: React.ReactNode;
+}
+
+function LtlApp(props: LtlAppProps) {
   // The primary panel keeps its options and formulas in the URL; the duplicate
   // one, opened next to it, is just local state.
   const urlState = props.state;
@@ -63,7 +73,7 @@ function LtlApp(props) {
   // for it. Neither is an option: they come from the input, not from a menu.
   const [localFormula, setLocalFormula] = React.useState("");
   const [localFormula2, setLocalFormula2] = React.useState("");
-  const [formulaerr, setFormulaerr] = React.useState(null);
+  const [formulaerr, setFormulaerr] = React.useState<string | null>(null);
   const [formulalbt, setFormulalbt] = React.useState(false);
 
   // Expert mode and "hide all options" change what is shown rather than what is
@@ -80,7 +90,7 @@ function LtlApp(props) {
   );
 
   const dispatch = React.useCallback(
-    (change) => {
+    (change: OptionsChange) => {
       if (
         change.type === "set" &&
         (change.name === "expert" || change.name === "hideoptions")
@@ -101,14 +111,18 @@ function LtlApp(props) {
 
   // The tabs read the options from the context; only the controls rendered
   // here need the setter directly.
-  const setOption = (name, value) => dispatch({ type: "set", name, value });
-  const changeAction = (event, value) => setOption("action", value);
-  const handleChecked = (name) => (event) => setOption(name, event.target.checked);
+  const setOption = <K extends keyof Options>(name: K, value: Options[K]) =>
+    dispatch(setAction(name, value));
+  const changeAction = (_event: React.SyntheticEvent, value: number) =>
+    setOption("action", value);
+  const handleChecked =
+    (name: "expert" | "hideoptions") => (event: React.ChangeEvent<HTMLInputElement>) =>
+      setOption(name, event.target.checked);
 
   // The tabs call this from an effect, so its identity must be stable; the
   // setters it uses are.
-  const handleAnyParseError = React.useCallback((res) => {
-    setFormulaerr("parse_error" in res ? res.parse_error : null);
+  const handleAnyParseError = React.useCallback((res: ParseInfo) => {
+    setFormulaerr("parse_error" in res ? (res.parse_error ?? null) : null);
     setFormulalbt(res.prefix_syntax === true);
   }, []);
 
@@ -190,7 +204,7 @@ function LtlApp(props) {
     </OptionsProvider>
   );
 }
-function LtlApps({ action }) {
+function LtlApps({ action }: { action: number }) {
   // A second panel can be opened next to the first one, and the help panel can
   // be opened over them. Both are all-or-nothing, so a flag says it all.
   const [duplicated, setDuplicated] = React.useState(false);

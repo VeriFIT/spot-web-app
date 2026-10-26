@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import Paper from "@mui/material/Paper";
 import { styled } from "@mui/material/styles";
 
@@ -8,6 +9,6 @@ const ResultPaper = styled(Paper)(({ theme }) => ({
   overflow: "auto",
 }));
 
-export function LtlResult({ result }) {
+export function LtlResult({ result }: { result: ReactNode }) {
   return <ResultPaper>{result}</ResultPaper>;
 }

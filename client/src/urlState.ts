@@ -1,4 +1,4 @@
-import { INITIAL_OPTIONS } from "./options";
+import { INITIAL_OPTIONS, type Options } from "./options";
 
 /**
  * The four modes, in the order of the `action` numbers the tabs use: selecting
@@ -22,8 +22,6 @@ export function modeOfAction(action: number): Mode {
 
 /** Where a bare `/app/` lands. */
 export const DEFAULT_MODE = modeOfAction(INITIAL_OPTIONS.action);
-
-type Options = typeof INITIAL_OPTIONS;
 
 /** Encode the options as a query string; `""` when everything is at its default. */
 export function searchFromState(

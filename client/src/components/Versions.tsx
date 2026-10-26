@@ -8,6 +8,7 @@ import TableRow from "@mui/material/TableRow";
 import { styled } from "@mui/material/styles";
 
 import { getVersions, versionsUrl } from "../api/client";
+import type { VersionInfo } from "../api/types";
 
 /** The button that opens the version list, at the right of the panel header. */
 const VersionsButton = styled(Button)({
@@ -16,8 +17,8 @@ const VersionsButton = styled(Button)({
 });
 
 export function Versions() {
-  const [anchorEl, setAnchorEl] = React.useState(null);
-  const [versions, setVersions] = React.useState([]);
+  const [anchorEl, setAnchorEl] = React.useState<HTMLElement | null>(null);
+  const [versions, setVersions] = React.useState<VersionInfo[]>([]);
 
   // The list is fetched once; abort it if the menu goes away before it lands.
   React.useEffect(() => {
@@ -27,14 +28,17 @@ export function Versions() {
         if (controller.signal.aborted) return;
         setVersions([...vers, ["React", React.version, "https://reactjs.org/"]]);
       })
-      .catch((error) => {
+      .catch((error: unknown) => {
         if (controller.signal.aborted) return;
-        setVersions([[error.message, null, null]]);
+        setVersions([
+          [error instanceof Error ? error.message : String(error), null, null],
+        ]);
       });
     return () => controller.abort();
   }, []);
 
-  const handleOpen = (event) => setAnchorEl(event.currentTarget);
+  const handleOpen = (event: React.MouseEvent<HTMLElement>) =>
+    setAnchorEl(event.currentTarget);
   const handleClose = () => setAnchorEl(null);
 
   return (
@@ -54,7 +58,7 @@ export function Versions() {
               return (
                 <TableRow key={tool}>
                   <TableCell component="th" scope="row">
-                    <a href={url}>{tool}</a>
+                    <a href={url ?? undefined}>{tool}</a>
                   </TableCell>
                   <TableCell>{version}</TableCell>
                 </TableRow>

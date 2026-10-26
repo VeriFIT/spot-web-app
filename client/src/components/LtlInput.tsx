@@ -5,6 +5,7 @@ import InputAdornment from "@mui/material/InputAdornment";
 import TextField from "@mui/material/TextField";
 import Tooltip from "@mui/material/Tooltip";
 import { styled } from "@mui/material/styles";
+import type { SxProps, Theme } from "@mui/material/styles";
 
 import { getRandomFormula, randomUrl } from "../api/client";
 import { DiceIcon } from "./icons";
@@ -12,14 +13,17 @@ import { NoteText } from "./NoteText";
 import { renderError } from "./renderError";
 
 /** Compare mode shows two inputs; tinting them tells the two formulas apart. */
-const HIGHLIGHT_SX = {
+const HIGHLIGHT_SX: Record<"first" | "second", SxProps<Theme>> = {
   first: { backgroundColor: "#b2ffff" },
   second: { backgroundColor: "#ffccff" },
 };
 
 const Wrapper = styled("div")({ width: "100%" });
 
-const Helper = styled(FormHelperText)({ marginTop: 0 });
+// Asserted back to `FormHelperText`: Material's `styled` drops the polymorphic
+// `component` prop, and the helper holds a note and an error block, so it has
+// to be a div rather than a paragraph.
+const Helper = styled(FormHelperText)({ marginTop: 0 }) as typeof FormHelperText;
 
 const ParseError = styled("pre")(({ theme }) => ({
   color: theme.palette.error.main,
@@ -30,15 +34,31 @@ const RandomError = styled("div")(({ theme }) => ({
   color: theme.palette.error.main,
 }));
 
-export function LtlInput(props) {
+export interface LtlInputProps {
+  /** Which of the two compare inputs this is, when it is one of them. */
+  highlight?: "first" | "second";
+  label: string;
+  /** Expert mode randomizes over PSL instead of LTL. */
+  expert: boolean;
+  autoFocus?: boolean;
+  /** The confirmed formula, owned by the parent. */
+  defaultValue: string;
+  setFormula: (formula: string) => void;
+  /** The formula was read with the prefix (LBT) syntax instead. */
+  formulalbt: boolean;
+  /** Why the formula could not be read, if it could not. */
+  formulaerr: string | null;
+}
+
+export function LtlInput(props: LtlInputProps) {
   // The text being typed, and the formula the app actually queries. They
   // differ while the user has not confirmed the edit with Enter or Tab.
   const [tmpformula, setTmpformula] = React.useState(props.defaultValue || "");
   const [formula, setFormula] = React.useState(props.defaultValue || "");
   // The random formula request in flight, if any, and the reason the last one
   // produced no formula.
-  const randomRequest = React.useRef(null);
-  const [randomError, setRandomError] = React.useState(null);
+  const randomRequest = React.useRef<AbortController | null>(null);
+  const [randomError, setRandomError] = React.useState<Error | null>(null);
 
   // A request still in flight when the input goes away must not land later.
   React.useEffect(() => {
@@ -55,14 +75,15 @@ export function LtlInput(props) {
     setFormula(defaultValue);
   }, [defaultValue]);
 
-  const handleChange = (event) => setTmpformula(event.target.value);
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) =>
+    setTmpformula(event.target.value);
 
   const updateFormula = () => {
     setFormula(tmpformula);
     props.setFormula(tmpformula);
   };
 
-  const handleKey = (event) => {
+  const handleKey = (event: React.KeyboardEvent) => {
     if (event.key === "Enter") updateFormula();
   };
 
@@ -81,7 +102,7 @@ export function LtlInput(props) {
         setFormula(fmt);
         props.setFormula(fmt);
       },
-      (error) => {
+      (error: unknown) => {
         // An aborted request was superseded on purpose, so it has nothing to
         // report; a real failure must say so instead of failing silently.
         if (controller.signal.aborted) return;
@@ -95,7 +116,7 @@ export function LtlInput(props) {
     <Wrapper>
       <TextField
         error={Boolean(props.formulaerr)}
-        sx={HIGHLIGHT_SX[props.highlight]}
+        sx={props.highlight === undefined ? undefined : HIGHLIGHT_SX[props.highlight]}
         fullWidth
         value={tmpformula}
         label={props.label}

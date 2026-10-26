@@ -12,6 +12,14 @@ const FallbackPaper = styled(Paper)(({ theme }) => ({
   maxWidth: "100%",
 }));
 
+interface ErrorBoundaryProps {
+  children?: React.ReactNode;
+}
+
+interface ErrorBoundaryState {
+  error: unknown;
+}
+
 /**
  * Keeps a render error inside the panel that raised it. Without a boundary, one
  * unexpected response — a renamed field, a `note` that is not an array, an SVG
@@ -19,14 +27,17 @@ const FallbackPaper = styled(Paper)(({ theme }) => ({
  *
  * React has no hook form for this, so it stays a class component.
  */
-export class ErrorBoundary extends React.Component {
-  state = { error: null };
+export class ErrorBoundary extends React.Component<
+  ErrorBoundaryProps,
+  ErrorBoundaryState
+> {
+  state: ErrorBoundaryState = { error: null };
 
-  static getDerivedStateFromError(error) {
+  static getDerivedStateFromError(error: unknown): ErrorBoundaryState {
     return { error };
   }
 
-  componentDidCatch(error, info) {
+  componentDidCatch(error: unknown, info: React.ErrorInfo) {
     // The fallback is deliberately terse, so keep the details in the console.
     console.error("Rendering failed", error, info.componentStack);
   }

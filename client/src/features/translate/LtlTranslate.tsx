@@ -28,6 +28,13 @@ import {
   OptionGroup,
 } from "../../components/OptionWidgets";
 import { useOptions } from "../../options";
+import type { ParseInfo, TranslateResponse } from "../../api/types";
+
+/** What the translate tab needs from the panel that owns the formula input. */
+export interface LtlTranslateProps {
+  formula: string;
+  handleAnyParseError: (res: ParseInfo) => void;
+}
 
 /** The option groups of the translate panel, side by side. */
 const OptionsRow = styled("div")({
@@ -56,7 +63,7 @@ const AutomatonSvg = styled(SVGInline)({
 });
 
 /** Entries of the acceptance-condition menu, in display order. */
-const ACCEPTANCE_OPTIONS = {
+const ACCEPTANCE_OPTIONS: Record<string, string> = {
   m: "Acceptance: monitor (all runs accepting)",
   c: "Acceptance: co-Büchi",
   b: "Acceptance: Büchi",
@@ -66,10 +73,10 @@ const ACCEPTANCE_OPTIONS = {
 };
 
 function AccChoice() {
-  const [anchorEl, setAnchorEl] = React.useState(null);
+  const [anchorEl, setAnchorEl] = React.useState<HTMLElement | null>(null);
   const { options, setOption } = useOptions();
 
-  const chooseAcc = (key) => {
+  const chooseAcc = (key: string) => {
     setOption("acc", key);
     setAnchorEl(null);
   };
@@ -109,18 +116,24 @@ function AccChoice() {
 }
 
 /** Body of the translate tab; `showfile` picks the source shown, if any. */
-function translateResult(res, showfile, showfilehoa, showfilespin) {
+function translateResult(
+  res: TranslateResponse,
+  showfile: number,
+  showfilehoa: () => void,
+  showfilespin: () => void
+) {
   return (
-    <React.Fragment>
-      {"states" in res && (
+    <>
+      {res.states !== undefined && res.edges !== undefined && (
         <Typography>
-          {res["det"] ? "D" : "Non-d"}
-          eterministic automaton with {res["states"]} state
-          {res["states"] > 1 ? "s" : ""} and {res["edges"]} edge
-          {res["edges"] > 1 ? "s" : ""}.
+          {res.det ? "D" : "Non-d"}
+          eterministic automaton with {res.states} state
+          {res.states > 1 ? "s" : ""} and {res.edges} edge
+          {res.edges > 1 ? "s" : ""}.
         </Typography>
       )}
-      {"note" in res && res["note"].map((note) => <NoteText key={note} text={note} />)}
+      {res.note !== undefined &&
+        res.note.map((note) => <NoteText key={note} text={note} />)}
       {"automaton_svg" in res && <AutomatonSvg svg={res["automaton_svg"]} />}
       {"automaton_hoa" in res && (
         <Button color="primary" onClick={showfilehoa}>
@@ -132,9 +145,9 @@ function translateResult(res, showfile, showfilehoa, showfilespin) {
           NeverClaim
         </Button>
       )}
-      {showfile === 1 && <SourceText>{res["automaton_hoa"]}</SourceText>}
-      {showfile === 2 && <SourceText>{res["automaton_spin"]}</SourceText>}
-    </React.Fragment>
+      {showfile === 1 && <SourceText>{res.automaton_hoa}</SourceText>}
+      {showfile === 2 && <SourceText>{res.automaton_spin}</SourceText>}
+    </>
   );
 }
 
@@ -355,7 +368,7 @@ function TranslateOptions() {
   );
 }
 
-export function LtlTranslate(props) {
+export function LtlTranslate(props: LtlTranslateProps) {
   const { formula, handleAnyParseError } = props;
   const { options } = useOptions();
   const { acc, autpref, optlevel, minmax, oddeven, transopts } = options;
@@ -380,7 +393,7 @@ export function LtlTranslate(props) {
     if (data !== null) handleAnyParseError(data);
   }, [data, handleAnyParseError]);
 
-  let result = null;
+  let result: React.ReactNode = null;
   if (error !== null) result = renderError(error);
   else if (showSpinner)
     result = <CircularProgress sx={{ display: "block", margin: "auto" }} />;

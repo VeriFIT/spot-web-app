@@ -20,6 +20,7 @@ import { LtlRewrite } from "./features/rewrite/LtlRewrite";
 import { LtlStudy } from "./features/study/LtlStudy";
 import { LtlTranslate } from "./features/translate/LtlTranslate";
 import { INITIAL_OPTIONS, OptionsProvider, optionsReducer } from "./options";
+import type { ParseInfo } from "./api/types";
 
 interface PendingRequest {
   url: string;
@@ -115,7 +116,7 @@ function RewriteResult({
   handleAnyParseError = ignoreParseError,
 }: {
   formula?: string;
-  handleAnyParseError?: (res: Record<string, unknown>) => void;
+  handleAnyParseError?: (res: ParseInfo) => void;
 }) {
   return (
     <OptionsHarness initial={{ hideoptions: true }}>
@@ -213,8 +214,8 @@ function FormulaAndRewrite() {
   const [formulalbt, setFormulalbt] = useState(false);
 
   // The translation `LtlApp.handleAnyParseError` performs.
-  const handleAnyParseError = (res: Record<string, unknown>) => {
-    setFormulaerr("parse_error" in res ? (res.parse_error as string) : null);
+  const handleAnyParseError = (res: ParseInfo) => {
+    setFormulaerr("parse_error" in res ? (res.parse_error ?? null) : null);
     setFormulalbt(res.prefix_syntax === true);
   };
 
@@ -607,7 +608,7 @@ describe("LtlCompare", () => {
     handleAnyParseError = ignoreParseError,
   }: {
     formula2?: string;
-    handleAnyParseError?: (res: Record<string, unknown>) => void;
+    handleAnyParseError?: (res: ParseInfo) => void;
   }) {
     return (
       <OptionsHarness>
@@ -680,7 +681,7 @@ describe("LtlTranslate", () => {
     formula?: string;
     hideoptions?: boolean;
     initial?: Record<string, unknown>;
-    handleAnyParseError?: (res: Record<string, unknown>) => void;
+    handleAnyParseError?: (res: ParseInfo) => void;
   }) {
     return (
       <OptionsHarness initial={{ ...TRANSLATE_OPTIONS, hideoptions, ...initial }}>

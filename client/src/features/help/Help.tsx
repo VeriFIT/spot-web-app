@@ -9,6 +9,7 @@ import { styled } from "@mui/material/styles";
 
 import { CloseIcon } from "../../components/icons";
 import { Ltl } from "../../components/Ltl";
+import type { ReactNode } from "react";
 
 /** The help panel, which sits beside the formula panels. */
 const HelpPaper = styled(Paper)(({ theme }) => ({
@@ -63,7 +64,7 @@ const OpPair = styled("div")({
 const OpDesc = styled("div")({ float: "left" });
 const OpSyn = styled("div")({ float: "right" });
 
-function OpTable(array, width) {
+function OpTable(array: [string, ReactNode][], width: string) {
   return (
     <OpTableBox>
       {array.map((value) => {
@@ -78,11 +79,11 @@ function OpTable(array, width) {
   );
 }
 
-export function Help(props) {
+export function Help({ onClose }: { onClose: () => void }) {
   return (
     <HelpPaper>
       <HelpIcons>
-        <CloseButton color="primary" onClick={props.onClose} aria-label="close">
+        <CloseButton color="primary" onClick={onClose} aria-label="close">
           <CloseIcon />
         </CloseButton>
         <HelpTitle variant="h5" color="primary" align="center" gutterBottom>

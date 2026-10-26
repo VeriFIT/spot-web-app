@@ -1,11 +1,14 @@
-import React from "react";
+import type { ReactElement } from "react";
 import Typography from "@mui/material/Typography";
 
-export function renderError(error) {
+/** The API's own errors carry a status code, so a timeout can be explained. */
+type CodedError = Error & { status?: number };
+
+export function renderError(error: CodedError): ReactElement {
   const msg = error.message;
   if (error.status !== 500) return <pre>{msg}</pre>;
   return (
-    <React.Fragment>
+    <>
       <pre>{msg}</pre>
       <Typography color="error">
         Our server automatically kills requests that take longer than 40 seconds, or that
@@ -20,6 +23,6 @@ export function renderError(error) {
         <a href="https://spot.lre.epita.fr/install.html">installing Spot</a> to run your
         experiments locally; this is a shared service.
       </Typography>
-    </React.Fragment>
+    </>
   );
 }

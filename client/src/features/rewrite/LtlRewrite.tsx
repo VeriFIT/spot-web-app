@@ -25,9 +25,17 @@ import {
 import { renderError } from "../../components/renderError";
 import { SVGInline } from "../../components/SVGInline";
 import { useOptions } from "../../options";
+import type { SimplificationOptions, UnabbrevOptions } from "../../options";
+import type { ParseInfo } from "../../api/types";
+
+/** What the rewrite tab needs from the panel that owns the formula input. */
+export interface LtlRewriteProps {
+  formula: string;
+  handleAnyParseError: (res: ParseInfo) => void;
+}
 
 /** Entries of the output-syntax menu, in display order. */
-const SYNTAX_OPTIONS = {
+const SYNTAX_OPTIONS: Record<string, string> = {
   o: "Output syntax: Spot",
   l: "Output syntax: LBT/LTL2DSTAR",
   i: "Output syntax: Spin",
@@ -35,10 +43,10 @@ const SYNTAX_OPTIONS = {
 };
 
 function LtlSyntaxChoice() {
-  const [anchorEl, setAnchorEl] = React.useState(null);
+  const [anchorEl, setAnchorEl] = React.useState<HTMLElement | null>(null);
   const { options, setOption } = useOptions();
 
-  const chooseSyntax = (key) => {
+  const chooseSyntax = (key: string) => {
     setOption("syntax", key);
     setAnchorEl(null);
   };
@@ -101,7 +109,7 @@ function LtlSimplificationOptions() {
           disabled={!options.simplify}
           control={
             <Checkbox
-              checked={options.ltlsimp[key]}
+              checked={options.ltlsimp[key as keyof SimplificationOptions]}
               onChange={() => toggleOption("ltlsimp", key)}
             />
           }
@@ -113,7 +121,7 @@ function LtlSimplificationOptions() {
 }
 
 /** Un-abbreviation options of the infix syntaxes, in display order. */
-const UNABBREV_OPTIONS_1 = {
+const UNABBREV_OPTIONS_1: Record<string, [string, string, string]> = {
   F: ["F", "<>", "F"],
   G: ["G", "[]", "G"],
   R: ["R", "V", "V"],
@@ -122,7 +130,7 @@ const UNABBREV_OPTIONS_1 = {
 };
 
 /** Un-abbreviation options of the infix syntaxes, continuing `UNABBREV_OPTIONS_1`. */
-const UNABBREV_OPTIONS_2 = {
+const UNABBREV_OPTIONS_2: Record<string, [string, string, string]> = {
   i: ["->", "->", "i"],
   e: ["<->", "<->", "e"],
   "^": ["xor", "xor", "^"],
@@ -141,12 +149,12 @@ function LtlUnabbrevOptions() {
   const { options, toggleOption } = useOptions();
   const syntaxId = options.syntax === "i" ? 1 : options.syntax === "l" ? 2 : 0;
 
-  const option = ([key, values]) => (
+  const option = ([key, values]: [string, [string, string, string]]) => (
     <UnabbrevLabel
       key={key}
       control={
         <Checkbox
-          checked={options.unabbrev[key]}
+          checked={options.unabbrev[key as keyof UnabbrevOptions]}
           disabled={syntaxId === 1 && "MW^".indexOf(key) >= 0}
           onChange={() => toggleOption("unabbrev", key)}
           color="primary"
@@ -170,7 +178,7 @@ function LtlUnabbrevOptions() {
   );
 }
 
-export function LtlRewrite(props) {
+export function LtlRewrite(props: LtlRewriteProps) {
   const { formula, handleAnyParseError } = props;
   const { options, setOption } = useOptions();
   const { syntax, simplify, ltlsimp, unabbrev, delta2, hideoptions, expert } = options;
@@ -193,7 +201,7 @@ export function LtlRewrite(props) {
     if (data !== null) handleAnyParseError(data);
   }, [data, handleAnyParseError]);
 
-  let result = null;
+  let result: React.ReactNode = null;
   if (error !== null) result = renderError(error);
   else if (showSpinner)
     result = <CircularProgress sx={{ display: "block", margin: "auto" }} />;

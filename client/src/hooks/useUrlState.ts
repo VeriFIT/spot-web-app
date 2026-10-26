@@ -1,16 +1,11 @@
 import { useCallback, useMemo } from "react";
 import { useLocation, useNavigate } from "react-router";
 
-import { optionsReducer } from "../options";
+import { optionsReducer, type Options, type OptionsChange } from "../options";
 import { modeOfAction, searchFromState, stateFromSearch } from "../urlState";
 
-/** The two actions `optionsReducer` accepts. */
-export type OptionsChange =
-  | { type: "set"; name: string; value: string | number | boolean }
-  | { type: "toggle"; name: string; key: string };
-
 export interface UrlState {
-  options: ReturnType<typeof stateFromSearch>["options"];
+  options: Options;
   formula: string;
   formula2: string;
   dispatch: (change: OptionsChange) => void;
@@ -36,14 +31,7 @@ export function useUrlState(action: number): UrlState {
   );
 
   const go = useCallback(
-    (
-      next: {
-        options: ReturnType<typeof stateFromSearch>["options"];
-        formula: string;
-        formula2: string;
-      },
-      replace: boolean
-    ) => {
+    (next: { options: Options; formula: string; formula2: string }, replace: boolean) => {
       navigate(
         {
           pathname: "/" + modeOfAction(next.options.action),

@@ -18,6 +18,13 @@ import {
   WordTableCellBold,
   WordTableRow,
 } from "../../components/WordTable";
+import type { ParseInfo, StudyResponse } from "../../api/types";
+
+/** What the study tab needs from the panel that owns the formula input. */
+export interface LtlStudyProps {
+  formula: string;
+  handleAnyParseError: (res: ParseInfo) => void;
+}
 
 /** One classification of the formula, separated from the next one. */
 const Section = styled("div")({ paddingBottom: 10 });
@@ -26,7 +33,7 @@ const Section = styled("div")({ paddingBottom: 10 });
 const HierarchySvg = styled(SVGInline)({ float: "right" });
 
 /** Body of the study tab, as a function of the answer so it stays pure. */
-function studyResult(res) {
+function studyResult(res: StudyResponse) {
   if (!("mp_class_text" in res)) return null;
   return (
     <React.Fragment>
@@ -177,7 +184,7 @@ function studyResult(res) {
   );
 }
 
-export function LtlStudy(props) {
+export function LtlStudy(props: LtlStudyProps) {
   const { formula } = props;
 
   // The request URL identifies the query: it only changes when the formula
@@ -197,7 +204,7 @@ export function LtlStudy(props) {
     else if (requestUrl === null) handleAnyParseError({});
   }, [data, requestUrl, handleAnyParseError]);
 
-  let result = null;
+  let result: React.ReactNode = null;
   if (error !== null) result = renderError(error);
   else if (showSpinner)
     result = <CircularProgress sx={{ display: "block", margin: "auto" }} />;

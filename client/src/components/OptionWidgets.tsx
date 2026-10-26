@@ -7,6 +7,10 @@ import MenuItem from "@mui/material/MenuItem";
 // group holding a set of related options, and the entries of the pop-up menus
 // that pick one output syntax or one acceptance condition.
 
+// Both groups are rendered as a `<fieldset>`, so the options inside them are
+// grouped semantically and the legend is announced. Material's `styled` drops
+// the polymorphic `component` prop, hence the assertions to `FormControl`.
+
 /** Bordered group of options that belong to the main task of the panel. */
 export const OptionGroup = styled(FormControl)(({ theme }) => ({
   padding: 8,
@@ -21,7 +25,7 @@ export const OptionGroup = styled(FormControl)(({ theme }) => ({
     backgroundColor: "white",
     color: theme.palette.primary.light,
   },
-}));
+})) as typeof FormControl;
 
 /** Bordered group of options that only expert mode reveals. */
 export const ExpertOptionGroup = styled(FormControl)(({ theme }) => ({
@@ -40,7 +44,7 @@ export const ExpertOptionGroup = styled(FormControl)(({ theme }) => ({
   "& legend.Mui-focused": {
     color: theme.palette.secondary.main,
   },
-}));
+})) as typeof FormControl;
 
 /** The closed state of a syntax or acceptance menu. */
 export const ChoiceListItem = styled(ListItemButton)(({ theme }) => ({

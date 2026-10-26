@@ -19,6 +19,15 @@ import {
   WordTableRow,
 } from "../../components/WordTable";
 import { useOptions } from "../../options";
+import type { CompareResponse, ParseInfo } from "../../api/types";
+
+/** What the compare tab needs from the panel that owns the two inputs. */
+export interface LtlCompareProps {
+  formula: string;
+  formula2: string;
+  handleChangeFormula2: (formula: string) => void;
+  handleAnyParseError: (res: ParseInfo) => void;
+}
 
 /** The Venn diagram of the two languages, to the right of the text. */
 const VennDiagram = styled(SVGInline)({ float: "right" });
@@ -27,7 +36,7 @@ const VennDiagram = styled(SVGInline)({ float: "right" });
 const ToplessList = styled("ul")({ marginTop: 0 });
 
 /** Body of the compare tab, as a function of the answer so it stays pure. */
-function compareResult(res) {
+function compareResult(res: CompareResponse) {
   if (!("txt" in res && "svg" in res)) return null;
   return (
     <React.Fragment>
@@ -82,7 +91,7 @@ function compareResult(res) {
   );
 }
 
-export function LtlCompare(props) {
+export function LtlCompare(props: LtlCompareProps) {
   const { formula, formula2 } = props;
   const { options } = useOptions();
 
@@ -95,17 +104,17 @@ export function LtlCompare(props) {
 
   // The answer describes both formulas: the first one is reported to the
   // parent, which owns that input, the second one belongs to the input here.
-  const [formula2err, setFormula2err] = React.useState(null);
+  const [formula2err, setFormula2err] = React.useState<string | null>(null);
   const [formula2lbt, setFormula2lbt] = React.useState(false);
   const { handleAnyParseError } = props;
   React.useEffect(() => {
     if (data === null) return;
     handleAnyParseError(data);
-    setFormula2err("parse_error2" in data ? data.parse_error2 : null);
+    setFormula2err("parse_error2" in data ? (data.parse_error2 ?? null) : null);
     setFormula2lbt(data.prefix_syntax2 === true);
   }, [data, handleAnyParseError]);
 
-  let result = null;
+  let result: React.ReactNode = null;
   if (error !== null) result = renderError(error);
   else if (showSpinner)
     result = <CircularProgress sx={{ display: "block", margin: "auto" }} />;

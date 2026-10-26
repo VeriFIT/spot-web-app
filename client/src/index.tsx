@@ -1,5 +1,5 @@
 import { createRoot } from "react-dom/client";
-import App from "./App.jsx";
+import App from "./App";
 import CssBaseline from "@mui/material/CssBaseline";
 import { ThemeProvider, StyledEngineProvider } from "@mui/material/styles";
 import { BrowserRouter } from "react-router";
@@ -7,6 +7,7 @@ import { BrowserRouter } from "react-router";
 import { theme } from "./theme";
 
 const container = document.getElementById("root");
+if (container === null) throw new Error("index.html is missing its #root element");
 const root = createRoot(container);
 root.render(
   <StyledEngineProvider injectFirst>

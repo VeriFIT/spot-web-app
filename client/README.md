@@ -15,7 +15,7 @@ From the `client/` directory:
    ```bash
    npm run start
    ```
-   The app runs on http://localhost:3000/app/ and proxies `/api` requests to the Flask server at http://localhost:5000 (configured in `vite.config.js`).
+   The app runs on http://localhost:3000/app/ and proxies `/api` requests to the Flask server at http://localhost:5000 (configured in `vite.config.ts`).
 
 3. Start the API server (from the repository root):
    ```bash
@@ -57,10 +57,10 @@ responses and error handling; `src/LtlApp.test.tsx` renders the tabs against a m
 controls, the formula input covers committing an edit and showing parse errors, and the
 study, compare and translate tabs each check their request and what they render.
 
-TypeScript is adopted incrementally: `tsconfig.json` has `allowJs` with `checkJs`
-disabled, so existing `.jsx` sources are parsed but not type-checked, while new modules
-(`src/api/`, `src/hooks/`) are checked in strict mode and converted one component at a
-time. All four tabs go through `src/api/client.ts` for their requests and through
+Every source module is TypeScript: components are `.tsx`, everything else `.ts`,
+`src/api/types.ts` gives the JSON answers of `spotapi.py` their shape, and
+`tsconfig.json` checks them in strict mode (no `allowJs` escape hatch). All four tabs go
+through `src/api/client.ts` for their requests and through
 `useApiQuery`/`useDelayedFlag` for their results.
 
 ## Notes
