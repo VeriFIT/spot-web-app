@@ -21,7 +21,7 @@ import { LtlTranslate } from "./features/translate/LtlTranslate";
 import { useUrlState } from "./hooks/useUrlState";
 import type { UrlState } from "./hooks/useUrlState";
 import { INITIAL_OPTIONS, OptionsProvider, optionsReducer, setAction } from "./options";
-import type { Options, OptionsChange } from "./options";
+import type { Options } from "./options";
 import type { ParseInfo } from "./api/types";
 import { actionOfMode, DEFAULT_MODE } from "./urlState";
 
@@ -83,32 +83,11 @@ function LtlApp(props: LtlAppProps) {
   const [formulalbt, setFormulalbt] = React.useState(false);
 
   // Expert mode and "hide all options" change what is shown rather than what is
-  // asked of the server, so they stay out of the URL even for the primary panel.
-  const [uiOptions, setUiOptions] = React.useState({
-    expert: INITIAL_OPTIONS.expert,
-    hideoptions: INITIAL_OPTIONS.hideoptions,
-  });
+  // asked of the server, but they are preferences of the panel all the same, so
+  // they travel with its other options.
+  const options = urlState === undefined ? localOptions : urlState.options;
 
-  const baseOptions = urlState === undefined ? localOptions : urlState.options;
-  const options = React.useMemo(
-    () => ({ ...baseOptions, ...uiOptions }),
-    [baseOptions, uiOptions]
-  );
-
-  const dispatch = React.useCallback(
-    (change: OptionsChange) => {
-      if (
-        change.type === "set" &&
-        (change.name === "expert" || change.name === "hideoptions")
-      ) {
-        setUiOptions((previous) => ({ ...previous, [change.name]: change.value }));
-        return;
-      }
-      if (urlState === undefined) localDispatch(change);
-      else urlState.dispatch(change);
-    },
-    [urlState, localDispatch]
-  );
+  const dispatch = urlState === undefined ? localDispatch : urlState.dispatch;
 
   const formula = urlState === undefined ? localFormula : urlState.formula;
   const formula2 = urlState === undefined ? localFormula2 : urlState.formula2;

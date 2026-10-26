@@ -52,6 +52,14 @@ describe("searchFromState", () => {
     );
   });
 
+  it("writes the display preferences of the panel", () => {
+    const options = { ...INITIAL_OPTIONS, expert: true, hideoptions: true };
+
+    // They change what the panel shows, not what it asks the server, but they
+    // are part of the view a link should restore.
+    expect(searchFromState(options, "", "")).toBe("?expert=1&hideoptions=1");
+  });
+
   it("writes a flag map as its enabled keys", () => {
     const options = {
       ...INITIAL_OPTIONS,
@@ -71,6 +79,8 @@ describe("stateFromSearch", () => {
     const options = {
       ...INITIAL_OPTIONS,
       action: 2,
+      expert: true,
+      hideoptions: true,
       syntax: "g",
       simplify: false,
       ltlsimp: { ...INITIAL_OPTIONS.ltlsimp, lc: false, fs: true },
@@ -158,6 +168,7 @@ describe("the duplicate panel", () => {
       options: {
         ...INITIAL_OPTIONS,
         action: 1,
+        expert: true,
         acc: "c",
         transopts: { ...INITIAL_OPTIONS.transopts, complete: true },
       },
@@ -166,7 +177,7 @@ describe("the duplicate panel", () => {
     };
 
     expect(searchFromPanels(primary, secondary)).toBe(
-      "?f=G+a&p2-mode=study&p2-f=F+b&p2-acc=c&p2-trans=complete"
+      "?f=G+a&p2-mode=study&p2-expert=1&p2-f=F+b&p2-acc=c&p2-trans=complete"
     );
   });
 

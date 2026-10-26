@@ -23,7 +23,11 @@ export function modeOfAction(action: number): Mode {
 /** Where a bare `/app/` lands. */
 export const DEFAULT_MODE = modeOfAction(INITIAL_OPTIONS.action);
 
-/** One panel: the formulas it works on and the options that change its answer. */
+/**
+ * One panel: the formulas it works on and its preferences. Two of them,
+ * `expert` and `hideoptions`, change what the panel shows rather than what it
+ * asks the server, but a link should still restore the panel as it was seen.
+ */
 export interface PanelState {
   options: Options;
   formula: string;
@@ -41,6 +45,14 @@ const SECONDARY_MODE = SECONDARY_PREFIX + "mode";
 /** Add one panel's parameters to `params`; everything at its default is left out. */
 function addPanel(params: URLSearchParams, prefix: string, panel: PanelState): void {
   const { options, formula, formula2 } = panel;
+
+  // The display preferences lead: they describe the panel before its work.
+  if (options.expert !== INITIAL_OPTIONS.expert) {
+    params.set(prefix + "expert", options.expert ? "1" : "0");
+  }
+  if (options.hideoptions !== INITIAL_OPTIONS.hideoptions) {
+    params.set(prefix + "hideoptions", options.hideoptions ? "1" : "0");
+  }
 
   if (formula !== "") params.set(prefix + "f", formula);
   if (formula2 !== "") params.set(prefix + "g", formula2);
@@ -84,6 +96,8 @@ function readPanel(params: URLSearchParams, prefix: string, action: number): Pan
     options: {
       ...INITIAL_OPTIONS,
       action,
+      expert: flag(params, prefix + "expert", INITIAL_OPTIONS.expert),
+      hideoptions: flag(params, prefix + "hideoptions", INITIAL_OPTIONS.hideoptions),
       syntax: choice(
         params,
         prefix + "syntax",

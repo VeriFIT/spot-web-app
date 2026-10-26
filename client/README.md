@@ -33,7 +33,7 @@ Build output goes to `client/build/`. For deployment, copy this directory to `/v
 
 The mode is a path segment (`/app/translate`, `/app/rewrite`, …), so the web server must serve `app/index.html` for any path under `/app/` that is not a file — with nginx, `try_files $uri /app/index.html;`. Without that fallback, opening or reloading a link other than `/app/` returns a 404.
 
-The formulas, the mode and the result-affecting options of both panels live in that URL, so a link or a reload restores the whole page. The primary panel owns the bare parameters (`f`, `g`, `acc`, …); the duplicate panel opened by the copy button owns the same names prefixed `p2-`, and `p2-mode` is what says the second panel is open at all. `expert` and `hideoptions` are display-only and stay out of the URL.
+The formulas, the mode and the options of both panels live in that URL, so a link or a reload restores the whole page. The primary panel owns the bare parameters (`f`, `g`, `acc`, …); the duplicate panel opened by the copy button owns the same names prefixed `p2-`, and `p2-mode` is what says the second panel is open at all. `expert` and `hideoptions` are display-only — they change what a panel shows, not what it asks the server — but they are parameters too, so a reload keeps the panel as it was seen.
 
 The build is split into chunks: React and MUI each get one (`codeSplitting` in `vite.config.ts`), the app code and the help panel get their own. Only the first three load with the page; the help chunk is fetched the first time the help button is pressed.
 

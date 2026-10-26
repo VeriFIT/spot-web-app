@@ -1081,12 +1081,13 @@ describe("app URL", () => {
     const { requests } = stubFetch();
     renderApp(["/rewrite?f=a"]);
 
-    // The simplification checkboxes are expert-only; expert mode itself is not
-    // part of the URL. `br` is on by default, so turning it off leaves four.
+    // The simplification checkboxes are expert-only, so expert mode is turned
+    // on first; both the flag and the toggle end up in the query string. `br`
+    // is on by default, so turning it off leaves four.
     fireEvent.click(screen.getByLabelText("Expert mode"));
     fireEvent.click(screen.getByLabelText("basic rewritings"));
 
-    expect(location()).toBe("/rewrite?f=a&simp=lf,si,eu,lc");
+    expect(location()).toBe("/rewrite?expert=1&f=a&simp=lf,si,eu,lc");
     expect(searchParams(requests.at(-1)!.url).getAll("r")).toEqual([
       "lf",
       "si",
@@ -1171,16 +1172,44 @@ describe("app URL", () => {
     expect(urls[1].searchParams.get("g")).toBe("a");
   });
 
-  it("keeps presentation flags out of the URL", () => {
+  it("keeps the display flags in the URL", () => {
     stubFetch();
     renderApp(["/translate"]);
 
     fireEvent.click(screen.getByLabelText("Expert mode"));
 
     // Expert mode shows the versions menu but asks nothing different of the
-    // server, so the link is unchanged.
+    // server; the link changes all the same, since it restores the panel.
     expect(screen.getByRole("button", { name: "Versions" })).toBeTruthy();
-    expect(location()).toBe("/translate");
+    expect(location()).toBe("/translate?expert=1");
+
+    fireEvent.click(screen.getByLabelText("Hide all options"));
+
+    expect(location()).toBe("/translate?expert=1&hideoptions=1");
+    expect(screen.queryByRole("button", { name: "Acceptance to use" })).toBeNull();
+  });
+
+  it("restores the display flags from a link", () => {
+    stubFetch();
+    renderApp(["/translate?expert=1&hideoptions=1"]);
+
+    expect(screen.getByLabelText("Expert mode")).toHaveProperty("checked", true);
+    expect(screen.getByLabelText("Hide all options")).toHaveProperty("checked", true);
+    expect(screen.getByRole("button", { name: "Versions" })).toBeTruthy();
+    // Hidden options stay hidden after a reload, not just after the click.
+    expect(screen.queryByRole("button", { name: "Acceptance to use" })).toBeNull();
+  });
+
+  it("keeps each panel's display flags apart", () => {
+    stubFetch();
+    renderApp(["/translate?p2-mode=compare"]);
+
+    // Each panel has its own switches, so the second panel's are the prefixed
+    // ones and turning them on leaves the first panel alone.
+    fireEvent.click(screen.getAllByLabelText("Expert mode")[1]);
+
+    expect(location()).toBe("/translate?p2-mode=compare&p2-expert=1");
+    expect(screen.getAllByRole("button", { name: "Versions" })).toHaveLength(1);
   });
 
   it("leaves the query string clean while the options are at their default", () => {
