@@ -103,21 +103,23 @@ export function LtlInput(props) {
         onChange={handleChange}
         onKeyDown={handleKey}
         onBlur={updateFormula}
-        InputProps={{
-          endAdornment: (
-            <Tooltip
-              disableFocusListener={true}
-              title="Overwrite input with a random formula."
-              placement="right"
-              enterDelay={750}
-            >
-              <InputAdornment position="end">
-                <IconButton onClick={randomizeFormula}>
-                  <DiceIcon color="primary" />
-                </IconButton>
-              </InputAdornment>
-            </Tooltip>
-          ),
+        slotProps={{
+          input: {
+            endAdornment: (
+              <Tooltip
+                disableFocusListener={true}
+                title="Overwrite input with a random formula."
+                placement="right"
+                enterDelay={750}
+              >
+                <InputAdornment position="end">
+                  <IconButton onClick={randomizeFormula}>
+                    <DiceIcon color="primary" />
+                  </IconButton>
+                </InputAdornment>
+              </Tooltip>
+            ),
+          },
         }}
       />
       <Helper component="div">

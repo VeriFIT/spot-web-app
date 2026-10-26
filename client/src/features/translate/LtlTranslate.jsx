@@ -78,7 +78,6 @@ function AccChoice() {
     <div>
       <List component="nav">
         <ChoiceListItem
-          button
           aria-haspopup="true"
           aria-controls="acc-menu"
           aria-label="Acceptance to use"

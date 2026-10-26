@@ -1,6 +1,6 @@
 import { styled } from "@mui/material/styles";
 import FormControl from "@mui/material/FormControl";
-import ListItem from "@mui/material/ListItem";
+import ListItemButton from "@mui/material/ListItemButton";
 import MenuItem from "@mui/material/MenuItem";
 
 // The option widgets that the rewrite and translate panels share: a bordered
@@ -43,7 +43,7 @@ export const ExpertOptionGroup = styled(FormControl)(({ theme }) => ({
 }));
 
 /** The closed state of a syntax or acceptance menu. */
-export const ChoiceListItem = styled(ListItem)(({ theme }) => ({
+export const ChoiceListItem = styled(ListItemButton)(({ theme }) => ({
   borderWidth: 1,
   borderStyle: "solid",
   borderRadius: 4,

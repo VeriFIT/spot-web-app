@@ -47,7 +47,6 @@ function LtlSyntaxChoice() {
     <div>
       <List component="nav">
         <ChoiceListItem
-          button
           aria-haspopup="true"
           aria-controls="syntax-menu"
           aria-label="LTL syntax to output"

@@ -19,7 +19,7 @@ const HelpPaper = styled(Paper)(({ theme }) => ({
     marginLeft: 0,
     marginRight: 0,
   },
-  "& h2": { color: theme.palette.primary.main },
+  "& h5": { color: theme.palette.primary.main },
 }));
 
 /** The row holding the close button and the title. */
@@ -85,14 +85,16 @@ export function Help(props) {
         <CloseButton color="primary" onClick={props.onClose} aria-label="close">
           <CloseIcon />
         </CloseButton>
-        <HelpTitle variant="headline" color="primary" align="center" gutterBottom>
+        <HelpTitle variant="h5" color="primary" align="center" gutterBottom>
           Help
         </HelpTitle>
       </HelpIcons>
 
       <HelpAccordion>
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Typography variant="h6">About</Typography>
+          <Typography component="span" variant="h6">
+            About
+          </Typography>
         </AccordionSummary>
         <AccordionDetails>
           <Typography component="div">
@@ -124,7 +126,9 @@ export function Help(props) {
 
       <HelpAccordion>
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Typography variant="h6">Operation modes</Typography>
+          <Typography component="span" variant="h6">
+            Operation modes
+          </Typography>
         </AccordionSummary>
         <AccordionDetails>
           <Typography component="div" variant="body1">
@@ -156,7 +160,9 @@ export function Help(props) {
 
       <HelpAccordion>
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Typography variant="h6">LTL Infix Syntax</Typography>
+          <Typography component="span" variant="h6">
+            LTL Infix Syntax
+          </Typography>
         </AccordionSummary>
         <AccordionDetails>
           <Typography component="div">
@@ -293,7 +299,9 @@ export function Help(props) {
 
       <HelpAccordion>
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Typography variant="h6">LTL Prefix Syntax</Typography>
+          <Typography component="span" variant="h6">
+            LTL Prefix Syntax
+          </Typography>
         </AccordionSummary>
         <AccordionDetails>
           <Typography component="div">
@@ -337,7 +345,9 @@ export function Help(props) {
 
       <HelpAccordion>
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Typography variant="h6">PSL Infix Syntax</Typography>
+          <Typography component="span" variant="h6">
+            PSL Infix Syntax
+          </Typography>
         </AccordionSummary>
         <AccordionDetails>
           <Typography component="div">
@@ -468,7 +478,9 @@ export function Help(props) {
 
       <HelpAccordion>
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Typography variant="h6">Acceptance conditions</Typography>
+          <Typography component="span" variant="h6">
+            Acceptance conditions
+          </Typography>
         </AccordionSummary>
         <AccordionDetails>
           <Typography component="div">
