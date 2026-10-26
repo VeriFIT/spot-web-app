@@ -81,6 +81,14 @@ class SpotApiTest(unittest.TestCase):
 
         self.assertIn('error', result)
 
+    def test_rewrite_accepts_psl_in_the_default_syntax(self):
+        # An empty ff means Spot syntax; the guard for LBT and Spin must not
+        # treat that as one of them.
+        result = self.get('/api/rewrite/%7Ba%5B*%5D%7D%5B%5D-%3Eb?ff=')
+
+        self.assertNotIn('error', result)
+        self.assertIn('formula', result)
+
     def test_study_classifies_a_safety_formula(self):
         result = self.get('/api/study/G a')
 

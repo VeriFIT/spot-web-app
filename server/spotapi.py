@@ -186,7 +186,7 @@ def rewrite(ltlformula, method='GET'):
         s = dotsrc.str().encode('utf-8')
         return jsonify({'svg': str_to_svg(s)})
 
-    if not f.is_ltl_formula() and syntax in "li":
+    if not f.is_ltl_formula() and syntax in ("l", "i"):
         res['error'] = "The selected syntax only supports LTL formulas."
         return jsonify(res)
 
