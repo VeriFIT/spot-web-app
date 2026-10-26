@@ -6,6 +6,14 @@ import type {
   TranslateResponse,
   VersionsResponse,
 } from "./types";
+import {
+  validateCompare,
+  validateRandom,
+  validateRewrite,
+  validateStudy,
+  validateTranslate,
+  validateVersions,
+} from "./validate";
 
 /**
  * HTTP error carrying the status code, so the UI can branch on it instead of
@@ -37,11 +45,22 @@ function queryString(params: URLSearchParams): string {
   return query === "" ? "" : "?" + query;
 }
 
-/** Fetch `url` and decode the JSON body, turning HTTP errors into `ApiError`. */
-export async function fetchJson<T>(url: string, signal?: AbortSignal): Promise<T> {
+/**
+ * Fetch `url`, decode the JSON body and check it against `validate`, turning
+ * HTTP errors into `ApiError`.
+ *
+ * The validator is required rather than optional: a response that is only cast
+ * to a type is not typed at all once it comes off the network (see
+ * `api/validate.ts`).
+ */
+export async function fetchJson<T>(
+  url: string,
+  signal: AbortSignal | undefined,
+  validate: (body: unknown, url: string) => T
+): Promise<T> {
   const response = await fetch(url, { signal });
   if (!response.ok) throw new ApiError(response);
-  return (await response.json()) as T;
+  return validate(await response.json(), url);
 }
 
 export interface RewriteOptions {
@@ -80,7 +99,7 @@ export function rewriteUrl(formula: string, options: RewriteOptions): string {
 
 /** Loader for `useApiQuery`: the request URL doubles as the query key. */
 export function getRewrite(url: string, signal: AbortSignal): Promise<RewriteResponse> {
-  return fetchJson<RewriteResponse>(url, signal);
+  return fetchJson(url, signal, validateRewrite);
 }
 
 /**
@@ -98,7 +117,7 @@ export function getRandomFormula(
   url: string,
   signal?: AbortSignal
 ): Promise<RandomResponse> {
-  return fetchJson<RandomResponse>(url, signal);
+  return fetchJson(url, signal, validateRandom);
 }
 
 /** URL of the versions list; see `spotapi.py:versions`. */
@@ -111,7 +130,7 @@ export function getVersions(
   url: string,
   signal?: AbortSignal
 ): Promise<VersionsResponse> {
-  return fetchJson<VersionsResponse>(url, signal);
+  return fetchJson(url, signal, validateVersions);
 }
 
 /** URL of the study request for `formula`; see `spotapi.py:study`. */
@@ -121,7 +140,7 @@ export function studyUrl(formula: string): string {
 
 /** Loader for the study tab. */
 export function getStudy(url: string, signal: AbortSignal): Promise<StudyResponse> {
-  return fetchJson<StudyResponse>(url, signal);
+  return fetchJson(url, signal, validateStudy);
 }
 
 /** URL of the comparison of `formula` (first) with `formula2` (second). */
@@ -133,7 +152,7 @@ export function compareUrl(formula: string, formula2: string): string {
 
 /** Loader for the compare tab. */
 export function getCompare(url: string, signal: AbortSignal): Promise<CompareResponse> {
-  return fetchJson<CompareResponse>(url, signal);
+  return fetchJson(url, signal, validateCompare);
 }
 
 export interface TranslateOptions {
@@ -174,5 +193,5 @@ export function getTranslate(
   url: string,
   signal: AbortSignal
 ): Promise<TranslateResponse> {
-  return fetchJson<TranslateResponse>(url, signal);
+  return fetchJson(url, signal, validateTranslate);
 }

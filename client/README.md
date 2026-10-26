@@ -63,6 +63,12 @@ Every source module is TypeScript: components are `.tsx`, everything else `.ts`,
 through `src/api/client.ts` for their requests and through
 `useApiQuery`/`useDelayedFlag` for their results.
 
+Those answers are also checked at runtime, in `src/api/validate.ts`: a field that does
+not match its declared type rejects the whole response with a message naming the
+endpoint and the field, which the panel shows in place of a result. Add a field to
+`spotapi.py`, and its declaration in `types.ts` and its check in `validate.ts` have to
+follow.
+
 ## Notes
 
 - The app is always served under the `/app/` base path, and all API requests go to the

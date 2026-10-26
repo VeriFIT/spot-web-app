@@ -986,22 +986,22 @@ describe("app shell", () => {
     expect(screen.getAllByLabelText("Input formula")).toHaveLength(1);
   });
 
-  it("keeps a malformed response from blanking the page", async () => {
+  it("reports a malformed response instead of blanking the page", async () => {
     const { requests } = stubFetch();
-    // React reports the caught error; the assertion below is what matters.
-    vi.spyOn(console, "error").mockImplementation(() => {});
     renderApp();
 
     const input = screen.getByLabelText("Input formula");
     fireEvent.change(input, { target: { value: "G a" } });
     fireEvent.keyDown(input, { key: "Enter" });
 
-    // Translate reads `note` as an array, so a string makes the result render
-    // throw — exactly the failure the boundary exists for.
+    // Translate reads `note` as a list, so a string is rejected by the client's
+    // validator before the result renderer can trip over it. The panel shows
+    // what was wrong, and the rest of the page keeps working.
     await act(async () => requests[0].respond({ note: "not an array" }));
 
-    expect(screen.getByText("This panel could not be displayed")).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Reload the page" })).toBeTruthy();
+    expect(screen.getByText(/"note" is not a list of strings/)).toBeTruthy();
+    expect(screen.getByText(/Unexpected answer from \/api\/translate/)).toBeTruthy();
+    expect(screen.getByLabelText("Input formula")).toBeTruthy();
   });
 });
 
