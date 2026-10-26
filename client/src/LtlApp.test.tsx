@@ -20,6 +20,12 @@ import { LtlRewrite } from "./features/rewrite/LtlRewrite";
 import { LtlStudy } from "./features/study/LtlStudy";
 import { LtlTranslate } from "./features/translate/LtlTranslate";
 import { INITIAL_OPTIONS, OptionsProvider, optionsReducer } from "./options";
+import type {
+  Options,
+  SimplificationOptions,
+  TranslationOptions,
+  UnabbrevOptions,
+} from "./options";
 import type { ParseInfo } from "./api/types";
 
 interface PendingRequest {
@@ -70,6 +76,16 @@ function stubFetch() {
 const ENABLED_SIMPLIFICATIONS = ["br", "lf", "si", "eu", "lc"];
 
 /**
+ * Options of a test, with the groups it names allowed to be partial: naming one
+ * flag of a group leaves the other flags at their defaults.
+ */
+type OptionsFixture = Partial<Omit<Options, "transopts" | "unabbrev" | "ltlsimp">> & {
+  transopts?: Partial<TranslationOptions>;
+  unabbrev?: Partial<UnabbrevOptions>;
+  ltlsimp?: Partial<SimplificationOptions>;
+};
+
+/**
  * Provides the tab under test with the option state it reads, starting from
  * the app's defaults plus `initial`, so a test names only what it cares about.
  */
@@ -77,12 +93,18 @@ function OptionsHarness({
   initial = {},
   children,
 }: {
-  initial?: Record<string, unknown>;
+  initial?: OptionsFixture;
   children: ReactNode;
 }) {
   const [options, dispatch] = useReducer(optionsReducer, {
     ...INITIAL_OPTIONS,
     ...initial,
+    // Each group is filled in: spreading only `initial` over the defaults would
+    // replace a group a fixture half-names, leaving its other flags undefined
+    // and turning their checkboxes uncontrolled.
+    transopts: { ...INITIAL_OPTIONS.transopts, ...initial.transopts },
+    unabbrev: { ...INITIAL_OPTIONS.unabbrev, ...initial.unabbrev },
+    ltlsimp: { ...INITIAL_OPTIONS.ltlsimp, ...initial.ltlsimp },
   });
 
   return (
