@@ -961,7 +961,7 @@ describe("app shell", () => {
     vi.restoreAllMocks();
   });
 
-  it("opens the help panel and duplicates the app", () => {
+  it("opens the help panel and duplicates the app", async () => {
     stubFetch();
     renderApp();
 
@@ -970,9 +970,13 @@ describe("app shell", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "help" }));
 
+    // The panel is its own chunk, loaded on first use: the placeholder takes
+    // its place until the module arrives.
+    expect(screen.getByLabelText("loading help")).toBeTruthy();
+
     // The help panel is one long document; check that it rendered with its
     // sections, and that its own close button removes it again.
-    expect(screen.getByText("Help")).toBeTruthy();
+    expect(await screen.findByText("Help")).toBeTruthy();
     expect(screen.getByText("About")).toBeTruthy();
     expect(screen.getByText("Operation modes")).toBeTruthy();
 

@@ -1,4 +1,5 @@
 import React from "react";
+import CircularProgress from "@mui/material/CircularProgress";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import IconButton from "@mui/material/IconButton";
 import Paper from "@mui/material/Paper";
@@ -14,7 +15,6 @@ import { CloseIcon, DupeIcon } from "./components/icons";
 import { LtlInput } from "./components/LtlInput";
 import { Versions } from "./components/Versions";
 import { LtlCompare } from "./features/compare/LtlCompare";
-import { Help } from "./features/help/Help";
 import { LtlRewrite } from "./features/rewrite/LtlRewrite";
 import { LtlStudy } from "./features/study/LtlStudy";
 import { LtlTranslate } from "./features/translate/LtlTranslate";
@@ -24,6 +24,12 @@ import { INITIAL_OPTIONS, OptionsProvider, optionsReducer, setAction } from "./o
 import type { Options, OptionsChange } from "./options";
 import type { ParseInfo } from "./api/types";
 import { actionOfMode, DEFAULT_MODE } from "./urlState";
+
+// The help panel is read once in a while, so its prose is not worth loading
+// with the panels: it arrives in its own chunk when the button is pressed.
+const Help = React.lazy(() =>
+  import("./features/help/Help").then((module) => ({ default: module.Help }))
+);
 
 /** The page lays the panels out side by side, centered when there is room. */
 const Toplevel = styled("div")(({ theme }) => ({
@@ -246,7 +252,19 @@ function LtlApps({ action }: { action: number }) {
           }
         />
       )}
-      {showingHelp && <Help onClose={() => setShowingHelp(false)} />}
+      {showingHelp && (
+        <React.Suspense
+          fallback={
+            // The panel is as wide as a formula panel, so the placeholder holds
+            // its place instead of letting the layout jump when it arrives.
+            <Panel>
+              <CircularProgress aria-label="loading help" />
+            </Panel>
+          }
+        >
+          <Help onClose={() => setShowingHelp(false)} />
+        </React.Suspense>
+      )}
     </Toplevel>
   );
 }

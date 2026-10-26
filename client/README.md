@@ -35,6 +35,8 @@ The mode is a path segment (`/app/translate`, `/app/rewrite`, …), so the web s
 
 The formulas, the mode and the result-affecting options of both panels live in that URL, so a link or a reload restores the whole page. The primary panel owns the bare parameters (`f`, `g`, `acc`, …); the duplicate panel opened by the copy button owns the same names prefixed `p2-`, and `p2-mode` is what says the second panel is open at all. `expert` and `hideoptions` are display-only and stay out of the URL.
 
+The build is split into chunks: React and MUI each get one (`codeSplitting` in `vite.config.ts`), the app code and the help panel get their own. Only the first three load with the page; the help chunk is fetched the first time the help button is pressed.
+
 ## Lint, types and format
 
 ```bash
@@ -84,6 +86,10 @@ entry in `SECTIONS`.
 Prettier skips those files (`.prettierignore`): its MDX printer pulls inline JSX out of
 the surrounding paragraph, which would split the sentences of the prose into separate
 blocks. They are laid out by hand.
+
+The panel is loaded on demand — `React.lazy` in `App.tsx`, with a placeholder the size
+of the panel until the chunk arrives — so the prose ships in its own file and editing a
+section does not touch the bundle the formula panels load.
 
 ## Notes
 

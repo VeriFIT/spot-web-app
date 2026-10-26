@@ -8,6 +8,23 @@ export default defineConfig({
   build: {
     outDir: "build",
     emptyOutDir: true,
+    rolldownOptions: {
+      output: {
+        // React and MUI are large, versioned as a block and needed by every
+        // view, so they get their own chunks: each stays under the 500 kB
+        // warning limit and a dependency bump no longer invalidates the app
+        // code cached next to it.
+        codeSplitting: {
+          groups: [
+            {
+              name: "react",
+              test: /node_modules[\\/](react|react-dom|react-router|scheduler)[\\/]/,
+            },
+            { name: "mui", test: /node_modules[\\/](@mui|@emotion)[\\/]/ },
+          ],
+        },
+      },
+    },
   },
   server: {
     port: 3000,
