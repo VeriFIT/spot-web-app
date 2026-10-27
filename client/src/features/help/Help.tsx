@@ -10,6 +10,7 @@ import type { ComponentProps, ComponentType, ElementType } from "react";
 
 import { CloseIcon } from "../../components/icons";
 import { Ltl } from "../../components/Ltl";
+import { ModeLink } from "./ModeLink";
 import { Op, OpTable } from "./OpTable";
 import { Term, Terms } from "./Terms";
 import About from "./sections/about.mdx";
@@ -68,6 +69,7 @@ const components: Record<string, ElementType> = {
   p: MdxParagraph,
   h3: MdxSubheading,
   Ltl,
+  ModeLink,
   OpTable,
   Op,
   Terms,

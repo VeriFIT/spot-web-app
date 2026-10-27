@@ -1,5 +1,6 @@
 Formulas can be translated into ω-automata with various types of acceptance conditions
-(Generalized Büchi acceptance is selected by default).
+(Generalized Büchi acceptance is selected by default). Each condition below comes with an
+example that opens the translate mode requesting that acceptance condition.
 
 <Terms>
   <Term name="monitor">
@@ -7,24 +8,25 @@ Formulas can be translated into ω-automata with various types of acceptance con
     automaton. Such automata will accept any finite prefix that can be extended into an
     infinite word accepted by the formula. Only safety properties can be recognized
     precisely. If a non-safety formula is translated into a monitor, the resulting
-    automaton will accept a superset of the specified language.
+    automaton will accept a superset of the specified language. Try it on <ModeLink mode="translate" formula="G(a <-> XXa)" options={{ acc: "m" }}><Ltl f="G(a <-> XXa)" /></ModeLink>, a safety property that this monitor recognizes exactly; a monitor has no accepting set, so nothing is annotated on its drawing.
   </Term>
   <Term name="Büchi acceptance">
-    Büchi automata have a set of accepting states represented with double circles. An
-    infinite word is accepted if it visits some accepting state infinitely often. (For
-    historical reason, only state-based Büchi acceptance is supported.)
+    Büchi automata have a set of accepting states or transitions, and an infinite word is
+    accepted if a run visits some accepting element infinitely often. Accepting transitions
+    are annotated with a "⓿", while accepting states are drawn as double circles. Try it on
+    <ModeLink mode="translate" formula="GFa" options={{ acc: "b" }}><Ltl f="GFa" /></ModeLink>, whose single state has an accepting self-loop, or on <ModeLink mode="translate" formula="FGa" options={{ acc: "b" }}><Ltl f="FGa" /></ModeLink>, which is built with state-based acceptance and draws its accepting state as a double circle.
   </Term>
   <Term name="co-Büchi acceptance">
     Co-Büchi automata have a set of *rejecting states* represented with double circles
     (when state-based acceptance is used) or *rejecting transitions* annotated with a
     "⓿". An infinite word is accepted if it visits elements of the rejecting set a finite
-    number of times.
+    number of times. Co-Büchi acceptance can only represent persistence properties, so <ModeLink mode="translate" formula="FGa" options={{ acc: "c" }}><Ltl f="FGa" /></ModeLink>, which is one, gets a single-state automaton; a formula outside that class, such as <ModeLink mode="translate" formula="GFa" options={{ acc: "c" }}><Ltl f="GFa" /></ModeLink>, gets a warning along with an automaton that accepts a superset of the intended language.
   </Term>
   <Term name="generalized Büchi acceptance">
     In generalized Büchi automata, multiple sets of states or transitions are used. States
     or transitions are annotated by circled numbers (like ⓿) denoting the sets they belong
     to. A run is accepted if it visits a state or transitions of each set infinitely
-    often.
+    often. Try it on <ModeLink mode="translate" formula="GFa -> (GFb & GFc)" options={{ autpref: "d" }}><Ltl f="GFa -> (GFb & GFc)" /></ModeLink>, with a deterministic translation requested (a request Spot cannot always satisfy: for this formula it returns a non-deterministic automaton).
   </Term>
   <Term name="parity acceptance">
     In automata with parity acceptance, multiple sets of states or transitions are used.
@@ -33,20 +35,24 @@ Formulas can be translated into ω-automata with various types of acceptance con
     often is odd or even. The choice between min or max, and odd or even, is indicated at
     the top of the automaton and can be forced with some options. The **colored** option
     forces each transitions (or state) to belong to exactly one acceptance set; this is
-    usually what people working with parity automata are expecting.
+    usually what people working with parity automata are expecting. Try it on <ModeLink mode="translate" formula="GFa -> (GFb & GFc)" options={{ acc: "p", autpref: "d" }}><Ltl f="GFa -> (GFb & GFc)" /></ModeLink>, translated deterministically.
   </Term>
   <Term name="Emerson-Lei acceptance">
     When using Emerson-Lei acceptance, the acceptance condition produced can be any
     positive boolean formula over terms like **Fin(⓿)** (meaning that elements of set ⓿
     should be seen *finitely* often) or **Inf(⓿)** (*infinitely* often). Multiple
-    acceptance sets are used.
+    acceptance sets are used. Try it on <ModeLink mode="translate" formula="GFa -> (GFb & GFc)" options={{ acc: "e", autpref: "d" }}><Ltl f="GFa -> (GFb & GFc)" /></ModeLink>, translated deterministically.
   </Term>
 </Terms>
 
-By default, automata with transition-based acceptance are produced, except for monitors
-(where it makes no sense) and Büchi automata (for historical reasons). The translation
-constraint "force state-based acc." can be used to force the produced automata to use
-state-based acceptance, possibly increasing the number of states. However, even when
-automata are displayed as state-based, they are stored using transition-based acceptance
-internally: this can be seen using the "force transition-based acc." *display* option.
+The translation prefers transition-based acceptance, and falls back on state-based acceptance
+only when this costs no extra state (monitors, which have no accepting set, are displayed
+without any annotation). Automata built with state-based acceptance are nevertheless stored
+using transition-based acceptance internally: this is what the "force transition-based acc."
+*display* option shows, by moving the annotations back onto the transitions (compare
+<ModeLink mode="translate" formula="FGa"><Ltl f="FGa" /></ModeLink> with
+<ModeLink mode="translate" formula="FGa" options={{ transopts: { forcetacc: true } }}>the same automaton displayed that way</ModeLink>).
+Conversely, the translation constraint "force state-based acc." can be used to request a
+state-based automaton, at the cost of using more states (compare <ModeLink mode="translate" formula="GFa"><Ltl f="GFa" /></ModeLink> with
+<ModeLink mode="translate" formula="GFa" options={{ transopts: { statebased: true } }}>the same formula translated with that constraint</ModeLink>).
 This explains why these two options are not mutually exclusive.

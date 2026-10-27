@@ -1,4 +1,5 @@
 import { cleanup, render } from "@testing-library/react";
+import { MemoryRouter } from "react-router";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { NoteText } from "./components/NoteText";
@@ -57,7 +58,12 @@ describe("Typography nesting", () => {
   afterEach(cleanup);
 
   it("keeps block content out of the help paragraphs", () => {
-    const { container } = render(<Help onClose={() => {}} />);
+    // The panel links to the modes, so it is rendered inside a router.
+    const { container } = render(
+      <MemoryRouter>
+        <Help onClose={() => {}} />
+      </MemoryRouter>
+    );
 
     // The panel is long enough that a mistake here is easy to make; the
     // operator tables and the two definition lists are the reason the check

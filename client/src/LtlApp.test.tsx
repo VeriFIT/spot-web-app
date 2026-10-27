@@ -1121,6 +1121,132 @@ describe("app shell", () => {
     expect(screen.getAllByLabelText("Input formula")).toHaveLength(1);
   });
 
+  it("opens a mode on an example taken from the help panel", async () => {
+    const { requests } = stubFetch();
+    renderApp(["/translate"]);
+    fireEvent.click(screen.getByRole("button", { name: "help" }));
+
+    // A section starts collapsed, and a link inside one only reaches the
+    // accessibility tree once the section holding it is open.
+    fireEvent.click(await screen.findByRole("button", { name: "Operation modes" }));
+
+    // Each mode is named by a link to that mode, and each description ends on
+    // an example linking to the same mode with a formula. Both are in-app
+    // links, so the help panel stays open over the panel they change.
+    expect(
+      (await screen.findByRole("link", { name: "Study" })).getAttribute("href")
+    ).toBe("/study");
+    // The compare example carries both of its formulas, written the way the
+    // panels write them themselves (a space is a `+`).
+    expect(
+      screen.getByRole("link", { name: "a U b and b U a" }).getAttribute("href")
+    ).toBe("/compare?f=a+U+b&g=b+U+a");
+
+    fireEvent.click(screen.getByRole("link", { name: "F(a & X(!a & Gb))" }));
+
+    expect(location()).toBe("/study?f=F%28a+%26+X%28%21a+%26+Gb%29%29");
+    expect(screen.getByRole("tab", { name: "Study" }).getAttribute("aria-selected")).toBe(
+      "true"
+    );
+    expect(screen.getByLabelText("Input formula")).toHaveProperty(
+      "value",
+      "F(a & X(!a & Gb))"
+    );
+    expect(screen.getByText("Operation modes")).toBeTruthy();
+
+    // The mode mounted on a formula the URL already carried, so the tab asked
+    // the server about it without anything being typed.
+    expect(requests.map((request) => requestUrl(request.url).pathname)).toContain(
+      "/api/study/F(a%20%26%20X(!a%20%26%20Gb))"
+    );
+  });
+
+  it("opens an acceptance example with the settings it illustrates", async () => {
+    const { requests } = stubFetch();
+    renderApp(["/translate"]);
+    fireEvent.click(screen.getByRole("button", { name: "help" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Acceptance conditions" })); // Each of the six conditions is illustrated by an example asking for that
+    // acceptance condition (the two formulas are shared between entries), and
+    // the paragraph below the list keeps the default view.
+    expect(
+      screen
+        .getAllByRole("link")
+        .filter((link) => link.getAttribute("href")?.startsWith("/translate"))
+        .map((link) => link.getAttribute("href"))
+    ).toEqual([
+      "/translate?f=G%28a+%3C-%3E+XXa%29&acc=m",
+      "/translate?f=GFa&acc=b",
+      "/translate?f=FGa&acc=b",
+      "/translate?f=FGa&acc=c",
+      "/translate?f=GFa&acc=c",
+      "/translate?f=GFa+-%3E+%28GFb+%26+GFc%29&pref=d",
+      "/translate?f=GFa+-%3E+%28GFb+%26+GFc%29&acc=p&pref=d",
+      "/translate?f=GFa+-%3E+%28GFb+%26+GFc%29&acc=e&pref=d",
+      "/translate?f=FGa",
+      "/translate?f=FGa&trans=forcetacc",
+      "/translate?f=GFa",
+      "/translate?f=GFa&trans=statebased",
+    ]);
+
+    // The display option and the translation constraint of the closing
+    // paragraph are spelled the way the panel writes its own URLs.
+    const hrefOf = (name: string) =>
+      screen.getByRole("link", { name }).getAttribute("href");
+
+    expect(hrefOf("the same automaton displayed that way")).toBe(
+      "/translate?f=FGa&trans=forcetacc"
+    );
+    expect(hrefOf("the same formula translated with that constraint")).toBe(
+      "/translate?f=GFa&trans=statebased"
+    );
+
+    // Following the co-Büchi example switches the panel's acceptance and asks
+    // the server for it, while the help panel stays open.
+    const cobuchi = screen
+      .getAllByRole("link", { name: "GFa" })
+      .find((link) => link.getAttribute("href") === "/translate?f=GFa&acc=c");
+    fireEvent.click(cobuchi!);
+
+    expect(location()).toBe("/translate?f=GFa&acc=c");
+    expect(screen.getByLabelText("Input formula")).toHaveProperty("value", "GFa");
+    expect(screen.getByText("Acceptance conditions")).toBeTruthy();
+    expect(searchParams(requests[requests.length - 1].url).get("a")).toBe("c");
+  });
+
+  it("opens an LTL syntax example in the translate panel", async () => {
+    const { requests } = stubFetch();
+    renderApp(["/translate"]);
+    fireEvent.click(screen.getByRole("button", { name: "help" }));
+    fireEvent.click(await screen.findByRole("button", { name: "LTL Infix Syntax" }));
+
+    // The examples of the section are links to the translate mode on the
+    // formula they show, with everything left at its default.
+    expect(
+      screen
+        .getAllByRole("link")
+        .filter((link) => link.getAttribute("href")?.startsWith("/translate?"))
+        .map((link) => link.getAttribute("href"))
+    ).toEqual([
+      "/translate?f=GFa",
+      "/translate?f=G%28F%28a%29%29",
+      "/translate?f=%22GFa%22",
+      "/translate?f=aUb",
+      "/translate?f=a+U+b",
+      "/translate?f=%28a%29U%28b%29",
+      "/translate?f=a%3D0+U+b%3D1",
+      "/translate?f=%21a+U+b",
+      "/translate?f=F%5B3..5%5Dp",
+      "/translate?f=XXX%28p%7CX%28p%7CXp%29%29",
+    ]);
+
+    fireEvent.click(screen.getByRole("link", { name: "F[3..5]p" }));
+
+    expect(location()).toBe("/translate?f=F%5B3..5%5Dp");
+    expect(screen.getByLabelText("Input formula")).toHaveProperty("value", "F[3..5]p");
+    expect(screen.getByText("LTL Infix Syntax")).toBeTruthy();
+    expect(searchParams(requests[requests.length - 1].url).get("a")).toBe("g");
+  });
+
   it("puts the caret in the main formula on arrival", () => {
     stubFetch();
     renderApp();

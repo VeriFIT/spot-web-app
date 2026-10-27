@@ -6,8 +6,11 @@ export function Terms({ children }: { children?: ReactNode }) {
   return <dl>{children}</dl>;
 }
 
-/** One term and its explanation, as a `<dt>`/`<dd>` pair. */
-export function Term({ name, children }: { name: string; children?: ReactNode }) {
+/**
+ * One term and its explanation, as a `<dt>`/`<dd>` pair. The name is a node
+ * rather than a string so that a term can be a link to what it names.
+ */
+export function Term({ name, children }: { name: ReactNode; children?: ReactNode }) {
   return (
     <>
       <dt>

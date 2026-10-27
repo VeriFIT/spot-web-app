@@ -1,16 +1,18 @@
-The application has four modes of operation that you can select at its top:
+The application has four modes of operation that you can select at its top. Each of the
+names below links to its mode, and the examples open a mode on a formula:
 
 <Terms>
-  <Term name="Rewrite">
-    for rewriting a formula (changing syntaxes, simplifying, removing some operators)
+  <Term name={<ModeLink mode="rewrite">Rewrite</ModeLink>}>
+    for rewriting a formula (changing syntaxes, simplifying, removing some operators);
+    try it on <ModeLink mode="rewrite" formula="GF(a) & XG(b) & (Xc M d)"><Ltl f="GF(a) & XG(b) & (Xc M d)" /></ModeLink>
   </Term>
-  <Term name="Study">
-    for computing various properties of a formula
+  <Term name={<ModeLink mode="study">Study</ModeLink>}>
+    for computing various properties of a formula; try it on <ModeLink mode="study" formula="F(a & X(!a & Gb))"><Ltl f="F(a & X(!a & Gb))" /></ModeLink>
   </Term>
-  <Term name="Compare">
-    for comparing two LTL formulas
+  <Term name={<ModeLink mode="compare">Compare</ModeLink>}>
+    for comparing two LTL formulas; try it on <ModeLink mode="compare" formula="a U b" formula2="b U a"><Ltl f="a U b" /> and <Ltl f="b U a" /></ModeLink>
   </Term>
-  <Term name="Translate">
-    for constructing an automaton equivalent to a given formula
+  <Term name={<ModeLink mode="translate">Translate</ModeLink>}>
+    for constructing an automaton equivalent to a given formula; try it on <ModeLink mode="translate" formula="G(req -> F(ans))"><Ltl f="G(req -> F(ans))" /></ModeLink>
   </Term>
 </Terms>

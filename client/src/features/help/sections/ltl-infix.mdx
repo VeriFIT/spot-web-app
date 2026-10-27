@@ -6,11 +6,15 @@ representations for many operators. For the semantics of all operators see
 
 Use alphanumeric identifiers or double-quoted strings for atomic propositions, and
 parentheses for grouping. Identifiers cannot start with the letter of a prefix operator
-(<Ltl f="F" />, <Ltl f="G" />, or <Ltl f="X" />): for instance <Ltl f="GFa" /> means
-<Ltl f="G(F(a))" />. Use <Ltl f={'"GFa"'} />, with double quotes, if you really want to
-refer to <Ltl f="GFa" /> as a proposition. Conversely, infix letter operators are not
-assumed to be operators if they are part of an identifier: <Ltl f="aUb" /> is an atomic
-proposition, unlike <Ltl f="a&nbsp;U&nbsp;b" /> and <Ltl f="(a)U(b)" />.
+(<Ltl f="F" />, <Ltl f="G" />, or <Ltl f="X" />): for instance
+<ModeLink mode="translate" formula="GFa"><Ltl f="GFa" /></ModeLink> means
+<ModeLink mode="translate" formula="G(F(a))"><Ltl f="G(F(a))" /></ModeLink>. Use
+<ModeLink mode="translate" formula={'"GFa"'}><Ltl f={'"GFa"'} /></ModeLink>, with double
+quotes, if you really want to refer to <Ltl f="GFa" /> as a proposition. Conversely,
+infix letter operators are not assumed to be operators if they are part of an identifier:
+<ModeLink mode="translate" formula="aUb"><Ltl f="aUb" /></ModeLink> is an atomic
+proposition, unlike <ModeLink mode="translate" formula="a U b"><Ltl f="a&nbsp;U&nbsp;b" /></ModeLink> and
+<ModeLink mode="translate" formula="(a)U(b)"><Ltl f="(a)U(b)" /></ModeLink>.
 
 ### Boolean constants
 
@@ -32,7 +36,8 @@ The following Boolean operators are supported:
 
 For compatibility with [Wring](http://www.ist.tugraz.at/staff/bloem/wring.html), atomic
 propositions can be followed by <Ltl f="=1" /> or <Ltl f="=0" /> to specify their
-polarity. For instance <Ltl f="a=0 U b=1" /> is equivalent to <Ltl f="!a U b" />.
+polarity. For instance <ModeLink mode="translate" formula="a=0 U b=1"><Ltl f="a=0 U b=1" /></ModeLink> is
+equivalent to <ModeLink mode="translate" formula="!a U b"><Ltl f="!a U b" /></ModeLink>.
 
 ### Temporal Operators
 
@@ -55,4 +60,5 @@ The following unary (prefix) operators are supported:
 
 Additionally, <Ltl f="X[n]" />, <Ltl f="F[n..m]" />, and <Ltl f="G[n..m]" /> are
 syntactic sugar for differents types of repetition of the <Ltl f="X" /> operator. For
-instance <Ltl f="F[3..5]p" /> is short for <Ltl f="XXX(p|X(p|Xp))" />.
+instance <ModeLink mode="translate" formula="F[3..5]p"><Ltl f="F[3..5]p" /></ModeLink> is short for
+<ModeLink mode="translate" formula="XXX(p|X(p|Xp))"><Ltl f="XXX(p|X(p|Xp))" /></ModeLink>.
