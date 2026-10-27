@@ -1,3 +1,8 @@
+// Lato, the face the diagrams are drawn with: the four faces the theme asks for
+// are declared here (see lato.css) rather than read from the site's spot.css,
+// so the app owns the font it paints with.
+import "./lato.css";
+
 import { createRoot } from "react-dom/client";
 import App from "./App";
 import CssBaseline from "@mui/material/CssBaseline";

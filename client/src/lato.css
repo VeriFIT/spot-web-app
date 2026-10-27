@@ -1,0 +1,59 @@
+/*
+ * Lato, declared here rather than left to a stylesheet we do not own.
+ *
+ * Each face prefers an installed copy of Lato — spot.css has always done the
+ * same, and it keeps the Vite dev server, which is not served the files below,
+ * painting in Lato — and falls back to the subset the Docker image writes at
+ * the root of the site (spot-web/docker/install.sh): woff2, plus the same
+ * subset in TrueType for the browsers that cannot read woff2.  The names carry
+ * no date, because the documentation pages outside the app link to them.
+ *
+ * The four faces are the ones the theme asks for: 400 for the prose, 500 for
+ * the buttons and headings, 700 for emphasised text, and the italic of the
+ * help panel.  Without them the browser draws those weights by slanting and
+ * thickening the regular face.
+ */
+@font-face {
+  font-family: Lato;
+  src:
+    local("Lato"),
+    local("Lato-Regular"),
+    url("/Lato-Regular.woff2") format("woff2"),
+    url("/Lato-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: Lato;
+  src:
+    local("Lato Medium"),
+    local("Lato-Medium"),
+    url("/Lato-Medium.woff2") format("woff2"),
+    url("/Lato-Medium.ttf") format("truetype");
+  font-weight: 500;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: Lato;
+  src:
+    local("Lato Bold"),
+    local("Lato-Bold"),
+    url("/Lato-Bold.woff2") format("woff2"),
+    url("/Lato-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: Lato;
+  font-style: italic;
+  src:
+    local("Lato Italic"),
+    local("Lato-Italic"),
+    url("/Lato-Italic.woff2") format("woff2"),
+    url("/Lato-Italic.ttf") format("truetype");
+  font-weight: 400;
+  font-display: swap;
+}

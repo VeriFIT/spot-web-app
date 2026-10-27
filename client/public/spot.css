@@ -1,4 +1,8 @@
-@font-face{font-family:Lato;src:local("Lato"),local("Lato-Regular"),url("https://spot.lrde.epita.fr/Lato-Regular.ttf");}
+/* The subsetted fonts the Docker image installs at the root of the site, woff2
+   first and the same subset in TrueType for the browsers that cannot read woff2.
+   src/lato.css declares the same regular face, plus the medium, bold and italic
+   ones; the address upstream publishes is kept last, as a last resort. */
+@font-face{font-family:Lato;src:local("Lato"),local("Lato-Regular"),url("/Lato-Regular.woff2") format("woff2"),url("/Lato-Regular.ttf") format("truetype"),url("https://spot.lre.epita.fr/Lato-Regular.ttf") format("truetype");font-display:swap}
 @media screen{
 #spotlogo{position:absolute;top:10px;left:10px;z-index:-1}
 }

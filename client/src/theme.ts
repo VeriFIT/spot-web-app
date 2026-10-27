@@ -6,9 +6,9 @@ import { createTheme } from "@mui/material/styles";
  */
 export const theme = createTheme({
   typography: {
-    // Lato, declared by the `spot.css` that `index.html` links and that the
-    // SVG diagrams are drawn with, so the panels match their diagrams. The
-    // rest are fallbacks for the glyphs no Lato face covers.
+    // Lato, the face the SVG diagrams are drawn with (see `lato.css`, which
+    // declares it), so the panels match their diagrams. The rest are fallbacks
+    // for the glyphs no Lato face covers.
     fontFamily: '"Lato", "Helvetica", "Arial", sans-serif',
     fontSize: 14,
     body1: {
