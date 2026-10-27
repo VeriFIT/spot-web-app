@@ -6,9 +6,10 @@ import { createTheme } from "@mui/material/styles";
  */
 export const theme = createTheme({
   typography: {
-    // Roboto, loaded from `@fontsource/roboto` in `index.tsx`; the rest are
-    // the fallbacks for the glyphs Roboto has no face for.
-    fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
+    // Lato, declared by the `spot.css` that `index.html` links and that the
+    // SVG diagrams are drawn with, so the panels match their diagrams. The
+    // rest are fallbacks for the glyphs no Lato face covers.
+    fontFamily: '"Lato", "Helvetica", "Arial", sans-serif',
     fontSize: 14,
     body1: {
       fontSize: "0.875rem",
