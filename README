@@ -26,6 +26,42 @@ requests to the Flask server on localhost:5000.  Now any save to spotapi.py
 or files under client/src/ will cause the components to reload automatically.
 
 
+Client-only build
+-----------------
+
+The application can also be built so that it never contacts a server:
+Spot and GraphViz are then compiled to WebAssembly and run in the
+browser, so the formulas typed in the page do not leave the computer.
+The resulting directory can be served by any static web server.
+
+The API is then answered by wasm/spotapi.cc, a C++ port of
+server/spotapi.py, running in a Web Worker (client/src/api/local/).
+Changes to spotapi.py should be mirrored there.
+
+To build it, install Emscripten (https://emscripten.org/), build Spot
+with it:
+
+  % emconfigure ./configure --host=wasm32-unknown-emscripten \
+      --disable-shared --disable-python --prefix=$HOME/spot-wasm \
+      CFLAGS='-O2 -fwasm-exceptions' CXXFLAGS='-O2 -fwasm-exceptions' \
+      LDFLAGS=-fwasm-exceptions --disable-debug \
+      gl_cv_func_sleep_works=yes
+  % for d in cadical buddy lib ltdl spot; do emmake make -C $d; done
+  % emmake make -C buddy install
+  % emmake make -C spot install
+
+(or download the spot-wasm.tar.gz artifact of the "emscripten" job of
+Spot's pipeline), and then
+
+  % make -C wasm SPOT_PREFIX=$HOME/spot-wasm
+  % cd client
+  % npm run test               # now also tests the WebAssembly module
+  % VITE_SPOT_BACKEND=wasm npm run build
+
+The application is then in client/build/.  "VITE_SPOT_BACKEND=wasm
+npm run start" runs it in development mode, without the Flask server.
+
+
 Using remotely or locally
 -------------------------
 
@@ -56,6 +92,8 @@ Third-package used and their licenses:
   flask: BSD
   flask-CORR: MIT
   ReactJS: MIT
+  Emscripten: MIT
+  @hpcc-js/wasm-graphviz: Apache-2.0 (the GraphViz it embeds: EPL-1.0)
   Material-ui: MIT
   nodejs: MIT
   Spot: GPLv3

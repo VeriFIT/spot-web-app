@@ -58,6 +58,21 @@ export async function fetchJson<T>(
   signal: AbortSignal | undefined,
   validate: (body: unknown, url: string) => T
 ): Promise<T> {
+  if (import.meta.env.VITE_SPOT_BACKEND === "wasm") {
+    // Client-only build: Spot runs in the browser (see `api/local/`). The
+    // import is dynamic so that the server build does not include it.
+    const { localFetch } = await import("./local/backend");
+    const answer = await localFetch(url, signal);
+    if (answer.status !== 200) {
+      throw new ApiError(
+        new Response(null, {
+          status: answer.status,
+          statusText: answer.error ?? (answer.status === 404 ? "Not Found" : "Error"),
+        })
+      );
+    }
+    return validate(answer.body, url);
+  }
   const response = await fetch(url, { signal });
   if (!response.ok) throw new ApiError(response);
   return validate(await response.json(), url);
