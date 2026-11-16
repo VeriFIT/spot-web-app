@@ -6,6 +6,8 @@ stages:
 # the cache below can carry it to the next pipeline.
 variables:
   npm_config_cache: "$CI_PROJECT_DIR/client/.npm"
+  # Branch of Spot whose WebAssembly build the client-only build uses.
+  SPOT_BRANCH: next
 
 default:
   image: gitlab-registry.lre.epita.fr/spot/buildenv/debian-node
@@ -53,3 +55,44 @@ compile:
     paths:
       - ./client/build/
       - ./server/*.py
+
+# Client-only build: Spot runs in the browser, compiled to WebAssembly
+# (see "Client-only build" in the README).  The Emscripten build of
+# Spot comes from the latest successful "emscripten" job of Spot's
+# pipeline on the branch named by $SPOT_BRANCH.
+
+spotapi-wasm:
+  stage: check
+  except:
+    - /wip/
+  image: emscripten/emsdk:7.0.0
+  cache: []
+  script:
+    - curl -fL -o spot-wasm.tar.gz "https://gitlab.lre.epita.fr/api/v4/projects/90/jobs/artifacts/$SPOT_BRANCH/raw/spot-wasm.tar.gz?job=emscripten"
+    - mkdir spot-wasm
+    - tar xf spot-wasm.tar.gz -C spot-wasm
+    - make -C wasm SPOT_PREFIX=$PWD/spot-wasm
+  artifacts:
+    expire_in: 1 week
+    paths:
+      - ./client/public/wasm/
+
+compile-wasm:
+  stage: build
+  except:
+    - /wip/
+  needs:
+    - job: spotapi-wasm
+      artifacts: true
+  script:
+    - cd client
+    - npm ci
+    # The WebAssembly tests are skipped by the lint job, which does not
+    # have the module.
+    - npx vitest run src/api/local
+    - VITE_SPOT_BACKEND=wasm npx vite build --outDir build-wasm
+  artifacts:
+    when: always
+    expire_in: 6 months
+    paths:
+      - ./client/build-wasm/
