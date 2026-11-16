@@ -1,5 +1,8 @@
 *~
 /client/build/
+/client/build-wasm/
 /client/node_modules/
 /client/.npm/
 /server/__pycache__/
+/client/public/wasm/
+/wasm/spotapi-native
