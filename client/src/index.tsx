@@ -18,8 +18,9 @@ root.render(
   <StyledEngineProvider injectFirst>
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      {/* The mode is the first path segment, under the /app/ base Vite bakes in. */}
-      <BrowserRouter basename="/app">
+      {/* The mode is the first path segment, under the base Vite bakes in: /app/
+          by default (see vite.config.ts), or what `vite build --base` says. */}
+      <BrowserRouter basename={import.meta.env.BASE_URL.replace(/\/$/, "")}>
         <App />
       </BrowserRouter>
     </ThemeProvider>

@@ -24,7 +24,7 @@ const browserSource = {
 };
 
 export default [
-  { ignores: ["build/**", "dist/**", "public/**"] },
+  { ignores: ["build/**", "build-wasm/**", "dist/**", "public/**"] },
 
   // Existing JavaScript sources (JSX included).
   { ...js.configs.recommended, files: jsFiles, languageOptions: browserSource },

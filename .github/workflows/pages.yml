@@ -1,0 +1,138 @@
+# Publish the client-only build (Spot compiled to WebAssembly, running in the
+# browser) on GitHub Pages, at https://verifit.github.io/spot-web-app/.
+#
+# This workflow is for the GitHub fork only: upstream's pipeline is
+# .gitlab-ci.yml.  Pull requests are built and tested; what is merged into
+# master is also deployed.
+
+name: GitHub Pages
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # The Spot to compile: VeriFIT/spot's next has the Emscripten fixes
+  # (VeriFIT/spot#12), which upstream's next does not have yet.
+  SPOT_REPOSITORY: VeriFIT/spot
+  SPOT_REF: next
+
+jobs:
+  wasm:
+    name: Spot and the API as WebAssembly
+    runs-on: ubuntu-latest
+    # Keep in sync with the cache key below (contexts are not allowed here).
+    container: emscripten/emsdk:7.0.0
+    steps:
+      - name: Check out the application
+        uses: actions/checkout@v5
+        with:
+          path: web
+
+      # A plain clone: Spot is public, and actions/checkout would send this
+      # repository's token to another one.
+      - name: Check out Spot
+        id: spot
+        run: |
+          git config --global --add safe.directory '*'
+          git clone --depth 1 --branch "$SPOT_REF" \
+            "https://github.com/$SPOT_REPOSITORY.git" spot
+          echo "rev=$(git -C spot rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      # Compiling Spot takes about half an hour; do it once per revision.
+      - name: Restore the WebAssembly build of Spot
+        id: cache
+        uses: actions/cache@v4
+        with:
+          path: spot-wasm
+          key: spot-wasm-${{ steps.spot.outputs.rev }}-emsdk-7.0.0
+
+      - name: Compile Spot with Emscripten
+        if: steps.cache.outputs.cache-hit != 'true'
+        working-directory: spot
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends \
+            autoconf automake libtool libltdl-dev flex bison perl \
+            liblocale-gettext-perl
+          autoreconf -vfi
+          # See NEWS: exceptions must work, gnulib's sleep test never ends
+          # under Node.js, and debugging symbols would only weigh.
+          emconfigure ./configure --host=wasm32-unknown-emscripten \
+            --disable-shared --disable-python --disable-devel --disable-debug \
+            --prefix="$GITHUB_WORKSPACE/spot-wasm" \
+            CFLAGS='-O2 -fwasm-exceptions' CXXFLAGS='-O2 -fwasm-exceptions' \
+            LDFLAGS=-fwasm-exceptions gl_cv_func_sleep_works=yes
+          for d in cadical buddy lib ltdl spot; do
+            emmake make -j"$(nproc)" -C "$d"
+          done
+          emmake make -C buddy install
+          emmake make -C spot install
+
+      - name: Compile the API
+        run: make -C web/wasm SPOT_PREFIX="$GITHUB_WORKSPACE/spot-wasm"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: spotapi-wasm
+          path: web/client/public/wasm/
+
+  site:
+    name: Client-only site
+    needs: wasm
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: client/package-lock.json
+
+      - uses: actions/download-artifact@v5
+        with:
+          name: spotapi-wasm
+          path: client/public/wasm/
+
+      - name: Test
+        working-directory: client
+        run: |
+          npm ci
+          VITE_REQUIRE_WASM=1 npm run test
+
+      - name: Build
+        working-directory: client
+        run: |
+          VITE_SPOT_BACKEND=wasm npx vite build \
+            --base="/${GITHUB_REPOSITORY#*/}/" --outDir build-pages
+          # GitHub Pages has no fallback to index.html for the app's deep
+          # links (e.g., .../translate?f=GFa), but serves 404.html for them.
+          cp build-pages/index.html build-pages/404.html
+
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: client/build-pages/
+
+  deploy:
+    name: Deploy
+    needs: site
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
